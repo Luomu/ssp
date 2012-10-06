@@ -80,6 +80,7 @@
     <ClInclude Include="..\..\..\src\graphics\gl2\StarfieldMaterial.h">
       <Filter>gl2</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\src\graphics\GLDebug.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="win32">
