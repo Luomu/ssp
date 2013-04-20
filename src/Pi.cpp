@@ -868,7 +868,9 @@ void Pi::StartGame()
 
 void Pi::Start()
 {
-	Pi::intro = new Intro(Pi::renderer, Graphics::GetScreenWidth(), Graphics::GetScreenHeight());
+	Pi::intro = 0;
+	if (config->Int("NoIntro") == 0)
+		intro = new Intro(Pi::renderer, Graphics::GetScreenWidth(), Graphics::GetScreenHeight());
 
 	ui->SetInnerWidget(ui->CallTemplate("MainMenu"));
 
@@ -899,7 +901,7 @@ void Pi::Start()
 		Pi::renderer->BeginFrame();
 		Pi::renderer->SetPerspectiveProjection(75, Pi::GetScrAspect(), 1.f, 10000.f);
 		Pi::renderer->SetTransform(matrix4x4f::Identity());
-		intro->Draw(_time);
+		if (intro) intro->Draw(_time);
 		Pi::renderer->EndFrame();
 
 		ui->Update();
