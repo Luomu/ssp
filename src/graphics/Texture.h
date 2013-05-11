@@ -10,11 +10,13 @@
 namespace Graphics {
 
 enum TextureFormat {
+	TEXTURE_FORMAT_NONE = 0,
 	TEXTURE_RGBA,
 	TEXTURE_RGB,
 	TEXTURE_LUMINANCE_ALPHA, // luminance value put into R,G,B components; separate alpha value
 	TEXTURE_INTENSITY,
-	TEXTURE_ALPHA
+	TEXTURE_ALPHA,
+	TEXTURE_DEPTH //default depth, may be 16, 24 or 32
 };
 
 enum ImageFormat {

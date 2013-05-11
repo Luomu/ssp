@@ -5,7 +5,7 @@
 #define _RENDERER_H
 
 #include "libs.h"
-#include <map>
+#include "GraphicsTypes.h"
 
 namespace Graphics {
 
@@ -36,34 +36,13 @@ class Light;
 class Material;
 class MaterialDescriptor;
 class RendererLegacy;
+class RenderTarget;
 class StaticMesh;
 class Surface;
 class Texture;
 class TextureDescriptor;
 class VertexArray;
-
-// first some enums
-enum LineType {
-	LINE_SINGLE = GL_LINES, //draw one line per two vertices
-	LINE_STRIP = GL_LINE_STRIP,  //connect vertices
-	LINE_LOOP = GL_LINE_LOOP    //connect vertices,  connect start & end
-};
-
-//how to treat vertices
-enum PrimitiveType {
-	TRIANGLES = GL_TRIANGLES,
-	TRIANGLE_STRIP = GL_TRIANGLE_STRIP,
-	TRIANGLE_FAN = GL_TRIANGLE_FAN,
-	POINTS = GL_POINTS
-};
-
-enum BlendMode {
-	BLEND_SOLID,
-	BLEND_ADDITIVE,
-	BLEND_ALPHA,
-	BLEND_ALPHA_ONE, //"additive alpha"
-	BLEND_ALPHA_PREMULT
-};
+struct RenderTargetDesc;
 
 // Renderer base, functions return false if
 // failed/unsupported
@@ -81,6 +60,9 @@ public:
 	virtual bool EndFrame() = 0;
 	//traditionally gui happens between endframe and swapbuffers
 	virtual bool SwapBuffers() = 0;
+
+	//set 0 to render to screen
+	virtual bool SetRenderTarget(RenderTarget*) { return false; }
 
 	//clear color and depth buffer
 	virtual bool ClearScreen() { return false; }
@@ -130,6 +112,8 @@ public:
 	//creates a unique material based on the descriptor. It will not be deleted automatically.
 	virtual Material *CreateMaterial(const MaterialDescriptor &descriptor) = 0;
 	virtual Texture *CreateTexture(const TextureDescriptor &descriptor) = 0;
+	//returns 0 if unsupported
+	virtual RenderTarget *CreateRenderTarget(const RenderTargetDesc &) { return 0; }
 
 	Texture *GetCachedTexture(const std::string &type, const std::string &name);
 	void AddCachedTexture(const std::string &type, const std::string &name, Texture *texture);
