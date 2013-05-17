@@ -743,7 +743,7 @@ static int l_ship_undock(lua_State *l)
  * Spawn a missile near the ship.
  *
  * > missile = ship:SpawnMissile(type, target, power)
- * 
+ *
  * Parameters:
  *
  *   shiptype - a string for the missile type. specifying an
@@ -1204,6 +1204,21 @@ static int l_ship_cancel_ai(lua_State *l)
 	return 0;
 }
 
+static int l_ship_get_invulnerable(lua_State *l)
+{
+	Ship *s = LuaObject<Ship>::CheckFromLua(1);
+	lua_pushboolean(l, s->IsInvulnerable());
+	return 1;
+}
+
+static int l_ship_set_invulnerable(lua_State *l)
+{
+	Ship *s = LuaObject<Ship>::CheckFromLua(1);
+	int i = luaL_checkinteger(l, 2);
+	s->SetInvulnerable(i > 0);
+	return 0;
+}
+
 template <> const char *LuaObject<Ship>::s_type = "Ship";
 
 template <> void LuaObject<Ship>::RegisterClass()
@@ -1251,6 +1266,9 @@ template <> void LuaObject<Ship>::RegisterClass()
 		{ "CheckHyperspaceTo", l_ship_check_hyperspace_to },
 		{ "GetHyperspaceDetails", l_ship_get_hyperspace_details },
 		{ "HyperspaceTo",    l_ship_hyperspace_to     },
+
+		{ "GetInvulnerable", l_ship_get_invulnerable },
+		{ "SetInvulnerable", l_ship_set_invulnerable },
 
 		{ 0, 0 }
 	};

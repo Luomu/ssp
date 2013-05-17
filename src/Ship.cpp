@@ -159,6 +159,8 @@ void Ship::Load(Serializer::Reader &rd, Space *space)
 
 void Ship::Init()
 {
+	m_invulnerable = false;
+
 	m_navLights.Reset(new NavLights(GetModel()));
 	m_navLights->SetEnabled(true);
 
@@ -238,7 +240,6 @@ void Ship::SetController(ShipController *c)
 	m_controller->m_ship = this;
 }
 
-
 float Ship::GetPercentHull() const
 {
 	return 100.0f * (m_stats.hull_mass_left / float(m_type->hullMass));
@@ -281,6 +282,11 @@ double Ship::GetSpeedReachedWithFuel() const
 
 bool Ship::OnDamage(Object *attacker, float kgDamage)
 {
+	if (m_invulnerable) {
+		Sound::BodyMakeNoise(this, "Hull_hit_Small", 0.5f);
+		return true;
+	}
+
 	if (!IsDead()) {
 		float dam = kgDamage*0.001f;
 		if (m_stats.shield_mass_left > 0.0f) {

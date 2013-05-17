@@ -247,6 +247,9 @@ public:
 	// actually changing state
 	mutable sigc::signal<void> onFlavourChanged;
 
+	bool IsInvulnerable() const { return m_invulnerable; }
+	void SetInvulnerable(bool b) { m_invulnerable = b; }
+
 protected:
 	virtual void Save(Serializer::Writer &wr, Space *space);
 	virtual void Load(Serializer::Reader &rd, Space *space);
@@ -280,6 +283,8 @@ private:
     void SetShipId(const ShipType::Id &shipId);
 	void OnEquipmentChange(Equip::Type e);
 	void EnterHyperspace();
+
+	bool m_invulnerable;
 
 	shipstats_t m_stats;
 	const ShipType *m_type;
@@ -319,8 +324,5 @@ private:
 	ScopedPtr<NavLights> m_navLights;
 };
 
-
-
 #endif /* _SHIP_H */
-
 
