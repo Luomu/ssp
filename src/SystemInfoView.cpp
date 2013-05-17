@@ -26,8 +26,8 @@ SystemInfoView::SystemInfoView()
 void SystemInfoView::OnBodySelected(SystemBody *b)
 {
 	{
-		printf("\n");
-		printf("Gas, liquid, ice: %f, %f, %f\n", b->m_volatileGas.ToFloat(), b->m_volatileLiquid.ToFloat(), b->m_volatileIces.ToFloat());
+		const SystemPath &p = b->path;
+		printf("%s: %d %d %d %u %u\n", b->name.c_str(), p.sectorX, p.sectorY, p.sectorZ, p.systemIndex, p.bodyIndex);
 	}
 
 	SystemPath path = m_system->GetPathOf(b);

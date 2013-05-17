@@ -28,6 +28,7 @@ local doLoadDialog = function ()
 end
 
 local buttonDefs = {
+	{ t("Start at Tau Ceti"), function () Game.StartGame(SystemPath.New(0,-2,-1,1,6)) setupPlayerWave() end },
 	{ t("Start at Earth"),    function () Game.StartGame(SystemPath.New(0,0,0,0,9))   setupPlayerWave() end },
 	{ t("Start at New Hope"), function () Game.StartGame(SystemPath.New(1,-1,-1,0,4)) setupPlayerWave() end },
 	{ t("Load game"),         doLoadDialog },
@@ -46,7 +47,7 @@ for i = 1,#buttonDefs do
 	buttonSet[i] = button
 end
 
-local menu = 
+local menu =
 	ui:Grid(1, { 0.2, 0.6, 0.2 })
 		:SetRow(0, {
 			ui:Grid({ 0.1, 0.8, 0.1 }, 1)
