@@ -23,6 +23,8 @@ static Sound::Event s_soundHyperdrive;
 Player::Player(ShipType::Id shipId): Ship(shipId)
 {
 	SetController(new PlayerShipController());
+
+	m_speedLines.Reset(new SpeedLines(this));
 }
 
 void Player::Save(Serializer::Writer &wr, Space *space)

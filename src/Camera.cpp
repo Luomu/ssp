@@ -165,8 +165,8 @@ void Camera::Draw(Renderer *renderer, const Body *excludeBody)
 		BodyAttrs *attrs = &(*i);
 
 		// explicitly exclude a single body if specified (eg player)
-		if (attrs->body == excludeBody)
-			continue;
+		//if (attrs->body == excludeBody)
+		//	continue;
 
 		double rad = attrs->body->GetClipRadius();
 		if (!m_frustum.TestPointInfinite((*i).viewCoords, rad))

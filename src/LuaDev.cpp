@@ -7,6 +7,7 @@
 #include "Player.h"
 #include "Ship.h"
 #include "WorldView.h"
+#include "Game.h"
 #include "scenegraph/ModelSkin.h"
 
 /*
