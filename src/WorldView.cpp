@@ -205,6 +205,9 @@ void WorldView::InitObject()
 	const Graphics::TextureDescriptor &descriptor = b.GetDescriptor();
 	m_indicatorMousedirSize = vector2f(descriptor.dataSize.x*descriptor.texSize.x,descriptor.dataSize.y*descriptor.texSize.y);
 
+	if (Pi::config->Int("SpeedLines") == 1)
+		m_speedLines.Reset(new SpeedLines(Pi::player));
+
 	//get near & far clipping distances
 	//XXX m_renderer not set yet
 	float znear;
@@ -378,6 +381,7 @@ void WorldView::Draw3D()
 	assert(Pi::player);
 	assert(!Pi::player->IsDead());
 	m_camera->Draw(m_renderer, GetCamType() == CAM_INTERNAL ? Pi::player : 0);
+	if (m_speedLines.Valid()) m_speedLines->Render(m_renderer);
 }
 
 void WorldView::OnToggleLabels()
@@ -392,7 +396,6 @@ void WorldView::ShowAll()
 	View::ShowAll(); // by default, just delegate back to View
 	RefreshButtonStateAndVisibility();
 }
-
 
 static Color get_color_for_warning_meter_bar(float v) {
 	Color c;
@@ -820,6 +823,16 @@ void WorldView::Update()
 
 	UpdateProjectedObjects();
 
+	if (m_speedLines.Valid()) {
+		m_speedLines->Update(Pi::game->GetTimeStep());
+		const Frame *cam_frame = m_camera->GetCamFrame();
+		matrix4x4d trans;
+		Frame::GetFrameRenderTransform(m_speedLines->GetShip()->GetFrame(), cam_frame, trans);
+		trans[12] = trans[13] = trans[14] = 0.0;
+		trans[15] = 1.0;
+		m_speedLines->SetTransform(trans);
+	}
+
 	// target object under the crosshairs. must be done after
 	// UpdateProjectedObjects() to be sure that m_projectedPos does not have
 	// contain references to deleted objects
@@ -1055,8 +1068,8 @@ void WorldView::UpdateCommsOptions()
 				button = AddCommsOption(Lang::REQUEST_DOCKING_CLEARANCE, ypos, optnum++);
 				button->onClick.connect(sigc::bind(sigc::ptr_fun(&PlayerRequestDockingClearance), reinterpret_cast<SpaceStation*>(navtarget)));
 				ypos += 32;
-			} 
-			
+			}
+
 			if( hasAutopilot )
 			{
 				button = AddCommsOption(Lang::AUTOPILOT_DOCK_WITH_STATION, ypos, optnum++);

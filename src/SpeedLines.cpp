@@ -92,7 +92,7 @@ void SpeedLines::Update(float time)
 	}
 }
 
-void SpeedLines::Render(Graphics::Renderer *r, const matrix4x4f &trans)
+void SpeedLines::Render(Graphics::Renderer *r)
 {
 	if (!m_visible) return;
 
@@ -111,7 +111,7 @@ void SpeedLines::Render(Graphics::Renderer *r, const matrix4x4f &trans)
 		vtx += 2;
 	}
 
-	r->SetTransform(trans);
+	r->SetTransform(m_transform);
 	r->SetBlendMode(Graphics::BLEND_ALPHA_ONE);
 	r->SetDepthWrite(false);
 	r->SetDepthTest(true);

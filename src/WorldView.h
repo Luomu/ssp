@@ -12,6 +12,7 @@
 #include "Background.h"
 #include "EquipType.h"
 #include "CameraController.h"
+#include "SpeedLines.h"
 
 class Body;
 class Frame;
@@ -113,6 +114,7 @@ private:
 	void MouseButtonDown(int button, int x, int y);
 
 	NavTunnelWidget *m_navTunnel;
+	ScopedPtr<SpeedLines> m_speedLines;
 
 	Gui::ImageButton *m_hyperspaceButton;
 

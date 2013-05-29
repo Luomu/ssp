@@ -12,7 +12,6 @@
 #include "NavLights.h"
 #include "Serializer.h"
 #include "ShipType.h"
-#include "SpeedLines.h"
 #include "scenegraph/SceneGraph.h"
 #include "scenegraph/ModelSkin.h"
 #include <list>
@@ -271,8 +270,6 @@ protected:
 	float m_ecmRecharge;
 
 	ShipController *m_controller;
-
-	ScopedPtr<SpeedLines> m_speedLines;
 
 private:
 	float GetECMRechargeTime();

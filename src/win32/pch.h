@@ -47,7 +47,6 @@
 #include "gui/GuiVScrollPortal.h"
 #include "gui/GuiWidget.h"
 #include "MarketAgent.h"
-#include "matrix4x4.h"
 #include "ModelBody.h"
 #include "Random.h"
 #include "Object.h"
@@ -65,4 +64,3 @@
 #include "SystemInfoView.h"
 #include "SystemView.h"
 #include "View.h"
-#include "WorldView.h"

@@ -949,8 +949,6 @@ void Ship::StaticUpdate(const float timeStep)
 
 	if (IsDead()) return;
 
-	if (m_speedLines.Valid()) m_speedLines->Update(timeStep);
-
 	if (m_controller) m_controller->StaticUpdate(timeStep);
 
 	if (GetHullTemperature() > 1.0)
@@ -1131,18 +1129,6 @@ void Ship::Render(Graphics::Renderer *renderer, const Camera *camera, const vect
 
 	//strncpy(params.pText[0], GetLabel().c_str(), sizeof(params.pText));
 	RenderModel(renderer, camera, viewCoords, viewTransform);
-
-	if (m_speedLines.Valid()) {
-		glPushMatrix();
-		matrix4x4f trans;
-		for (int i=0; i<12; i++) trans[i] = float(viewTransform[i]);
-		trans[12] = 0.f;
-		trans[13] = 0.f;
-		trans[14] = 0.f;
-		trans[15] = 1.0f;
-		m_speedLines->Render(renderer, trans);
-		glPopMatrix();
-	}
 
 	// draw shield recharge bubble
 	if (m_stats.shield_mass_left < m_stats.shield_mass) {

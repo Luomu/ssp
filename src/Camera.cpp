@@ -104,6 +104,9 @@ void Camera::Draw(Renderer *renderer, const Body *excludeBody)
 
 	m_renderer = renderer;
 
+	m_renderer->SetDepthWrite(true);
+	m_renderer->SetDepthTest(true);
+
 	glPushAttrib(GL_ALL_ATTRIB_BITS & (~GL_POINT_BIT));
 
 	m_renderer->SetPerspectiveProjection(m_fovAng, m_width/m_height, m_zNear, m_zFar);
@@ -165,8 +168,8 @@ void Camera::Draw(Renderer *renderer, const Body *excludeBody)
 		BodyAttrs *attrs = &(*i);
 
 		// explicitly exclude a single body if specified (eg player)
-		//if (attrs->body == excludeBody)
-		//	continue;
+		if (attrs->body == excludeBody)
+			continue;
 
 		double rad = attrs->body->GetClipRadius();
 		if (!m_frustum.TestPointInfinite((*i).viewCoords, rad))

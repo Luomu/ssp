@@ -14,7 +14,11 @@ public:
 	SpeedLines(Ship*);
 
 	void Update(float time);
-	void Render(Graphics::Renderer*, const matrix4x4f&);
+	void Render(Graphics::Renderer*);
+
+	void SetTransform(const matrix4x4d &t) { m_transform = t; }
+
+	Ship *GetShip() const { return m_ship; }
 
 private:
 	Ship *m_ship;
@@ -23,6 +27,8 @@ private:
 
 	std::vector<vector3f> m_vertices;
 	std::vector<Color> m_vtxColors;
+
+	matrix4x4d m_transform;
 
 	bool m_visible;
 	float m_lineLength;
