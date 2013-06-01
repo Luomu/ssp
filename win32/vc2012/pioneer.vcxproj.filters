@@ -464,13 +464,7 @@
     <ClInclude Include="..\..\src\AmbientSounds.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\BezierCurve.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\Body.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\BufferObject.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\buildopts.h">
@@ -537,9 +531,6 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\LuaEquipDef.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\LuaCargoBody.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\LuaChatForm.h">
@@ -624,9 +615,6 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\RefCounted.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\RefList.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\SectorView.h">
@@ -926,11 +914,6 @@
     <ClInclude Include="..\..\src\SpeedLines.h">
       <Filter>src</Filter>
     </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="..\..\src\Makefile.am">
-      <Filter>src</Filter>
-    </None>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\..\src\win32\pioneer.rc">

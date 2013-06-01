@@ -161,6 +161,8 @@ public:
 
 	static JobQueue *Jobs() { return jobQueue.Get();}
 
+	static Graphics::RenderTarget *pRTarget;
+
 private:
 	static void HandleEvents();
 	static void InitJoysticks();

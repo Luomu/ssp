@@ -131,6 +131,7 @@ Graphics::Renderer *Pi::renderer;
 RefCountedPtr<UI::Context> Pi::ui;
 ModelCache *Pi::modelCache;
 Intro *Pi::intro;
+Graphics::RenderTarget *Pi::pRTarget;
 
 #if WITH_OBJECTVIEWER
 ObjectViewerView *Pi::objectViewerView;
@@ -321,6 +322,29 @@ void Pi::Init()
 		fwrite(s.c_str(), 1, s.size(), f);
 		fclose(f);
 	}
+
+/*	@fluffyfreak here's a rendertarget implementation you can use for oculusing and other things. It's pretty simple:
+	 - fill out a RenderTargetDesc struct and call Renderer::CreateRenderTarget
+	 - pass target to Renderer::SetRenderTarget to start rendering to texture
+	 - set up viewport, clear etc, then draw as usual
+	 - SetRenderTarget(0) to resume render to screen
+	 - you can access the attached texture with GetColorTexture to use it with a material
+	You can reuse the same target with multiple textures. 
+	In that case, leave the color format to NONE so the initial texture is not created, then use SetColorTexture to attach your own.
+*/
+	Graphics::RenderTargetDesc rtDesc;
+	// 1280×800 (640×800 per eye)
+	rtDesc.width = videoSettings.width;
+	rtDesc.height = videoSettings.height;
+	rtDesc.colorFormat = Graphics::TEXTURE_RGBA;
+	rtDesc.allowDepthTexture = false;
+
+	Pi::pRTarget = Pi::renderer->CreateRenderTarget(rtDesc);
+	Graphics::MaterialDescriptor md;
+	md.textures = 1;
+	Graphics::Material *pMat = Pi::renderer->CreateMaterial(md);
+	pMat->texture0 = Pi::pRTarget->GetColorTexture();
+
 
 	OS::LoadWindowIcon();
 	SDL_WM_SetCaption("Pioneer","Pioneer");
@@ -1019,6 +1043,8 @@ void Pi::MainLoop()
 			}
 		}
 
+		const bool bTargetSet = Pi::renderer->SetRenderTarget(pRTarget);
+
 		Pi::renderer->BeginFrame();
 		Pi::renderer->SetTransform(matrix4x4f::Identity());
 
@@ -1053,6 +1079,10 @@ void Pi::MainLoop()
 #endif
 
 		Pi::renderer->SwapBuffers();
+
+		if( bTargetSet ) {
+			Pi::renderer->SetRenderTarget(NULL);
+		}
 
 		// game exit or failed load from GameMenuView will have cleared
 		// Pi::game. we can't continue.
