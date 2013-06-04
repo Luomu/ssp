@@ -51,6 +51,7 @@ public:
 
 protected:
 	virtual void OnSwitchTo();
+	virtual void OnSwitchFrom();
 private:
 	void InitObject();
 

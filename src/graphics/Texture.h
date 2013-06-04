@@ -16,7 +16,9 @@ enum TextureFormat {
 	TEXTURE_LUMINANCE_ALPHA, // luminance value put into R,G,B components; separate alpha value
 	TEXTURE_INTENSITY,
 	TEXTURE_ALPHA,
-	TEXTURE_DEPTH //default depth, may be 16, 24 or 32
+	TEXTURE_DEPTH, //default depth, may be 16, 24 or 32
+	TEXTURE_DXT1,	// these are source textures in these formats, no conversion necessary
+	TEXTURE_DXT5
 };
 
 enum ImageFormat {
@@ -24,7 +26,9 @@ enum ImageFormat {
 	IMAGE_RGB,
 	IMAGE_LUMINANCE_ALPHA,
 	IMAGE_INTENSITY,
-	IMAGE_ALPHA
+	IMAGE_ALPHA,
+	IMAGE_DXT1,	// these are source textures in these formats, no conversion necessary
+	IMAGE_DXT5
 };
 
 enum ImageType {
@@ -41,15 +45,15 @@ enum TextureSampleMode {
 class TextureDescriptor {
 public:
 	TextureDescriptor() :
-		format(TEXTURE_RGBA), dataSize(1.0f), texSize(1.0f), sampleMode(LINEAR_CLAMP), generateMipmaps(false), allowCompression(true)
+		format(TEXTURE_RGBA), dataSize(1.0f), texSize(1.0f), sampleMode(LINEAR_CLAMP), generateMipmaps(false), allowCompression(true), numberOfMipMaps(0)
 	{}
 
-	TextureDescriptor(TextureFormat _format, const vector2f &_dataSize, TextureSampleMode _sampleMode = LINEAR_CLAMP, bool _generateMipmaps = false, bool _allowCompression = true) :
-		format(_format), dataSize(_dataSize), texSize(1.0f), sampleMode(_sampleMode), generateMipmaps(_generateMipmaps), allowCompression(_allowCompression)
+	TextureDescriptor(TextureFormat _format, const vector2f &_dataSize, TextureSampleMode _sampleMode = LINEAR_CLAMP, bool _generateMipmaps = false, bool _allowCompression = true, unsigned int _numberOfMipMaps = 0) :
+		format(_format), dataSize(_dataSize), texSize(1.0f), sampleMode(_sampleMode), generateMipmaps(_generateMipmaps), allowCompression(_allowCompression), numberOfMipMaps(_numberOfMipMaps)
 	{}
 
-	TextureDescriptor(TextureFormat _format, const vector2f &_dataSize, const vector2f &_texSize, TextureSampleMode _sampleMode = LINEAR_CLAMP, bool _generateMipmaps = false, bool _allowCompression = true) :
-		format(_format), dataSize(_dataSize), texSize(_texSize), sampleMode(_sampleMode), generateMipmaps(_generateMipmaps), allowCompression(_allowCompression)
+	TextureDescriptor(TextureFormat _format, const vector2f &_dataSize, const vector2f &_texSize, TextureSampleMode _sampleMode = LINEAR_CLAMP, bool _generateMipmaps = false, bool _allowCompression = true, unsigned int _numberOfMipMaps = 0) :
+		format(_format), dataSize(_dataSize), texSize(_texSize), sampleMode(_sampleMode), generateMipmaps(_generateMipmaps), allowCompression(_allowCompression), numberOfMipMaps(_numberOfMipMaps)
 	{}
 
 	const TextureFormat format;
@@ -58,6 +62,7 @@ public:
 	const TextureSampleMode sampleMode;
 	const bool generateMipmaps;
 	const bool allowCompression;
+	const unsigned int numberOfMipMaps;
 
 	void operator=(const TextureDescriptor &o) {
 		const_cast<TextureFormat&>(format) = o.format;
@@ -66,6 +71,7 @@ public:
 		const_cast<TextureSampleMode&>(sampleMode) = o.sampleMode;
 		const_cast<bool&>(generateMipmaps) = o.generateMipmaps;
 		const_cast<bool&>(allowCompression) = o.allowCompression;
+		const_cast<unsigned int&>(numberOfMipMaps) = o.numberOfMipMaps;
 	}
 };
 
@@ -74,7 +80,7 @@ public:
 	const TextureDescriptor &GetDescriptor() const { return m_descriptor; }
 
 	// XXX include position
-	virtual void Update(const void *data, const vector2f &dataSize, ImageFormat format, ImageType type) = 0;
+	virtual void Update(const void *data, const vector2f &dataSize, ImageFormat format, ImageType type, const unsigned int numMips = 0) = 0;
 	virtual void SetSampleMode(TextureSampleMode) = 0;
 
 	virtual ~Texture() {}
