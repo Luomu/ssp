@@ -161,6 +161,8 @@ public:
 
 	static JobQueue *Jobs() { return jobQueue.Get();}
 
+	static bool DrawGUI;
+
 	static Graphics::RenderTarget *pRTarget;
 
 private:

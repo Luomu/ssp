@@ -64,6 +64,16 @@ static void print_info(const SystemBody *sbody, const Terrain *terrain)
 */
 }
 
+// static 
+void GeoSphere::UpdateAllGeoSpheres()
+{
+	for(std::vector<GeoSphere*>::iterator i = s_allGeospheres.begin(); i != s_allGeospheres.end(); ++i) 
+	{
+		(*i)->Update();
+	}
+}
+
+// static 
 void GeoSphere::OnChangeDetailLevel()
 {
 //#warning "cancel jobs"

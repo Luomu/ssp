@@ -7,6 +7,7 @@
 #include "libs.h"
 #include <list>
 #include "HyperspaceCloud.h"
+#include "HudTrail.h"
 #include "MarketAgent.h"
 #include "Ship.h"
 #include "ShipController.h"
@@ -44,6 +45,17 @@ public:
 	virtual Ship::HyperjumpStatus StartHyperspaceCountdown(const SystemPath &dest);
 	virtual void ResetHyperspaceCountdown();
 
+	virtual void StaticUpdate(const float timeStep);
+
+	struct RadarContact {
+		RadarContact() : body(0), fresh(false), trail(0) { }
+		~RadarContact() { body = 0; delete trail; }
+		Body *body;
+		HudTrail* trail;
+		bool fresh;
+	};
+	std::list<RadarContact> &GetContacts() { return m_radarContacts; }
+
 protected:
 	virtual void Save(Serializer::Writer &wr, Space *space);
 	virtual void Load(Serializer::Reader &rd, Space *space);
@@ -54,6 +66,8 @@ protected:
 	/* MarketAgent stuff */
 	void Bought(Equip::Type t);
 	void Sold(Equip::Type t);
+
+	std::list<RadarContact> m_radarContacts;
 };
 
 #endif /* _PLAYER_H */
