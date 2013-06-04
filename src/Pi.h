@@ -164,6 +164,8 @@ public:
 	static bool DrawGUI;
 
 	static Graphics::RenderTarget *pRTarget;
+	static RefCountedPtr<Graphics::Texture> m_texture;
+	static ScopedPtr<Gui::TexturedQuad> m_quad;
 
 private:
 	static void HandleEvents();

@@ -133,6 +133,8 @@ RefCountedPtr<UI::Context> Pi::ui;
 ModelCache *Pi::modelCache;
 Intro *Pi::intro;
 Graphics::RenderTarget *Pi::pRTarget;
+RefCountedPtr<Graphics::Texture> Pi::m_texture;
+ScopedPtr<Gui::TexturedQuad> Pi::m_quad;
 
 #if WITH_OBJECTVIEWER
 ObjectViewerView *Pi::objectViewerView;
@@ -337,14 +339,12 @@ void Pi::Init()
 	// 1280×800 (640×800 per eye)
 	rtDesc.width = videoSettings.width;
 	rtDesc.height = videoSettings.height;
-	rtDesc.colorFormat = Graphics::TEXTURE_RGBA;
+	rtDesc.colorFormat = Graphics::TEXTURE_RGB;
 	rtDesc.allowDepthTexture = false;
 
 	Pi::pRTarget = Pi::renderer->CreateRenderTarget(rtDesc);
-	Graphics::MaterialDescriptor md;
-	md.textures = 1;
-	Graphics::Material *pMat = Pi::renderer->CreateMaterial(md);
-	pMat->texture0 = Pi::pRTarget->GetColorTexture();
+	Pi::m_texture.Reset(Pi::pRTarget->GetColorTexture());
+	Pi::m_quad.Reset(new Gui::TexturedQuad(m_texture.Get()));
 
 
 	OS::LoadWindowIcon();
@@ -1101,10 +1101,15 @@ void Pi::MainLoop()
 		}
 #endif
 
-		Pi::renderer->SwapBuffers();
+		//Pi::renderer->SwapBuffers();
 
 		if( bTargetSet ) {
 			Pi::renderer->SetRenderTarget(NULL);
+			Pi::renderer->BeginFrame();
+			Pi::renderer->SetTransform(matrix4x4f::Identity());
+			Pi::m_quad->Draw( Pi::renderer, vector2f(0.0f,0.0f), vector2f(Graphics::GetScreenWidth(), Graphics::GetScreenHeight()) );
+			Pi::renderer->EndFrame();
+			Pi::renderer->SwapBuffers();
 		}
 
 		// game exit or failed load from GameMenuView will have cleared
