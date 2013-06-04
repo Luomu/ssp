@@ -382,6 +382,10 @@ void WorldView::Draw3D()
 	assert(!Pi::player->IsDead());
 	m_camera->Draw(m_renderer, GetCamType() == CAM_INTERNAL ? Pi::player : 0);
 	if (m_speedLines.Valid()) m_speedLines->Render(m_renderer);
+
+	//draw contact trails
+	for (auto it = Pi::player->GetContacts().begin(); it != Pi::player->GetContacts().end(); ++it)
+		it->trail->Render(m_renderer);
 }
 
 void WorldView::OnToggleLabels()
@@ -827,7 +831,12 @@ void WorldView::Update()
 		m_speedLines->Update(Pi::game->GetTimeStep());
 		const Frame *cam_frame = m_camera->GetCamFrame();
 		matrix4x4d trans;
-		Frame::GetFrameRenderTransform(m_speedLines->GetShip()->GetFrame(), cam_frame, trans);
+		Frame::GetFrameRenderTransform(Pi::player->GetFrame(), cam_frame, trans);
+
+		//draw contact trails
+		for (auto it = Pi::player->GetContacts().begin(); it != Pi::player->GetContacts().end(); ++it)
+			it->trail->SetTransform(trans);
+
 		trans[12] = trans[13] = trans[14] = 0.0;
 		trans[15] = 1.0;
 		m_speedLines->SetTransform(trans);

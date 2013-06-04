@@ -239,3 +239,46 @@ void Player::ResetHyperspaceCountdown()
 	s_soundHyperdrive.Play("Hyperdrive_Abort");
 	Ship::ResetHyperspaceCountdown();
 }
+
+void Player::StaticUpdate(const float time)
+{
+	Ship::StaticUpdate(time);
+
+	//Find nearby contacts, same range as scanner. Scanner should use these
+	//contacts, worldview labels too.
+	Space::BodyNearList nearby;
+	Pi::game->GetSpace()->GetBodiesMaybeNear(Pi::player, 100000.0f, nearby);
+	for (Space::BodyNearIterator i = nearby.begin(); i != nearby.end(); ++i) {
+		if ((*i) == Pi::player || !(*i)->IsType(Object::SHIP)) continue;
+		if ((*i)->IsDead()) continue;
+
+		auto cit = m_radarContacts.begin();
+		while (cit != m_radarContacts.end()) {
+			if (cit->body == (*i)) break;
+			++cit;
+		}
+
+		//create new contact or refresh old
+		if (cit == m_radarContacts.end()) {
+			m_radarContacts.push_back(RadarContact());
+			RadarContact &rc = m_radarContacts.back();
+			rc.body = (*i);
+			rc.fresh = true;
+			rc.trail = new HudTrail(rc.body, Color::BLUE); //XXX IFF
+		} else {
+			cit->fresh = true;
+		}
+	}
+
+	//update contacts and delete stale ones
+	auto it = m_radarContacts.begin();
+	while (it != m_radarContacts.end()) {
+		if (!it->fresh) {
+			m_radarContacts.erase(it++);
+		} else {
+			it->trail->Update(time);
+			it->fresh = false;
+			++it;
+		}
+	}
+}
