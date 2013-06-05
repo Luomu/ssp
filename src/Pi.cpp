@@ -347,7 +347,7 @@ void Pi::Init()
 		vector2f(videoSettings.width, videoSettings.height),
 		Graphics::LINEAR_CLAMP, false, false, 0);
 	Pi::m_texture.Reset(Pi::renderer->CreateTexture(texDesc));
-	Pi::m_quad.Reset(new Gui::TexturedQuad(m_texture.Get()));
+	Pi::m_quad.Reset(new Gui::TexturedQuad(m_texture.Get(), false));
 
 	Pi::pRTarget = Pi::renderer->CreateRenderTarget(rtDesc);
 
@@ -1119,9 +1119,6 @@ void Pi::MainLoop()
 				glPushMatrix();
 				glTranslatef(0.0f, 0.0f, 0.0f);
 				Pi::m_quad->Draw( Pi::renderer, vector2f(0.0f,0.0f), vector2f(Graphics::GetScreenWidth(), Graphics::GetScreenHeight()) );
-				Gui::Screen::PushFont("ConsoleFont");
-				Gui::Screen::RenderString("AAAAARGH!", 0, 0);
-				Gui::Screen::PopFont();
 				glPopMatrix();
 				Gui::Screen::LeaveOrtho();
 			}

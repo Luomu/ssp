@@ -21,7 +21,7 @@ namespace Gui {
 // makes it seem odd for Graphics::Drawables
 class TexturedQuad : public Graphics::Drawables::Drawable {
 public:
-	TexturedQuad(Graphics::Texture *texture) : m_texture(RefCountedPtr<Graphics::Texture>(texture)) {}
+	TexturedQuad(Graphics::Texture *texture, const bool bReverseWinding=true) : m_texture(RefCountedPtr<Graphics::Texture>(texture)), m_bReverseWinding(bReverseWinding) {}
 	virtual ~TexturedQuad() {}
 	virtual void Draw(Graphics::Renderer *r) { Draw(r, vector2f(0.0f), vector2f(1.0f)); }
 	void Draw(Graphics::Renderer *r, const Color &tint) { Draw(r, vector2f(0.0f), vector2f(1.0f), tint); }
@@ -32,6 +32,7 @@ public:
 private:
 	RefCountedPtr<Graphics::Texture> m_texture;
 	ScopedPtr<Graphics::Material> m_material;
+	const bool m_bReverseWinding;
 };
 
 }
