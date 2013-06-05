@@ -339,12 +339,19 @@ void Pi::Init()
 	// 1280×800 (640×800 per eye)
 	rtDesc.width = videoSettings.width;
 	rtDesc.height = videoSettings.height;
-	rtDesc.colorFormat = Graphics::TEXTURE_RGB;
+	//rtDesc.colorFormat = Graphics::TEXTURE_RGB;
 	rtDesc.allowDepthTexture = false;
 
-	Pi::pRTarget = Pi::renderer->CreateRenderTarget(rtDesc);
-	Pi::m_texture.Reset(Pi::pRTarget->GetColorTexture());
+	Graphics::TextureDescriptor texDesc(
+		Graphics::TEXTURE_RGB, 
+		vector2f(videoSettings.width, videoSettings.height),
+		Graphics::LINEAR_CLAMP, false, false, 0);
+	Pi::m_texture.Reset(Pi::renderer->CreateTexture(texDesc));
 	Pi::m_quad.Reset(new Gui::TexturedQuad(m_texture.Get()));
+
+	Pi::pRTarget = Pi::renderer->CreateRenderTarget(rtDesc);
+
+	pRTarget->SetColorTexture(Pi::m_texture.Get());
 
 
 	OS::LoadWindowIcon();
@@ -1107,7 +1114,17 @@ void Pi::MainLoop()
 			Pi::renderer->SetRenderTarget(NULL);
 			Pi::renderer->BeginFrame();
 			Pi::renderer->SetTransform(matrix4x4f::Identity());
-			Pi::m_quad->Draw( Pi::renderer, vector2f(0.0f,0.0f), vector2f(Graphics::GetScreenWidth(), Graphics::GetScreenHeight()) );
+			{
+				Gui::Screen::EnterOrtho();
+				glPushMatrix();
+				glTranslatef(0.0f, 0.0f, 0.0f);
+				Pi::m_quad->Draw( Pi::renderer, vector2f(0.0f,0.0f), vector2f(Graphics::GetScreenWidth(), Graphics::GetScreenHeight()) );
+				Gui::Screen::PushFont("ConsoleFont");
+				Gui::Screen::RenderString("AAAAARGH!", 0, 0);
+				Gui::Screen::PopFont();
+				glPopMatrix();
+				Gui::Screen::LeaveOrtho();
+			}
 			Pi::renderer->EndFrame();
 			Pi::renderer->SwapBuffers();
 		}
