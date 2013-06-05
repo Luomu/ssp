@@ -340,10 +340,11 @@ void Pi::Init()
 	rtDesc.width = videoSettings.width;
 	rtDesc.height = videoSettings.height;
 	//rtDesc.colorFormat = Graphics::TEXTURE_RGB;
+	rtDesc.depthFormat = Graphics::TEXTURE_DEPTH;
 	rtDesc.allowDepthTexture = false;
 
 	Graphics::TextureDescriptor texDesc(
-		Graphics::TEXTURE_RGB, 
+		Graphics::TEXTURE_RGBA, 
 		vector2f(videoSettings.width, videoSettings.height),
 		Graphics::LINEAR_CLAMP, false, false, 0);
 	Pi::m_texture.Reset(Pi::renderer->CreateTexture(texDesc));
