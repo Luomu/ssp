@@ -335,14 +335,6 @@ void Pi::Init()
 	You can reuse the same target with multiple textures. 
 	In that case, leave the color format to NONE so the initial texture is not created, then use SetColorTexture to attach your own.
 */
-	Graphics::RenderTargetDesc rtDesc;
-	// 1280×800 (640×800 per eye)
-	rtDesc.width = videoSettings.width;
-	rtDesc.height = videoSettings.height;
-	//rtDesc.colorFormat = Graphics::TEXTURE_RGB;
-	rtDesc.depthFormat = Graphics::TEXTURE_DEPTH;
-	rtDesc.allowDepthTexture = false;
-
 	Graphics::TextureDescriptor texDesc(
 		Graphics::TEXTURE_RGBA, 
 		vector2f(videoSettings.width, videoSettings.height),
@@ -350,6 +342,13 @@ void Pi::Init()
 	Pi::m_texture.Reset(Pi::renderer->CreateTexture(texDesc));
 	Pi::m_quad.Reset(new Gui::TexturedQuad(m_texture.Get(), false));
 
+	// Oculus Rift is 1280×800 (640×800 per eye)
+	Graphics::RenderTargetDesc rtDesc(
+		videoSettings.width,
+		videoSettings.height,
+		Graphics::TEXTURE_FORMAT_NONE,		// don't create a texture
+		Graphics::TEXTURE_DEPTH,
+		false);
 	Pi::pRTarget = Pi::renderer->CreateRenderTarget(rtDesc);
 
 	pRTarget->SetColorTexture(Pi::m_texture.Get());
