@@ -135,6 +135,7 @@ Intro *Pi::intro;
 Graphics::RenderTarget *Pi::pRTarget;
 RefCountedPtr<Graphics::Texture> Pi::m_texture;
 ScopedPtr<Gui::TexturedQuad> Pi::m_quad;
+bool Pi::godMode = false;
 
 #if WITH_OBJECTVIEWER
 ObjectViewerView *Pi::objectViewerView;
@@ -1118,7 +1119,7 @@ void Pi::MainLoop()
 				Gui::Screen::EnterOrtho();
 				glPushMatrix();
 				glTranslatef(0.0f, 0.0f, 0.0f);
-				Pi::m_quad->Draw( Pi::renderer, vector2f(0.0f,0.0f), vector2f(Graphics::GetScreenWidth(), Graphics::GetScreenHeight()) );
+				Pi::m_quad->Draw( Pi::renderer, vector2f(0.0f,0.0f), vector2f(800, 600) );
 				glPopMatrix();
 				Gui::Screen::LeaveOrtho();
 			}

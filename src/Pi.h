@@ -105,6 +105,8 @@ public:
 	static void Message(const std::string &message, const std::string &from = "", enum MsgLevel level = MSG_NORMAL);
 	static std::string GetSaveDir();
 	static SceneGraph::Model *FindModel(const std::string&, bool allowPlaceholder = true);
+	static bool IsGodModeOn() { return godMode; }
+	static bool ToggleGodMode() { godMode=!godMode; return godMode; }
 
 	static const char SAVE_DIR_NAME[];
 
@@ -210,6 +212,7 @@ private:
 	static bool navTunnelDisplayed;
 
 	static Gui::Fixed *menu;
+	static bool godMode;
 };
 
 #endif /* _PI_H */

@@ -269,15 +269,15 @@ void Ship::SetFuel(const double f)
 }
 
 double Ship::GetFuelUseRate() const {
-	const double denominator = GetShipType()->fuelTankMass * GetShipType()->effectiveExhaustVelocity * 10;
-	return denominator > 0 ? -GetShipType()->linThrust[ShipType::THRUSTER_FORWARD]/denominator : 1e9;
+	const double denominator = GetShipType()->fuelTankMass * GetShipType()->effectiveExhaustVelocity * 10.0;
+	return denominator > 0.0 ? -GetShipType()->linThrust[ShipType::THRUSTER_FORWARD]/denominator : 1e9;
 }
 
 // returns speed that can be reached using fuel minus reserve according to the Tsiolkovsky equation
 double Ship::GetSpeedReachedWithFuel() const
 {
-	const double fuelmass = 1000*GetShipType()->fuelTankMass * (m_thrusterFuel - m_reserveFuel);
-	if (fuelmass < 0) return 0.0;
+	const double fuelmass = 1000.0*GetShipType()->fuelTankMass * (m_thrusterFuel - m_reserveFuel);
+	if (fuelmass < 0.0) return 0.0;
 	return GetShipType()->effectiveExhaustVelocity * log(GetMass()/(GetMass()-fuelmass));
 }
 
@@ -293,15 +293,17 @@ bool Ship::OnDamage(Object *attacker, float kgDamage)
 		if (m_stats.shield_mass_left > 0.0f) {
 			if (m_stats.shield_mass_left > dam) {
 				m_stats.shield_mass_left -= dam;
-				dam = 0;
+				dam = 0.0f;
 			} else {
 				dam -= m_stats.shield_mass_left;
-				m_stats.shield_mass_left = 0;
+				m_stats.shield_mass_left = 0.0f;
 			}
 		}
 
-		m_stats.hull_mass_left -= dam;
-		if (m_stats.hull_mass_left < 0) {
+		if(!Pi::IsGodModeOn()) {
+			m_stats.hull_mass_left -= dam;
+		}
+		if (m_stats.hull_mass_left < 0.0f) {
 			if (attacker) {
 				if (attacker->IsType(Object::BODY))
 					LuaEvent::Queue("onShipDestroyed", this, dynamic_cast<Body*>(attacker));
@@ -311,16 +313,14 @@ bool Ship::OnDamage(Object *attacker, float kgDamage)
 			}
 
 			Explode();
-		}
-
-		else {
+		} else {
 			if (attacker && attacker->IsType(Object::SHIP))
 				Polit::NotifyOfCrime(static_cast<Ship*>(attacker), Polit::CRIME_PIRACY);
 
 			if (Pi::rng.Double() < kgDamage)
 				Sfx::Add(this, Sfx::TYPE_DAMAGE);
 
-			if (dam < 0.01 * float(GetShipType()->hullMass))
+			if (dam < 0.01f * float(GetShipType()->hullMass))
 				Sound::BodyMakeNoise(this, "Hull_hit_Small", 1.0f);
 			else
 				Sound::BodyMakeNoise(this, "Hull_Hit_Medium", 1.0f);
@@ -381,6 +381,9 @@ bool Ship::OnCollision(Object *b, Uint32 flags, double relVel)
 //destroy ship in an explosion
 void Ship::Explode()
 {
+	if(Pi::IsGodModeOn())
+		return;
+
 	Pi::game->GetSpace()->KillBody(this);
 	Sfx::Add(this, Sfx::TYPE_EXPLOSION);
 	Sound::BodyMakeNoise(this, "Explosion_1", 1.0f);
