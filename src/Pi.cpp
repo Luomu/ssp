@@ -1150,8 +1150,6 @@ void Pi::MainLoop()
 		}
 #endif
 
-		//Pi::renderer->SwapBuffers();
-
 		if( bTargetSet ) {
 			Pi::renderer->SetRenderTarget(NULL);
 			Pi::renderer->BeginFrame();
