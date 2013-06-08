@@ -147,13 +147,25 @@ ScopedPtr<JobQueue> Pi::jobQueue;
 static void draw_progress(float progress)
 {
 	float w, h;
+	const bool bTargetSet = Pi::renderer->SetRenderTarget(Pi::pRTarget);
 	Pi::renderer->BeginFrame();
+		// render something interesting here
 	Pi::renderer->EndFrame();
-	Gui::Screen::EnterOrtho();
-	std::string msg = stringf(Lang::SIMULATING_UNIVERSE_EVOLUTION_N_BYEARS, formatarg("age", progress * 13.7f));
-	Gui::Screen::MeasureString(msg, w, h);
-	Gui::Screen::RenderString(msg, 0.5f*(Gui::Screen::GetWidth()-w), 0.5f*(Gui::Screen::GetHeight()-h));
-	Gui::Screen::LeaveOrtho();
+	if(bTargetSet) {
+		Pi::renderer->SetRenderTarget(NULL);
+	}
+
+	Pi::renderer->BeginFrame();
+	Pi::renderer->SetTransform(matrix4x4f::Identity());
+	{
+		Gui::Screen::EnterOrtho();
+		Pi::m_quad->Draw( Pi::renderer, vector2f(0.0f,0.0f), vector2f(800, 600) );
+		std::string msg = stringf(Lang::SIMULATING_UNIVERSE_EVOLUTION_N_BYEARS, formatarg("age", progress * 13.7f));
+		Gui::Screen::MeasureString(msg, w, h);
+		Gui::Screen::RenderString(msg, 0.5f*(Gui::Screen::GetWidth()-w), 0.5f*(Gui::Screen::GetHeight()-h));
+		Gui::Screen::LeaveOrtho();
+	}
+	Pi::renderer->EndFrame();
 	Pi::renderer->SwapBuffers();
 }
 
@@ -840,10 +852,26 @@ void Pi::TombStoneLoop()
 	do {
 		Pi::HandleEvents();
 		Pi::SetMouseGrab(false);
+
+		// render the scene
+		const bool bTargetSet = Pi::renderer->SetRenderTarget(Pi::pRTarget);
 		Pi::renderer->BeginFrame();
 		tombstone->Draw(_time);
 		Pi::renderer->EndFrame();
 		Gui::Draw();
+		if(bTargetSet) {
+			Pi::renderer->SetRenderTarget(NULL);
+		}
+
+		// render the rendertarget texture
+		Pi::renderer->BeginFrame();
+		Pi::renderer->SetTransform(matrix4x4f::Identity());
+		{
+			Gui::Screen::EnterOrtho();
+			Pi::m_quad->Draw( Pi::renderer, vector2f(0.0f,0.0f), vector2f(800, 600) );
+			Gui::Screen::LeaveOrtho();
+		}
+		Pi::renderer->EndFrame();
 		Pi::renderer->SwapBuffers();
 
 		Pi::frameTime = 0.001f*(SDL_GetTicks() - last_time);
@@ -932,6 +960,7 @@ void Pi::Start()
 				while (SDL_PollEvent(&event)) {}
 		}
 
+		const bool bTargetSet = Pi::renderer->SetRenderTarget(Pi::pRTarget);
 		Pi::renderer->BeginFrame();
 		Pi::renderer->SetPerspectiveProjection(75, Pi::GetScrAspect(), 1.f, 10000.f);
 		Pi::renderer->SetTransform(matrix4x4f::Identity());
@@ -940,7 +969,19 @@ void Pi::Start()
 
 		ui->Update();
 		ui->Draw();
+		if(bTargetSet) {
+			Pi::renderer->SetRenderTarget(NULL);
+		}
 
+		// render the rendertarget texture
+		Pi::renderer->BeginFrame();
+		Pi::renderer->SetTransform(matrix4x4f::Identity());
+		{
+			Gui::Screen::EnterOrtho();
+			Pi::m_quad->Draw( Pi::renderer, vector2f(0.0f,0.0f), vector2f(800, 600) );
+			Gui::Screen::LeaveOrtho();
+		}
+		Pi::renderer->EndFrame();
 		Pi::renderer->SwapBuffers();
 
 		Pi::frameTime = 0.001f*(SDL_GetTicks() - last_time);
