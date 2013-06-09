@@ -46,12 +46,15 @@ PlayerShipController::PlayerShipController() :
 	m_fireMissileKey = KeyBindings::fireMissile.onPress.connect(
 			sigc::mem_fun(this, &PlayerShipController::FireMissile));
 
+	m_targetNearestKey = KeyBindings::targetNearest.onPress.connect(
+		sigc::mem_fun(this, &PlayerShipController::TargetNearestHostile));
 }
 
 PlayerShipController::~PlayerShipController()
 {
 	m_connRotationDampingToggleKey.disconnect();
 	m_fireMissileKey.disconnect();
+	m_targetNearestKey.disconnect();
 }
 
 void PlayerShipController::Save(Serializer::Writer &wr, Space *space)
@@ -268,7 +271,6 @@ void PlayerShipController::PollControls(const float timeStep, const bool force_r
 			m_ship->AIModelCoordsMatchAngVel(wantAngVel, angThrustSoftness);
 		}
 		if (m_mouseActive) m_ship->AIFaceDirection(m_mouseDir);
-
 	}
 }
 
@@ -377,4 +379,9 @@ void PlayerShipController::SetNavTarget(Body* const target, bool setSpeedTo)
 	else if (m_setSpeedTarget == m_navTarget)
 		m_setSpeedTarget = 0;
 	m_navTarget = target;
+}
+
+void PlayerShipController::TargetNearestHostile()
+{
+	m_ship->ChooseTarget(Ship::TARGET_NEAREST_HOSTILE);
 }

@@ -263,7 +263,6 @@ void Player::StaticUpdate(const float time)
 			m_radarContacts.push_back(RadarContact());
 			RadarContact &rc = m_radarContacts.back();
 			rc.body = (*i);
-			rc.fresh = true;
 			rc.trail = new HudTrail(rc.body, Color::BLUE); //XXX IFF
 		} else {
 			cit->fresh = true;
@@ -276,6 +275,7 @@ void Player::StaticUpdate(const float time)
 		if (!it->fresh) {
 			m_radarContacts.erase(it++);
 		} else {
+			it->distance = this->GetPositionRelTo(it->body).Length();
 			it->trail->Update(time);
 			it->fresh = false;
 			++it;

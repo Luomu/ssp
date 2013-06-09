@@ -6,8 +6,6 @@
 
 #include "libs.h"
 #include "Serializer.h"
-#include <string>
-#include <list>
 
 class Body;
 class CollisionSpace;

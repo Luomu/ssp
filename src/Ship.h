@@ -14,7 +14,7 @@
 #include "ShipType.h"
 #include "scenegraph/SceneGraph.h"
 #include "scenegraph/ModelSkin.h"
-#include <list>
+#include "HudTrail.h"
 
 class SpaceStation;
 class HyperspaceCloud;
@@ -50,6 +50,19 @@ class Ship: public DynamicBody {
 	friend class ShipController; //only controllers need access to AITimeStep
 	friend class PlayerShipController;
 public:
+	struct RadarContact {
+		RadarContact() : body(0), fresh(true), trail(0), distance(0.0) { }
+		~RadarContact() { body = 0; delete trail; }
+		Body *body;
+		HudTrail* trail;
+		bool fresh;
+		double distance;
+	};
+
+	enum TargetingCriteria {
+		TARGET_NEAREST_HOSTILE
+	};
+
 	OBJDEF(Ship, DynamicBody, SHIP);
 	Ship(ShipType::Id shipId);
 	Ship() {} //default constructor used before Load
@@ -250,6 +263,8 @@ public:
 	bool IsInvulnerable() const { return m_invulnerable; }
 	void SetInvulnerable(bool b) { m_invulnerable = b; }
 
+	bool ChooseTarget(TargetingCriteria);
+
 protected:
 	virtual void Save(Serializer::Writer &wr, Space *space);
 	virtual void Load(Serializer::Reader &rd, Space *space);
@@ -270,6 +285,8 @@ protected:
 	float m_ecmRecharge;
 
 	ShipController *m_controller;
+
+	std::list<RadarContact> m_radarContacts;
 
 private:
 	float GetECMRechargeTime();

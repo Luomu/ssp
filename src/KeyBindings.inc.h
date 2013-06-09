@@ -20,7 +20,8 @@
 BINDING_PAGE(CONTROLS)
 
 BINDING_GROUP(Lang::WEAPONS)
-KEY_BINDING(targetObject, "BindTargetObject", Lang::TARGET_OBJECT_IN_SIGHTS, SDLK_t)
+KEY_BINDING(targetObject, "BindTargetObject", Lang::TARGET_OBJECT_IN_SIGHTS, SDLK_y)
+KEY_BINDING(targetNearest, "BindTargetNearest", Lang::TARGET_NEAREST_HOSTILE, SDLK_t)
 KEY_BINDING(fireLaser, "BindFireLaser", Lang::FIRE_LASER, SDLK_SPACE)
 KEY_BINDING(fireMissile, "BindFireMissile", Lang::FIRE_MISSILE, SDLK_m)
 

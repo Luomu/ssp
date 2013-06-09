@@ -77,6 +77,7 @@ public:
 	Body *GetSetSpeedTarget() const;
 	void SetCombatTarget(Body* const target, bool setSpeedTo = false);
 	void SetNavTarget(Body* const target, bool setSpeedTo = false);
+	void TargetNearestHostile();
 
 	sigc::signal<void> onRotationDampingChanged;
 
@@ -106,6 +107,7 @@ private:
 
 	sigc::connection m_connRotationDampingToggleKey;
 	sigc::connection m_fireMissileKey;
+	sigc::connection m_targetNearestKey;
 };
 
 #endif

@@ -4,11 +4,9 @@
 #ifndef _SPACE_H
 #define _SPACE_H
 
-#include <list>
+#include "libs.h"
 #include "Object.h"
-#include "vector3.h"
 #include "Serializer.h"
-#include "RefCounted.h"
 #include "galaxy/StarSystem.h"
 #include "Background.h"
 
@@ -73,7 +71,6 @@ public:
 	void GetBodiesMaybeNear(const vector3d &pos, double dist, BodyNearList &bodies) const {
 		m_bodyNearFinder.GetBodiesMaybeNear(pos, dist, bodies);
 	}
-
 
 private:
 	void GenBody(SystemBody *b, Frame *f);

@@ -4,7 +4,6 @@
 #ifndef _MISSILE_H
 #define _MISSILE_H
 
-#include <list>
 #include "libs.h"
 #include "Ship.h"
 

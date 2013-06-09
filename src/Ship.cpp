@@ -27,6 +27,11 @@
 
 #define TONS_HULL_PER_SHIELD 10.0f
 
+bool ContactDistanceSort(const Ship::RadarContact &a, const Ship::RadarContact &b)
+{
+	return a.distance < b.distance;
+}
+
 void SerializableEquipSet::Save(Serializer::Writer &wr)
 {
 	wr.Int32(Equip::SLOT_MAX);
@@ -1287,4 +1292,28 @@ void Ship::SetSkin(const SceneGraph::ModelSkin &skin)
 {
 	m_skin = skin;
 	m_skin.Apply(GetModel());
+}
+
+bool Ship::ChooseTarget(TargetingCriteria tc)
+{
+	//wip. need to unify targeting...
+	if (!IsType(Object::PLAYER)) return false;
+
+	bool found = false;
+
+	m_radarContacts.sort(ContactDistanceSort);
+
+	for (auto it = m_radarContacts.begin(); it != m_radarContacts.end(); ++it) {
+		//match criteria with object type
+		//match iff
+		if (it->body->IsType(Object::SHIP)) {
+			//should move the target to ship after all (from PlayerShipController)
+			//targeting inputs stay in PSC
+			static_cast<Player*>(this)->SetCombatTarget(it->body);
+			bool found = true;
+			break;
+		}
+	}
+
+	return found;
 }

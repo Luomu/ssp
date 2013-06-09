@@ -14,6 +14,7 @@
 #include <SDL_image.h>
 #include <cfloat>
 #include <limits>
+#include <list>
 #include <ctime>
 #include <cstdarg>
 #include <cstdlib>
