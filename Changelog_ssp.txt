@@ -1,0 +1,11 @@
+Summer Side Project 2013
+
+Implemented features, bits and pieces:
+* Rendertargets architecture
+* Invulnerability flag for ships (also accessible from Lua)
+* NoIntro config option
+* Speed lines / AR space dust (toggleable via config)
+* Ship trails (need to add config option, colour coding etc)
+* Target nearest enemy -key
+* Couple of test lua commands: SpawnTargetDrone, SpawnEnemy
+* Add Tau Ceti start point, in orbit
