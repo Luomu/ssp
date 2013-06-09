@@ -132,10 +132,10 @@ Graphics::Renderer *Pi::renderer;
 RefCountedPtr<UI::Context> Pi::ui;
 ModelCache *Pi::modelCache;
 Intro *Pi::intro;
+bool Pi::godMode = false;
 Graphics::RenderTarget *Pi::pRTarget;
 RefCountedPtr<Graphics::Texture> Pi::m_texture;
 ScopedPtr<Graphics::Drawables::TexturedQuad> Pi::m_quad;
-bool Pi::godMode = false;
 
 #if WITH_OBJECTVIEWER
 ObjectViewerView *Pi::objectViewerView;

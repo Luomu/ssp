@@ -170,10 +170,6 @@ public:
 
 	static bool DrawGUI;
 
-	static Graphics::RenderTarget *pRTarget;
-	static RefCountedPtr<Graphics::Texture> m_texture;
-	static ScopedPtr<Graphics::Drawables::TexturedQuad> m_quad;
-
 private:
 	static void HandleEvents();
 	static void InitJoysticks();
@@ -218,6 +214,10 @@ private:
 
 	static Gui::Fixed *menu;
 	static bool godMode;
+
+	static Graphics::RenderTarget *pRTarget;
+	static RefCountedPtr<Graphics::Texture> m_texture;
+	static ScopedPtr<Graphics::Drawables::TexturedQuad> m_quad;
 };
 
 #endif /* _PI_H */
