@@ -108,6 +108,11 @@ public:
 	static bool IsGodModeOn() { return godMode; }
 	static bool ToggleGodMode() { godMode=!godMode; return godMode; }
 
+	static void CreateRenderTarget(const Uint16 width, const Uint16 height);
+	static void DrawRenderTarget();
+	static void BeginRenderTarget();
+	static void EndRenderTarget();
+
 	static const char SAVE_DIR_NAME[];
 
 	static sigc::signal<void, SDL_keysym*> onKeyPress;
@@ -167,7 +172,7 @@ public:
 
 	static Graphics::RenderTarget *pRTarget;
 	static RefCountedPtr<Graphics::Texture> m_texture;
-	static ScopedPtr<Gui::TexturedQuad> m_quad;
+	static ScopedPtr<Graphics::Drawables::TexturedQuad> m_quad;
 
 private:
 	static void HandleEvents();
