@@ -14,6 +14,7 @@ void TexturedQuad::Draw(Graphics::Renderer *renderer, const vector2f &pos, const
 {
     Graphics::VertexArray va(ATTRIB_POSITION | ATTRIB_UV0);
 
+	// reverse winding
 	va.Add(vector3f(pos.x,        pos.y,        0.0f), vector2f(texPos.x,           texPos.y));
 	va.Add(vector3f(pos.x,        pos.y+size.y, 0.0f), vector2f(texPos.x,           texPos.y+texSize.y));
 	va.Add(vector3f(pos.x+size.x, pos.y,        0.0f), vector2f(texPos.x+texSize.x, texPos.y));

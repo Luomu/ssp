@@ -132,6 +132,10 @@ Graphics::Renderer *Pi::renderer;
 RefCountedPtr<UI::Context> Pi::ui;
 ModelCache *Pi::modelCache;
 Intro *Pi::intro;
+bool Pi::godMode = false;
+Graphics::RenderTarget *Pi::pRTarget;
+RefCountedPtr<Graphics::Texture> Pi::m_texture;
+ScopedPtr<Graphics::Drawables::TexturedQuad> Pi::m_quad;
 
 #if WITH_OBJECTVIEWER
 ObjectViewerView *Pi::objectViewerView;
@@ -140,16 +144,102 @@ ObjectViewerView *Pi::objectViewerView;
 Sound::MusicPlayer Pi::musicPlayer;
 ScopedPtr<JobQueue> Pi::jobQueue;
 
+//static 
+void Pi::CreateRenderTarget(const Uint16 width, const Uint16 height) {
+	/*	@fluffyfreak here's a rendertarget implementation you can use for oculusing and other things. It's pretty simple:
+		 - fill out a RenderTargetDesc struct and call Renderer::CreateRenderTarget
+		 - pass target to Renderer::SetRenderTarget to start rendering to texture
+		 - set up viewport, clear etc, then draw as usual
+		 - SetRenderTarget(0) to resume render to screen
+		 - you can access the attached texture with GetColorTexture to use it with a material
+		You can reuse the same target with multiple textures. 
+		In that case, leave the color format to NONE so the initial texture is not created, then use SetColorTexture to attach your own.
+	*/
+	Graphics::TextureDescriptor texDesc(
+		Graphics::TEXTURE_RGB, 
+		vector2f(width, height),
+		Graphics::LINEAR_CLAMP, false, false, 0);
+	Pi::m_texture.Reset(Pi::renderer->CreateTexture(texDesc));
+	Pi::m_quad.Reset(new Graphics::Drawables::TexturedQuad(Pi::renderer, m_texture.Get(), vector2f(0.0f,0.0f), vector2f(800.0f, 600.0f)));
+
+	// Oculus Rift is 1280×800 (640×800 per eye)
+	Graphics::RenderTargetDesc rtDesc(
+		width,
+		height,
+		Graphics::TEXTURE_FORMAT_NONE,		// don't create a texture
+		Graphics::TEXTURE_DEPTH,
+		false);
+	Pi::pRTarget = Pi::renderer->CreateRenderTarget(rtDesc);
+
+	pRTarget->SetColorTexture(Pi::m_texture.Get());
+}
+
+//static 
+void Pi::DrawRenderTarget() {
+	Pi::renderer->BeginFrame();
+	Pi::renderer->SetTransform(matrix4x4f::Identity());
+
+	//Gui::Screen::EnterOrtho();
+	{
+		glDisable(GL_DEPTH_TEST);
+		glDisable(GL_LIGHTING);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		glMatrixMode(GL_PROJECTION);
+		glPushMatrix();
+		glLoadIdentity();
+		glOrtho(0, 800, 600, 0, -1, 1);
+		glMatrixMode(GL_MODELVIEW);
+		glPushMatrix();
+		glLoadIdentity();
+	}
+	
+	Pi::m_quad->Draw( Pi::renderer );
+
+	//Gui::Screen::LeaveOrtho();
+	{
+		glMatrixMode(GL_PROJECTION);
+		glPopMatrix();
+		glMatrixMode(GL_MODELVIEW);
+		glPopMatrix();
+		glEnable(GL_LIGHTING);
+		glEnable(GL_DEPTH_TEST);
+	}
+	
+	Pi::renderer->EndFrame();
+}
+
+//static 
+void Pi::BeginRenderTarget() {
+	const bool bTargetSet = Pi::renderer->SetRenderTarget(Pi::pRTarget);
+}
+
+//static 
+void Pi::EndRenderTarget() {
+	Pi::renderer->SetRenderTarget(NULL);
+}
+
 static void draw_progress(float progress)
 {
-	float w, h;
-	Pi::renderer->BeginFrame();
-	Pi::renderer->EndFrame();
-	Gui::Screen::EnterOrtho();
-	std::string msg = stringf(Lang::SIMULATING_UNIVERSE_EVOLUTION_N_BYEARS, formatarg("age", progress * 13.7f));
-	Gui::Screen::MeasureString(msg, w, h);
-	Gui::Screen::RenderString(msg, 0.5f*(Gui::Screen::GetWidth()-w), 0.5f*(Gui::Screen::GetHeight()-h));
-	Gui::Screen::LeaveOrtho();
+	Pi::BeginRenderTarget();
+	{
+		Pi::renderer->BeginFrame();
+		// render something interesting here
+		{
+			Pi::renderer->SetTransform(matrix4x4f::Identity());
+			Gui::Screen::EnterOrtho();
+
+			float w, h;
+			std::string msg = stringf(Lang::SIMULATING_UNIVERSE_EVOLUTION_N_BYEARS, formatarg("age", progress * 13.7f));
+			Gui::Screen::MeasureString(msg, w, h);
+			Gui::Screen::RenderString(msg, 0.5f*(Gui::Screen::GetWidth()-w), 0.5f*(Gui::Screen::GetHeight()-h));
+
+			Gui::Screen::LeaveOrtho();
+		}
+		Pi::renderer->EndFrame();
+	}
+	Pi::EndRenderTarget();
+
+	Pi::DrawRenderTarget();
 	Pi::renderer->SwapBuffers();
 }
 
@@ -322,6 +412,8 @@ void Pi::Init()
 		fwrite(s.c_str(), 1, s.size(), f);
 		fclose(f);
 	}
+
+	Pi::CreateRenderTarget(videoSettings.width, videoSettings.height);
 
 	OS::LoadWindowIcon();
 	SDL_WM_SetCaption("Pioneer","Pioneer");
@@ -808,10 +900,16 @@ void Pi::TombStoneLoop()
 	do {
 		Pi::HandleEvents();
 		Pi::SetMouseGrab(false);
+
+		// render the scene
+		Pi::BeginRenderTarget();
 		Pi::renderer->BeginFrame();
 		tombstone->Draw(_time);
 		Pi::renderer->EndFrame();
 		Gui::Draw();
+		Pi::EndRenderTarget();
+
+		Pi::DrawRenderTarget();
 		Pi::renderer->SwapBuffers();
 
 		Pi::frameTime = 0.001f*(SDL_GetTicks() - last_time);
@@ -900,6 +998,7 @@ void Pi::Start()
 				while (SDL_PollEvent(&event)) {}
 		}
 
+		Pi::BeginRenderTarget();
 		Pi::renderer->BeginFrame();
 		Pi::renderer->SetPerspectiveProjection(75, Pi::GetScrAspect(), 1.f, 10000.f);
 		Pi::renderer->SetTransform(matrix4x4f::Identity());
@@ -908,7 +1007,10 @@ void Pi::Start()
 
 		ui->Update();
 		ui->Draw();
+		Pi::EndRenderTarget();
 
+		// render the rendertarget texture
+		Pi::DrawRenderTarget();
 		Pi::renderer->SwapBuffers();
 
 		Pi::frameTime = 0.001f*(SDL_GetTicks() - last_time);
@@ -1023,6 +1125,8 @@ void Pi::MainLoop()
 			}
 		}
 
+		Pi::BeginRenderTarget();
+
 		Pi::renderer->BeginFrame();
 		Pi::renderer->SetTransform(matrix4x4f::Identity());
 
@@ -1075,6 +1179,8 @@ void Pi::MainLoop()
 		}
 #endif
 
+		Pi::EndRenderTarget();
+		Pi::DrawRenderTarget();
 		Pi::renderer->SwapBuffers();
 
 		// game exit or failed load from GameMenuView will have cleared

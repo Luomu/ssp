@@ -105,6 +105,13 @@ public:
 	static void Message(const std::string &message, const std::string &from = "", enum MsgLevel level = MSG_NORMAL);
 	static std::string GetSaveDir();
 	static SceneGraph::Model *FindModel(const std::string&, bool allowPlaceholder = true);
+	static bool IsGodModeOn() { return godMode; }
+	static bool ToggleGodMode() { godMode=!godMode; return godMode; }
+
+	static void CreateRenderTarget(const Uint16 width, const Uint16 height);
+	static void DrawRenderTarget();
+	static void BeginRenderTarget();
+	static void EndRenderTarget();
 
 	static const char SAVE_DIR_NAME[];
 
@@ -206,6 +213,11 @@ private:
 	static bool navTunnelDisplayed;
 
 	static Gui::Fixed *menu;
+	static bool godMode;
+
+	static Graphics::RenderTarget *pRTarget;
+	static RefCountedPtr<Graphics::Texture> m_texture;
+	static ScopedPtr<Graphics::Drawables::TexturedQuad> m_quad;
 };
 
 #endif /* _PI_H */
