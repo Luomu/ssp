@@ -85,6 +85,7 @@ private:
 	void SeparateLabels(Gui::Label *a, Gui::Label *b);
 
 	void OnToggleLabels();
+	void OnToggleCameraMagnification();
 
 	void DrawCrosshair(float px, float py, float sz, const Color &c);
 	void DrawCombatTargetIndicator(const Indicator &target, const Indicator &lead, const Color &c);
@@ -147,6 +148,7 @@ private:
 	sigc::connection m_onPlayerChangeTargetCon;
 	sigc::connection m_onChangeFlightControlStateCon;
 	sigc::connection m_onMouseButtonDown;
+	sigc::connection m_toggleCameraMagnificationCon;
 
 	Gui::LabelSet *m_bodyLabels;
 	std::map<Body*,vector3d> m_projectedPos;

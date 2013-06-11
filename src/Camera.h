@@ -11,7 +11,6 @@
 #include "Background.h"
 #include "Body.h"
 
-
 class Frame;
 namespace Graphics { class Renderer; }
 
@@ -23,6 +22,13 @@ public:
 
 	void Update();
 	void Draw(Graphics::Renderer *r, const Body *excludeBody = 0);
+
+	void SetFov(float y);
+	float GetFov() const;
+	float GetDefaultFov() const;
+	float GetZoomedInFov() const;
+	void SetDefaultFov(float);
+	void SetZoomedInFov(float);
 
 	// frame to position the camera relative to
 	void SetFrame(Frame *frame) { m_frame = frame; }
@@ -80,6 +86,8 @@ private:
 	float m_fovAng;
 	float m_zNear;
 	float m_zFar;
+	float m_defaultFov;
+	float m_zoomedInFov;
 
 	Graphics::Frustum m_frustum;
 

@@ -30,6 +30,9 @@ InternalCameraController::InternalCameraController(Camera *camera, const Ship *s
 	CameraController(camera, ship)
 {
 	SetMode(MODE_FRONT);
+	m_magnify = false;
+	m_fov = 90.f;
+	m_fovTo = 90.f;
 }
 
 void InternalCameraController::SetMode(Mode m)
@@ -73,13 +76,24 @@ void InternalCameraController::Load(Serializer::Reader &rd)
 	SetMode(static_cast<Mode>(rd.Int32()));
 }
 
+void InternalCameraController::ToggleMagnification()
+{
+	m_magnify = !m_magnify;
+	m_fovTo = m_magnify ? m_camera->GetZoomedInFov() : m_camera->GetDefaultFov();
+}
+
+void InternalCameraController::ZoomEventUpdate(float frameTime)
+{
+	AnimationCurves::Approach(m_fov, m_fovTo, frameTime);
+	m_camera->SetFov(m_fov);
+}
+
 void InternalCameraController::Update()
 {
 	SetPosition(GetShip()->GetShipType()->cameraOffset);
 
 	CameraController::Update();
 }
-
 
 ExternalCameraController::ExternalCameraController(Camera *camera, const Ship *ship) :
 	MoveableCameraController(camera, ship),
@@ -178,7 +192,6 @@ void ExternalCameraController::Load(Serializer::Reader &rd)
 	m_dist = rd.Double();
 	m_distTo = m_dist;
 }
-
 
 SiderealCameraController::SiderealCameraController(Camera *camera, const Ship *ship) :
 	MoveableCameraController(camera, ship),

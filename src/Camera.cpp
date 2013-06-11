@@ -28,7 +28,9 @@ Camera::Camera(float width, float height, float fovY, float znear, float zfar) :
 	m_orient(matrix3x3d::Identity()),
 	m_frame(0),
 	m_camFrame(0),
-	m_renderer(0)
+	m_renderer(0),
+	m_defaultFov(fovY),
+	m_zoomedInFov(fovY / 5.f)
 {
 }
 
@@ -38,6 +40,38 @@ Camera::~Camera()
 		m_frame->RemoveChild(m_camFrame);
 		delete m_camFrame;
 	}
+}
+
+void Camera::SetFov(float fov)
+{
+	if (m_fovAng != fov)
+		m_frustum = Frustum(m_width, m_height, m_fovAng, m_zNear, m_zFar);
+	m_fovAng = fov;
+}
+
+float Camera::GetFov() const
+{
+	return m_fovAng;
+}
+
+float Camera::GetDefaultFov() const
+{
+	return m_defaultFov;
+}
+
+void Camera::SetDefaultFov(float df)
+{
+	m_defaultFov = df;
+}
+
+float Camera::GetZoomedInFov() const
+{
+	return m_zoomedInFov;
+}
+
+void Camera::SetZoomedInFov(float zf)
+{
+	m_zoomedInFov = zf;
 }
 
 static void position_system_lights(Frame *camFrame, Frame *frame, std::vector<Camera::LightSource> &lights)

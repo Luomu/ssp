@@ -21,6 +21,7 @@ GameConfig::GameConfig()
 	map["EnableJoystick"] = "1";
 	map["InvertMouseY"] = "0";
 	map["FOVVertical"] = "65";
+	map["FOVMagnified"] = "20";
 	map["DisplayNavTunnel"] = "0";
 	map["MasterVolume"] = "0.8";
 	map["MusicVolume"] = "0.8";
