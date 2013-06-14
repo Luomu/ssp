@@ -31,8 +31,8 @@ InternalCameraController::InternalCameraController(Camera *camera, const Ship *s
 {
 	SetMode(MODE_FRONT);
 	m_magnify = false;
-	m_fov = 90.f;
-	m_fovTo = 90.f;
+	m_fov = camera->GetDefaultFov();
+	m_fovTo = camera->GetDefaultFov();
 }
 
 void InternalCameraController::SetMode(Mode m)
