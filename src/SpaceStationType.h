@@ -36,17 +36,13 @@ struct SpaceStationType {
 	float angVel;
 	enum DOCKMETHOD { SURFACE, ORBITAL } dockMethod;
 	unsigned int numDockingPorts;
-	int numDockingStages;
-	int numUndockStages;
+	inline int GetNumDockingStages() const	{ return dockAnimStageDuration.size(); }
+	inline int GetNumUndockStages() const	{ return undockAnimStageDuration.size(); }
 	int shipLaunchStage;
-	double *dockAnimStageDuration;
-	double *undockAnimStageDuration;
+	std::vector<double> dockAnimStageDuration;
+	std::vector<double> undockAnimStageDuration;
 	float parkingDistance;
 	float parkingGapSize;
-	//std::string dockAnimFunction;
-	//std::string approachWaypointsFunction;
-	//bool bHasDockAnimFunction;
-	//bool bHasApproachWaypointsFunction;
 	TBayGroups bayGroups;
 
 	struct positionOrient_t {

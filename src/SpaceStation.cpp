@@ -303,7 +303,7 @@ int SpaceStation::GetFreeDockingPort() const
 void SpaceStation::SetDocked(Ship *ship, int port)
 {
 	m_shipDocking[port].ship = ship;
-	m_shipDocking[port].stage = m_type->numDockingStages+1;
+	m_shipDocking[port].stage = m_type->GetNumDockingStages()+1;
 
 	// have to do this crap again in case it was called directly (Ship::SetDockWith())
 	ship->SetFlightState(Ship::DOCKED);
@@ -400,7 +400,7 @@ bool SpaceStation::OnCollision(Object *b, Uint32 flags, double relVel)
 		}
 
 		// if there is more docking port anim to do, don't set docked yet
-		if (m_type->numDockingStages >= 2) {
+		if (m_type->GetNumDockingStages() >= 2) {
 			shipDocking_t &sd = m_shipDocking[port];
 			sd.ship = s;
 			sd.stage = 2;
@@ -444,7 +444,7 @@ void SpaceStation::DockingUpdate(const double timeStep)
 		shipDocking_t &dt = m_shipDocking[i];
 		if (!dt.ship) continue;
 		// docked stage is m_type->numDockingPorts + 1 => ship docked
-		if (dt.stage > m_type->numDockingStages) continue;
+		if (dt.stage > m_type->GetNumDockingStages()) continue;
 
 		double stageDuration = (dt.stage > 0 ?
 				m_type->GetDockAnimStageDuration(dt.stage-1) :
@@ -490,14 +490,14 @@ void SpaceStation::DockingUpdate(const double timeStep)
 			}
 			LuaEvent::Queue("onShipUndocked", dt.ship, this);
 		}
-		if (dt.stage < -m_type->numUndockStages) {
+		if (dt.stage < -m_type->GetNumUndockStages()) {
 			// undock animation finished, clear port
 			dt.stage = 0;
 			dt.ship = 0;
 			LockPort(i, false);
 			m_doorAnimationStep = -0.3; // close door
 		}
-		else if (dt.stage > m_type->numDockingStages) {
+		else if (dt.stage > m_type->GetNumDockingStages()) {
 			// set docked
 			dt.ship->SetDockedWith(this, i);
 			LuaEvent::Queue("onShipDocked", dt.ship, this);
@@ -521,7 +521,7 @@ void SpaceStation::PositionDockedShip(Ship *ship, int port) const
 	ship->SetPosition(GetPosition() + GetOrient()*dport.pos);
 
 	// Still in docking animation process?
-	if (dt.stage <= m_type->numDockingStages) {
+	if (dt.stage <= m_type->GetNumDockingStages()) {
 		matrix3x3d wantRot = matrix3x3d::FromVectors(dport.xaxis, dport.yaxis, dport.zaxis);
 		// use quaternion spherical linear interpolation to do
 		// rotation smoothly
@@ -770,7 +770,7 @@ vector3d SpaceStation::GetTargetIndicatorPosition(const Frame *relTo) const
 
 			SpaceStationType::positionOrient_t dport;
 			if (!m_type->GetShipApproachWaypoints(i, m_shipDocking[i].stage+1, dport))
-				PiVerify(m_type->GetDockAnimPositionOrient(i, m_type->numDockingStages,
+				PiVerify(m_type->GetDockAnimPositionOrient(i, m_type->GetNumDockingStages(),
 				1.0f, vector3d(0.0), dport, m_shipDocking[i].ship));
 
 			vector3d v = GetInterpPositionRelTo(relTo);
