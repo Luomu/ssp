@@ -218,20 +218,29 @@ void Pi::EndRenderTarget() {
 	Pi::renderer->SetRenderTarget(NULL);
 }
 
+static Gui::Image *pImage = NULL;
 static void draw_progress(float progress)
 {
 	Pi::BeginRenderTarget();
 	{
 		Pi::renderer->BeginFrame();
 		// render something interesting here
+		if( NULL==pImage ) {
+			pImage = new Gui::Image("loading.png");
+		}
+		
 		{
 			Pi::renderer->SetTransform(matrix4x4f::Identity());
 			Gui::Screen::EnterOrtho();
 
+			if( pImage ) {
+				pImage->Draw();
+			}
+
 			float w, h;
 			std::string msg = stringf(Lang::SIMULATING_UNIVERSE_EVOLUTION_N_BYEARS, formatarg("age", progress * 13.7f));
 			Gui::Screen::MeasureString(msg, w, h);
-			Gui::Screen::RenderString(msg, 0.5f*(Gui::Screen::GetWidth()-w), 0.5f*(Gui::Screen::GetHeight()-h));
+			Gui::Screen::RenderString(msg, 0.5f*(Gui::Screen::GetWidth()-w), 0.75f*(Gui::Screen::GetHeight()-h));
 
 			Gui::Screen::LeaveOrtho();
 		}
