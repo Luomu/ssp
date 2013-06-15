@@ -11,7 +11,6 @@
 
 #include "Aabb.h"
 #include "Body.h"
-#include "CargoBody.h"
 #include "galaxy/Sector.h"
 #include "galaxy/StarSystem.h"
 #include "DynamicBody.h"

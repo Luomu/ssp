@@ -217,6 +217,7 @@ void WorldView::InitObject()
 	const float fovY = Pi::config->Float("FOVVertical");
 
 	m_camera.Reset(new Camera(Graphics::GetScreenWidth(), Graphics::GetScreenHeight(), fovY, znear, zfar));
+	m_camera->SetZoomedInFov(Pi::config->Float("FOVMagnified"));
 	m_internalCameraController.Reset(new InternalCameraController(m_camera.Get(), Pi::player));
 	m_externalCameraController.Reset(new ExternalCameraController(m_camera.Get(), Pi::player));
 	m_siderealCameraController.Reset(new SiderealCameraController(m_camera.Get(), Pi::player));
@@ -234,6 +235,9 @@ void WorldView::InitObject()
 
 	Pi::player->GetPlayerController()->SetMouseForRearView(GetCamType() == CAM_INTERNAL && m_internalCameraController->GetMode() == InternalCameraController::MODE_REAR);
 	KeyBindings::toggleHudMode.onPress.connect(sigc::mem_fun(this, &WorldView::OnToggleLabels));
+
+	m_toggleCameraMagnificationCon =
+		KeyBindings::cameraMagnifyToggle.onPress.connect(sigc::mem_fun(this, &WorldView::OnToggleCameraMagnification));
 }
 
 WorldView::~WorldView()
@@ -242,6 +246,7 @@ WorldView::~WorldView()
 	m_onPlayerChangeTargetCon.disconnect();
 	m_onChangeFlightControlStateCon.disconnect();
 	m_onMouseButtonDown.disconnect();
+	m_toggleCameraMagnificationCon.disconnect();
 }
 
 void WorldView::Save(Serializer::Writer &wr)
@@ -400,6 +405,11 @@ void WorldView::OnToggleLabels()
 			m_labelsOn = true;
 		}
 	}
+}
+
+void WorldView::OnToggleCameraMagnification()
+{
+	m_internalCameraController->ToggleMagnification();
 }
 
 void WorldView::ShowAll()
@@ -807,6 +817,7 @@ void WorldView::Update()
 			else if (KeyBindings::rightCamera.IsActive())  ChangeInternalCameraMode(InternalCameraController::MODE_RIGHT);
 			else if (KeyBindings::topCamera.IsActive())    ChangeInternalCameraMode(InternalCameraController::MODE_TOP);
 			else if (KeyBindings::bottomCamera.IsActive()) ChangeInternalCameraMode(InternalCameraController::MODE_BOTTOM);
+			m_internalCameraController->ZoomEventUpdate(frameTime);
 		} else {
 			MoveableCameraController *cam = static_cast<MoveableCameraController*>(m_activeCameraController);
 			if (KeyBindings::cameraRotateUp.IsActive()) cam->RotateUp(frameTime);

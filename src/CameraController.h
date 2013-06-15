@@ -38,12 +38,16 @@ public:
 	void SetOrient(const matrix3x3d &orient) { m_orient = orient; }
 	const matrix3x3d &GetOrient() const { return m_orient; }
 
+	/// Animated zoom update (on each frame), primarily designed for mouse wheel.
+	virtual void ZoomEventUpdate(float frameTime) { }
 	virtual void Update();
 
 	const Ship *GetShip() const { return m_ship; }
 
-private:
+protected:
 	Camera *m_camera;
+
+private:
 	const Ship *m_ship;
 	vector3d m_pos;
 	matrix3x3d m_orient;
@@ -68,12 +72,18 @@ public:
 	Mode GetMode() const { return m_mode; }
 	void Save(Serializer::Writer &wr);
 	void Load(Serializer::Reader &rd);
+	void ToggleMagnification();
 
+	virtual void ZoomEventUpdate(float frameTime);
 	virtual void Update();
 
 private:
 	Mode m_mode;
 	const char *m_name;
+
+	bool m_magnify;
+	float m_fov;
+	float m_fovTo;
 };
 
 class MoveableCameraController : public CameraController {
@@ -94,8 +104,6 @@ public:
 	/// Animated zoom trigger (on each event), primarily designed for mouse wheel.
 	///\param amount The zoom delta to add or substract (>0: zoom out, <0: zoom in), indirectly controling the zoom animation speed.
 	virtual void ZoomEvent(float amount) { }
-	/// Animated zoom update (on each frame), primarily designed for mouse wheel.
-	virtual void ZoomEventUpdate(float frameTime) { }
 	virtual void Reset() { }
 };
 
