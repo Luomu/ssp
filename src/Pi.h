@@ -169,6 +169,7 @@ public:
 	static JobQueue *Jobs() { return jobQueue.Get();}
 
 	static bool DrawGUI;
+	static ScopedPtr<Gui::Image> pLoadingImage;
 
 private:
 	static void HandleEvents();

@@ -136,6 +136,7 @@ bool Pi::godMode = false;
 Graphics::RenderTarget *Pi::pRTarget;
 RefCountedPtr<Graphics::Texture> Pi::m_texture;
 ScopedPtr<Graphics::Drawables::TexturedQuad> Pi::m_quad;
+ScopedPtr<Gui::Image> Pi::pLoadingImage;
 
 #if WITH_OBJECTVIEWER
 ObjectViewerView *Pi::objectViewerView;
@@ -218,23 +219,22 @@ void Pi::EndRenderTarget() {
 	Pi::renderer->SetRenderTarget(NULL);
 }
 
-static Gui::Image *pImage = NULL;
 static void draw_progress(float progress)
 {
 	Pi::BeginRenderTarget();
 	{
 		Pi::renderer->BeginFrame();
 		// render something interesting here
-		if( NULL==pImage ) {
-			pImage = new Gui::Image("loading.png");
+		if( NULL==Pi::pLoadingImage.Get() ) {
+			Pi::pLoadingImage.Reset(new Gui::Image("loading.png"));
 		}
 		
 		{
 			Pi::renderer->SetTransform(matrix4x4f::Identity());
 			Gui::Screen::EnterOrtho();
 
-			if( pImage ) {
-				pImage->Draw();
+			if( Pi::pLoadingImage.Get() ) {
+				Pi::pLoadingImage->Draw();
 			}
 
 			float w, h;
@@ -510,6 +510,7 @@ void Pi::Init()
 	draw_progress(1.0f);
 
 	OS::NotifyLoadEnd();
+	Pi::pLoadingImage.Reset();
 
 #if 0
 	// frame test code
