@@ -79,6 +79,7 @@
 #include "CoreCount.h"
 #include <algorithm>
 #include <sstream>
+#include "OculusRift.h"
 
 float Pi::gameTickAlpha;
 float Pi::scrAspect;
@@ -423,6 +424,8 @@ void Pi::Init()
 	}
 
 	Pi::CreateRenderTarget(videoSettings.width, videoSettings.height);
+
+	OculusRiftInterface::Init();
 
 	OS::LoadWindowIcon();
 	SDL_WM_SetCaption("Pioneer","Pioneer");
