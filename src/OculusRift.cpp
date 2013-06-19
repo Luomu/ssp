@@ -26,6 +26,8 @@ public:
 		// Initializes LibOVR. This LogMask_All enables maximum logging.
 		// Custom allocator can also be specified here.
 		System::Init(Log::ConfigureDefaultLog(LogMask_All));
+		if(!System::IsInitialized())
+			return;
 
 		// *** Oculus HMD & Sensor Initialization
 
@@ -143,11 +145,12 @@ public:
 		
 		SConfig.Set2DAreaFov(DegreeToRad(85.0f));
 	}
-
+	#pragma optimize("",off)
 	~OculusRiftImplemetation() 
 	{
 		// No OVR functions involving memory are allowed after this.
-		System::Destroy();
+		if(System::IsInitialized())
+			System::Destroy();
 	}
 
 private:
@@ -167,12 +170,12 @@ private:
 
 // static members for the interface class.
 ScopedPtr<OculusRiftImplemetation> OculusRiftInterface::mPimpl;
-
+#pragma optimize("",off)
 void OculusRiftInterface::Init()
 {
 	mPimpl.Reset(new OculusRiftImplemetation);
 }
-
+#pragma optimize("",off)
 void OculusRiftInterface::Uninit()
 {
 	mPimpl.Reset();
