@@ -150,7 +150,24 @@ public:
 	{
 		// No OVR functions involving memory are allowed after this.
 		if(System::IsInitialized())
+		{
+			if(pHMD.Valid())
+			{
+				//pHMD->Release();
+				pHMD.Reset();
+			}
+			if(pSensor.Valid())
+			{
+				//pSensor->Release();
+				pSensor.Reset();
+			}
+			if(pManager.Valid())
+			{
+				//pManager->Release();
+				pManager.Reset();
+			}
 			System::Destroy();
+		}
 	}
 
 private:
