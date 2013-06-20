@@ -113,6 +113,18 @@ void MsgLogWidget::GetSizeRequested(float size[2])
 	size[1] = 64;
 }
 
+void MsgLogWidget::Message(const std::string &sender, const std::string &msg)
+{
+	Pi::game->log->Add(msg);
+	//m_msgQueue.push_back(message_t(sender, msg, NOT_IMPORTANT));
+}
+
+void MsgLogWidget::ImportantMessage(const std::string &sender, const std::string &msg)
+{
+	Pi::game->log->Add(msg);
+	//m_msgQueue.push_back(message_t(sender, msg, MUST_SEE));
+}
+
 /////////////////////////////////
 
 ScannerWidget::ScannerWidget(Graphics::Renderer *r) :

@@ -31,12 +31,8 @@ public:
 	MsgLogWidget();
 	void GetSizeRequested(float size[2]);
 
-	void ImportantMessage(const std::string &sender, const std::string &msg) {
-		m_msgQueue.push_back(message_t(sender, msg, MUST_SEE));
-	}
-	void Message(const std::string &sender, const std::string &msg) {
-		m_msgQueue.push_back(message_t(sender, msg, NOT_IMPORTANT));
-	}
+	void ImportantMessage(const std::string &sender, const std::string &msg);
+	void Message(const std::string &sender, const std::string &msg);
 	virtual void Update();
 private:
 	enum Type {
@@ -124,7 +120,6 @@ private:
 
 	void FireMissile(int idx);
 };
-
 
 class MultiFuncSelectorWidget: public Gui::Fixed {
 public:
