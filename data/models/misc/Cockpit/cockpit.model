@@ -1,4 +1,4 @@
-material material1
+material Material-material1
 
 tex_diff diff.dds
 tex_spec spec.dds
