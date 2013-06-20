@@ -1,4 +1,5 @@
 Summer Side Project 2013
+a collection of Pioneer experiments
 
 Implemented features, bits and pieces:
 * Rendertargets architecture
@@ -9,3 +10,4 @@ Implemented features, bits and pieces:
 * Target nearest enemy -key
 * Couple of test lua commands: SpawnTargetDrone, SpawnEnemy
 * Add Tau Ceti start point, in orbit
+* Multi-line hud message log

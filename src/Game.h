@@ -4,10 +4,11 @@
 #ifndef _GAME_H
 #define _GAME_H
 
-#include "vector3.h"
-#include "galaxy/SystemPath.h"
-#include "Serializer.h"
+#include "libs.h"
 #include "gameconsts.h"
+#include "GameLog.h"
+#include "Serializer.h"
+#include "galaxy/SystemPath.h"
 
 class HyperspaceCloud;
 class Player;
@@ -79,6 +80,8 @@ public:
 
 	float GetTimeAccelRate() const { return s_timeAccelRates[m_timeAccel]; }
 	float GetTimeStep() const { return s_timeAccelRates[m_timeAccel]*(1.0f/PHYSICS_HZ); }
+
+	GameLog *log;
 
 private:
 	void CreateViews();

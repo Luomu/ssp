@@ -5,7 +5,6 @@
 #define _PI_H
 
 #include "utils.h"
-#include "gui/Gui.h"
 #include "Random.h"
 #include "gameconsts.h"
 #include "GameConfig.h"
@@ -14,9 +13,7 @@
 #include "CargoBody.h"
 #include "Space.h"
 #include "JobQueue.h"
-#include <map>
-#include <string>
-#include <vector>
+#include "gui/Gui.h"
 
 class DeathView;
 class GalacticView;
@@ -153,7 +150,7 @@ public:
 	static LuaConsole *luaConsole;
 	static ShipCpanel *cpan;
 	static Sound::MusicPlayer &GetMusicPlayer() { return musicPlayer; }
-	static Graphics::Renderer *renderer; // blargh
+	static Graphics::Renderer *renderer;
 	static ModelCache *modelCache;
 	static Intro *intro;
 

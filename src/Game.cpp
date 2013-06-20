@@ -2,27 +2,28 @@
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "Game.h"
-#include "Space.h"
-#include "Player.h"
 #include "Body.h"
-#include "SpaceStation.h"
-#include "HyperspaceCloud.h"
-#include "Pi.h"
-#include "ShipCpanel.h"
-#include "Sfx.h"
-#include "MathUtil.h"
-#include "SectorView.h"
-#include "WorldView.h"
 #include "DeathView.h"
-#include "GalacticView.h"
-#include "SystemView.h"
-#include "SystemInfoView.h"
-#include "SpaceStationView.h"
-#include "UIView.h"
-#include "LuaEvent.h"
-#include "ObjectViewerView.h"
 #include "FileSystem.h"
+#include "GalacticView.h"
+#include "HyperspaceCloud.h"
+#include "LuaEvent.h"
+#include "MathUtil.h"
+#include "ObjectViewerView.h"
+#include "Pi.h"
+#include "Player.h"
+#include "SectorView.h"
+#include "Sfx.h"
+#include "ShipCpanel.h"
+#include "Space.h"
+#include "SpaceStation.h"
+#include "SpaceStationView.h"
+#include "SystemInfoView.h"
+#include "SystemView.h"
+#include "UIView.h"
+#include "WorldView.h"
 #include "graphics/Renderer.h"
+#include "ui/Context.h"
 
 static const int  s_saveVersion   = 66;
 static const char s_saveStart[]   = "PIONEER";
@@ -126,7 +127,6 @@ Game::Game(Serializer::Reader &rd) :
 	section = rd.RdSection("Space");
 	m_space.Reset(new Space(this, section));
 
-
 	// game state and space transition state
 	section = rd.RdSection("Game");
 
@@ -145,20 +145,16 @@ Game::Game(Serializer::Reader &rd) :
 	m_hyperspaceDuration = section.Double();
 	m_hyperspaceEndTime = section.Double();
 
-
 	// system political stuff
 	section = rd.RdSection("Polit");
 	Polit::Unserialize(section);
 
-
 	// views
 	LoadViews(rd);
-
 
 	// lua
 	section = rd.RdSection("LuaModules");
 	Pi::luaSerializer->Unserialize(section);
-
 
 	// signature check
 	for (Uint32 i = 0; i < strlen(s_saveEnd)+1; i++)
@@ -180,7 +176,6 @@ void Game::Serialize(Serializer::Writer &wr)
 	m_space->Serialize(section);
 	wr.WrSection("Space", section.GetData());
 
-
 	// game state and space transition state
 	section = Serializer::Writer();
 
@@ -201,12 +196,10 @@ void Game::Serialize(Serializer::Writer &wr)
 
 	wr.WrSection("Game", section.GetData());
 
-
 	// system political data (crime etc)
 	section = Serializer::Writer();
 	Polit::Serialize(section);
 	wr.WrSection("Polit", section.GetData());
-
 
 	// views. must be saved in init order
 	section = Serializer::Writer();
@@ -221,12 +214,10 @@ void Game::Serialize(Serializer::Writer &wr)
 	Pi::worldView->Save(section);
 	wr.WrSection("WorldView", section.GetData());
 
-
 	// lua
 	section = Serializer::Writer();
 	Pi::luaSerializer->Serialize(section);
 	wr.WrSection("LuaModules", section.GetData());
-
 
 	// trailing signature
 	for (Uint32 i = 0; i < strlen(s_saveEnd)+1; i++)
@@ -242,6 +233,7 @@ void Game::TimeStep(float step)
 	// XXX ui updates, not sure if they belong here
 	Pi::cpan->TimeStepUpdate(step);
 	Sfx::TimeStepAll(step, m_space->GetRootFrame());
+	log->Update(m_timeAccel == Game::TIMEACCEL_PAUSED);
 
 	if (m_state == STATE_HYPERSPACE) {
 		if (Pi::game->GetTime() > m_hyperspaceEndTime) {
@@ -616,6 +608,11 @@ void Game::CreateViews()
 	Pi::objectViewerView = new ObjectViewerView();
 	Pi::objectViewerView->SetRenderer(Pi::renderer);
 #endif
+
+	UI::Point scrSize = Pi::ui->GetContext()->GetSize();
+	log = new GameLog(
+		Pi::ui->GetContext()->GetFont(UI::Widget::FONT_SMALLEST),
+		vector2f(scrSize.x, scrSize.y));
 }
 
 // XXX mostly a copy of CreateViews
@@ -655,6 +652,11 @@ void Game::LoadViews(Serializer::Reader &rd)
 	Pi::systemView->SetRenderer(Pi::renderer);
 	Pi::worldView->SetRenderer(Pi::renderer);
 	Pi::deathView->SetRenderer(Pi::renderer);
+
+	UI::Point scrSize = Pi::ui->GetContext()->GetSize();
+	log = new GameLog(
+		Pi::ui->GetContext()->GetFont(UI::Widget::FONT_SMALLEST),
+		vector2f(scrSize.x, scrSize.y));
 }
 
 void Game::DestroyViews()
@@ -674,6 +676,7 @@ void Game::DestroyViews()
 	delete Pi::worldView;
 	delete Pi::sectorView;
 	delete Pi::cpan;
+	delete log;
 
 	Pi::objectViewerView = 0;
 	Pi::deathView = 0;
@@ -685,6 +688,7 @@ void Game::DestroyViews()
 	Pi::worldView = 0;
 	Pi::sectorView = 0;
 	Pi::cpan = 0;
+	log = 0;
 }
 
 Game *Game::LoadGame(const std::string &filename)

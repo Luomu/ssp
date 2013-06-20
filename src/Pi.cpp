@@ -2,7 +2,6 @@
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "Pi.h"
-#include "libs.h"
 #include "AmbientSounds.h"
 #include "CargoBody.h"
 #include "CityOnPlanet.h"
@@ -145,7 +144,7 @@ ObjectViewerView *Pi::objectViewerView;
 Sound::MusicPlayer Pi::musicPlayer;
 ScopedPtr<JobQueue> Pi::jobQueue;
 
-//static 
+//static
 void Pi::CreateRenderTarget(const Uint16 width, const Uint16 height) {
 	/*	@fluffyfreak here's a rendertarget implementation you can use for oculusing and other things. It's pretty simple:
 		 - fill out a RenderTargetDesc struct and call Renderer::CreateRenderTarget
@@ -153,11 +152,11 @@ void Pi::CreateRenderTarget(const Uint16 width, const Uint16 height) {
 		 - set up viewport, clear etc, then draw as usual
 		 - SetRenderTarget(0) to resume render to screen
 		 - you can access the attached texture with GetColorTexture to use it with a material
-		You can reuse the same target with multiple textures. 
+		You can reuse the same target with multiple textures.
 		In that case, leave the color format to NONE so the initial texture is not created, then use SetColorTexture to attach your own.
 	*/
 	Graphics::TextureDescriptor texDesc(
-		Graphics::TEXTURE_RGB, 
+		Graphics::TEXTURE_RGB,
 		vector2f(width, height),
 		Graphics::LINEAR_CLAMP, false, false, 0);
 	Pi::m_texture.Reset(Pi::renderer->CreateTexture(texDesc));
@@ -175,7 +174,7 @@ void Pi::CreateRenderTarget(const Uint16 width, const Uint16 height) {
 	pRTarget->SetColorTexture(Pi::m_texture.Get());
 }
 
-//static 
+//static
 void Pi::DrawRenderTarget() {
 	Pi::renderer->BeginFrame();
 	Pi::renderer->SetTransform(matrix4x4f::Identity());
@@ -193,7 +192,7 @@ void Pi::DrawRenderTarget() {
 		glPushMatrix();
 		glLoadIdentity();
 	}
-	
+
 	Pi::m_quad->Draw( Pi::renderer );
 
 	//Gui::Screen::LeaveOrtho();
@@ -205,16 +204,16 @@ void Pi::DrawRenderTarget() {
 		glEnable(GL_LIGHTING);
 		glEnable(GL_DEPTH_TEST);
 	}
-	
+
 	Pi::renderer->EndFrame();
 }
 
-//static 
+//static
 void Pi::BeginRenderTarget() {
 	const bool bTargetSet = Pi::renderer->SetRenderTarget(Pi::pRTarget);
 }
 
-//static 
+//static
 void Pi::EndRenderTarget() {
 	Pi::renderer->SetRenderTarget(NULL);
 }
@@ -228,7 +227,7 @@ static void draw_progress(float progress)
 		if( NULL==Pi::pLoadingImage.Get() ) {
 			Pi::pLoadingImage.Reset(new Gui::Image("loading.png"));
 		}
-		
+
 		{
 			Pi::renderer->SetTransform(matrix4x4f::Identity());
 			Gui::Screen::EnterOrtho();
@@ -553,7 +552,6 @@ void Pi::Init()
 	c2->SwitchToFrame(p1);
 	vector3d vel4 = c2->GetVelocityRelTo(c1);
 	double speed4 = c2->GetVelocityRelTo(c1).Length();
-
 
 	root->UpdateOrbitRails(0, 1.0);
 
@@ -1160,6 +1158,8 @@ void Pi::MainLoop()
 		Pi::renderer->EndFrame();
 		if( DrawGUI ) {
 			Gui::Draw();
+			if (game)
+				game->log->DrawHudMessages(renderer);
 		} else if (game && game->IsNormalSpace()) {
 			if (config->Int("DisableScreenshotInfo")==0) {
 				const RefCountedPtr<StarSystem> sys = game->GetSpace()->GetStarSystem();
