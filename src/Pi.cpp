@@ -174,6 +174,8 @@ void Pi::CreateRenderTarget(const Uint16 width, const Uint16 height) {
 	Pi::pRTarget = Pi::renderer->CreateRenderTarget(rtDesc);
 
 	pRTarget->SetColorTexture(Pi::m_texture.Get());
+
+	Pi::renderer->SetRenderTarget(NULL);
 }
 
 //static 
