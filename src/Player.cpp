@@ -139,10 +139,10 @@ bool Player::CanBuy(Equip::Type t, bool verbose) const
 	bool freecapacity = (GetStats().free_capacity >= Equip::types[int(t)].mass);
 	if (verbose) {
 		if (!freespace) {
-			Pi::Message(Lang::NO_FREE_SPACE_FOR_ITEM);
+			Pi::game->log->Add(Lang::NO_FREE_SPACE_FOR_ITEM);
 		}
 		else if (!freecapacity) {
-			Pi::Message(Lang::SHIP_IS_FULLY_LADEN);
+			Pi::game->log->Add(Lang::SHIP_IS_FULLY_LADEN);
 		}
 	}
 	return (freespace && freecapacity);
@@ -154,7 +154,7 @@ bool Player::CanSell(Equip::Type t, bool verbose) const
 	bool cansell = (m_equipment.Count(slot, t) > 0);
 	if (verbose) {
 		if (!cansell) {
-			Pi::Message(stringf(Lang::YOU_DO_NOT_HAVE_ANY_X, formatarg("item", Equip::types[int(t)].name)));
+			Pi::game->log->Add(stringf(Lang::YOU_DO_NOT_HAVE_ANY_X, formatarg("item", Equip::types[int(t)].name)));
 		}
 	}
 	return cansell;

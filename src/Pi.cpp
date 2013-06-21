@@ -1292,15 +1292,6 @@ float Pi::CalcHyperspaceFuelOut(int hyperclass, float dist, float hyperspace_ran
 	return outFuelRequired;
 }
 
-void Pi::Message(const std::string &message, const std::string &from, enum MsgLevel level)
-{
-	if (level == MSG_IMPORTANT) {
-		game->log->Add(from, message);
-	} else {
-		game->log->Add(from, message);
-	}
-}
-
 void Pi::InitJoysticks() {
 	int joy_count = SDL_NumJoysticks();
 	for (int n = 0; n < joy_count; n++) {

@@ -50,11 +50,6 @@ struct DetailLevel {
 	int cities;
 };
 
-enum MsgLevel {
-	MSG_NORMAL,
-	MSG_IMPORTANT
-};
-
 class Frame;
 class Game;
 
@@ -99,7 +94,6 @@ public:
 	static float CalcHyperspaceRange(int hyperclass, float total_mass_in_tonnes, int fuel);
 	static float CalcHyperspaceDuration(int hyperclass, int total_mass_in_tonnes, float dist);
 	static float CalcHyperspaceFuelOut(int hyperclass, float dist, float hyperspace_range_max);
-	static void Message(const std::string &message, const std::string &from = "", enum MsgLevel level = MSG_NORMAL);
 	static std::string GetSaveDir();
 	static SceneGraph::Model *FindModel(const std::string&, bool allowPlaceholder = true);
 	static bool IsGodModeOn() { return godMode; }
