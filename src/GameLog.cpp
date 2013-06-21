@@ -1,4 +1,5 @@
 #include "GameLog.h"
+#include "StringF.h"
 #include "graphics/Renderer.h"
 
 const Uint32 MESSAGE_TIMEOUT  = 8000;
@@ -26,6 +27,11 @@ void GameLog::Add(const std::string &msg)
 	m_messages.push_back(Message(msg, 0));
 
 	while (m_messages.size() > MAX_MESSAGES) m_messages.pop_front();
+}
+
+void GameLog::Add(const std::string &from, const std::string &msg)
+{
+	Add(stringf("%0: %1", from, msg));
 }
 
 void GameLog::Update(bool paused)

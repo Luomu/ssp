@@ -273,7 +273,7 @@ void ShipCpanel::OnMultiFuncUngrabFocus(multifuncfunc_t f)
 
 void ShipCpanel::OnDockingClearanceExpired(const SpaceStation *s)
 {
-	MsgLog()->ImportantMessage(s->GetLabel(), Lang::DOCKING_CLEARANCE_EXPIRED);
+	Pi::game->log->Add(s->GetLabel(), Lang::DOCKING_CLEARANCE_EXPIRED);
 }
 
 void ShipCpanel::Update()

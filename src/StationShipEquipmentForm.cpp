@@ -14,7 +14,6 @@
 
 #define REMOVAL_VALUE_PERCENT 90
 
-
 class PickLaserMountForm : public FaceForm {
 public:
 	PickLaserMountForm(FormController *controller, StationShipEquipmentForm *equipForm, Equip::Type equipType, bool doFit);
@@ -26,7 +25,6 @@ private:
 	Equip::Type m_equipType;
 	bool m_doFit;
 };
-
 
 StationShipEquipmentForm::StationShipEquipmentForm(FormController *controller) : FaceForm(controller)
 {
@@ -139,12 +137,12 @@ void StationShipEquipmentForm::FitItem(Equip::Type t)
 	int freespace = Pi::player->m_equipment.FreeSpace(slot);
 
 	if (Pi::player->GetMoney() < m_station->GetPrice(t)) {
-		Pi::cpan->MsgLog()->Message("", Lang::YOU_NOT_ENOUGH_MONEY);
+		Pi::game->log->Add(Lang::YOU_NOT_ENOUGH_MONEY);
 		return;
 	}
 
 	if (!freespace || stats.free_capacity < Equip::types[t].mass) {
-		Pi::cpan->MsgLog()->Message("", Lang::NO_SPACE_ON_SHIP);
+		Pi::game->log->Add(Lang::NO_SPACE_ON_SHIP);
 		return;
 	}
 
@@ -181,7 +179,7 @@ void StationShipEquipmentForm::FitItemForce(Equip::Type t, int pos) {
 
 	Pi::player->UpdateEquipStats();
 	Pi::player->SetMoney(Pi::player->GetMoney() - m_station->GetPrice(t));
-	Pi::cpan->MsgLog()->Message("", Lang::FITTING+std::string(Equip::types[t].name));
+	Pi::game->log->Add(Lang::FITTING+std::string(Equip::types[t].name));
 
 	RecalcButtonVisibility();
 }
@@ -195,12 +193,10 @@ void StationShipEquipmentForm::RemoveItemForce(Equip::Type t, int pos) {
 	Pi::player->UpdateEquipStats();
 	Pi::player->SetMoney(Pi::player->GetMoney() + m_station->GetPrice(t) * REMOVAL_VALUE_PERCENT / 100);
 	m_station->AddEquipmentStock(t, 1);
-	Pi::cpan->MsgLog()->Message("", Lang::REMOVING+std::string(Equip::types[t].name));
+	Pi::game->log->Add(Lang::REMOVING+std::string(Equip::types[t].name));
 
 	RecalcButtonVisibility();
 }
-
-
 
 PickLaserMountForm::PickLaserMountForm(FormController *controller, StationShipEquipmentForm *equipForm, Equip::Type equipType, bool doFit) :
 	FaceForm(controller),

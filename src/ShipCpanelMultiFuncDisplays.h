@@ -31,8 +31,6 @@ public:
 	MsgLogWidget();
 	void GetSizeRequested(float size[2]);
 
-	void ImportantMessage(const std::string &sender, const std::string &msg);
-	void Message(const std::string &sender, const std::string &msg);
 	virtual void Update();
 private:
 	enum Type {

@@ -322,7 +322,7 @@ void SectorView::OnSearchBoxKeyPress(const SDL_keysym *keysym)
 					// exact match, take it and go
 					SystemPath path = (*i).first;
 					path.systemIndex = systemIndex;
-					Pi::cpan->MsgLog()->Message("", stringf(Lang::EXACT_MATCH_X, formatarg("system", ss->name)));
+					Pi::game->log->Add(stringf(Lang::EXACT_MATCH_X, formatarg("system", ss->name)));
 					GotoSystem(path);
 					return;
 				}
@@ -357,12 +357,12 @@ void SectorView::OnSearchBoxKeyPress(const SDL_keysym *keysym)
 		}
 
 	if (gotMatch) {
-		Pi::cpan->MsgLog()->Message("", stringf(Lang::NOT_FOUND_BEST_MATCH_X, formatarg("system", *bestMatchName)));
+		Pi::game->log->Add(stringf(Lang::NOT_FOUND_BEST_MATCH_X, formatarg("system", *bestMatchName)));
 		GotoSystem(bestMatch);
 	}
 
 	else
-		Pi::cpan->MsgLog()->Message("", Lang::NOT_FOUND);
+		Pi::game->log->Add(Lang::NOT_FOUND);
 }
 
 #define DRAW_RAD	  3
@@ -993,9 +993,9 @@ void SectorView::OnKeyPressed(SDL_keysym *keysym)
 		if (keysym->sym == SDLK_KP_ENTER || keysym->sym == SDLK_RETURN) {
 		m_selectionFollowsMovement = !m_selectionFollowsMovement;
 		if (m_selectionFollowsMovement)
-			Pi::cpan->MsgLog()->Message("", Lang::ENABLED_AUTOMATIC_SYSTEM_SELECTION);
+			Pi::game->log->Add(Lang::ENABLED_AUTOMATIC_SYSTEM_SELECTION);
 		else
-			Pi::cpan->MsgLog()->Message("", Lang::DISABLED_AUTOMATIC_SYSTEM_SELECTION);
+			Pi::game->log->Add(Lang::DISABLED_AUTOMATIC_SYSTEM_SELECTION);
 		return;
 	}
 
