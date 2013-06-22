@@ -2,20 +2,21 @@
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "Pi.h"
-#include "Player.h"
-#include "LuaChatForm.h"
-#include "LuaUtils.h"
-#include "LuaObject.h"
+#include "CommodityTradeWidget.h"
 #include "EnumStrings.h"
+#include "FaceVideoLink.h"
+#include "Game.h"
+#include "Lang.h"
 #include "libs.h"
-#include "gui/Gui.h"
+#include "LuaChatForm.h"
+#include "LuaObject.h"
+#include "LuaUtils.h"
+#include "Player.h"
 #include "SpaceStation.h"
 #include "SpaceStationView.h"
-#include "CommodityTradeWidget.h"
-#include "FaceVideoLink.h"
 #include "StationPoliceForm.h"
-#include "Lang.h"
 #include "StringF.h"
+#include "gui/Gui.h"
 
 void LuaChatForm::OnOptionClicked(int option)
 {
@@ -200,7 +201,7 @@ void LuaChatForm::OnClickBuy(int t) {
 
 	if (allow_buy) {
 		if (SellTo(Pi::player, static_cast<Equip::Type>(t), true)) {
-			Pi::Message(stringf(Lang::BOUGHT_1T_OF, formatarg("commodity", Equip::types[t].name)));
+			Pi::game->log->Add(stringf(Lang::BOUGHT_1T_OF, formatarg("commodity", Equip::types[t].name)));
 		}
 		m_commodityTradeWidget->UpdateStock(t);
 	}
@@ -224,7 +225,7 @@ void LuaChatForm::OnClickSell(int t) {
 
 	if (allow_sell) {
 		if (BuyFrom(Pi::player, static_cast<Equip::Type>(t), true)) {
-			Pi::Message(stringf(Lang::SOLD_1T_OF, formatarg("commodity", Equip::types[t].name)));
+			Pi::game->log->Add(stringf(Lang::SOLD_1T_OF, formatarg("commodity", Equip::types[t].name)));
 		}
 		m_commodityTradeWidget->UpdateStock(t);
 	}

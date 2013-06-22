@@ -15,7 +15,6 @@ namespace Graphics { class Renderer; }
 enum multifuncfunc_t {
 	MFUNC_SCANNER,
 	MFUNC_EQUIPMENT,
-	MFUNC_MSGLOG,
 	MFUNC_MAX
 };
 
@@ -24,33 +23,6 @@ public:
 	sigc::signal<void> onGrabFocus;
 	sigc::signal<void> onUngrabFocus;
 	virtual void Update() = 0;
-};
-
-class MsgLogWidget: public IMultiFunc, public Gui::Fixed {
-public:
-	MsgLogWidget();
-	void GetSizeRequested(float size[2]);
-
-	void ImportantMessage(const std::string &sender, const std::string &msg);
-	void Message(const std::string &sender, const std::string &msg);
-	virtual void Update();
-private:
-	enum Type {
-		NONE = -1,
-		NOT_IMPORTANT = 0,
-		MUST_SEE = 1
-	};
-	void ShowNext();
-	struct message_t {
-		message_t(std::string s, std::string m, Type t): sender(s), message(m), type(t) {}
-		std::string sender;
-		std::string message;
-		Type type;
-	};
-	std::list<message_t> m_msgQueue;
-	Uint32 m_msgAge;
-	Gui::Label *m_msgLabel;
-	Type m_curMsgType;
 };
 
 class ScannerWidget: public IMultiFunc, public Gui::Widget {

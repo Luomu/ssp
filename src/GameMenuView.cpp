@@ -144,7 +144,6 @@ private:
 	sigc::connection m_keyUpConnection;
 };
 
-
 static const char *planet_detail_desc[5] = {
 	Lang::LOW, Lang::MEDIUM, Lang::HIGH, Lang::VERY_HIGH, Lang::VERY_VERY_HIGH
 };
@@ -357,7 +356,6 @@ GameMenuView::GameMenuView(): View()
 			vbox->PackEnd(hbox);
 		}
 	}
-
 
 	// language
 
@@ -634,7 +632,7 @@ void GameMenuView::OnToggleNavTunnel(Gui::ToggleButton *b, bool state) {
 void GameMenuView::OpenSaveDialog()
 {
 	if (Pi::game->IsHyperspace()) {
-		Pi::cpan->MsgLog()->Message("", Lang::CANT_SAVE_IN_HYPERSPACE);
+		Pi::game->log->Add(Lang::CANT_SAVE_IN_HYPERSPACE);
 		return;
 	}
 
@@ -644,7 +642,7 @@ void GameMenuView::OpenSaveDialog()
 		const std::string path = FileSystem::JoinPath(Pi::GetSaveDir(), filename);
 		try {
 			Game::SaveGame(filename, Pi::game);
-			Pi::cpan->MsgLog()->Message("", Lang::GAME_SAVED_TO + path); // XXX stringf with an arg would be better
+			Pi::game->log->Add(Lang::GAME_SAVED_TO + path); // XXX stringf with an arg would be better
 		}
 		catch (CouldNotOpenFileException) {
 			Gui::Screen::ShowBadError(stringf(Lang::COULD_NOT_OPEN_FILENAME, formatarg("path", path)).c_str());

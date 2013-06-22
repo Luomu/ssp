@@ -12,6 +12,7 @@ class GameLog {
 public:
 	GameLog(RefCountedPtr<Text::TextureFont>, vector2f screenSize);
 	void Add(const std::string&);
+	void Add(const std::string &from, const std::string &msg);
 	void Update(bool paused);
 	void DrawHudMessages(Graphics::Renderer*);
 

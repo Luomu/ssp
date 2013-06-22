@@ -23,7 +23,6 @@ StationShipViewForm::StationShipViewForm(FormController *controller, int marketI
 	SceneGraph::Model *model = Pi::FindModel(type.modelName);
 	Add(new ShipSpinnerWidget(model, m_sos.skin, 400, 400), 0, 0);
 
-
 	Gui::VBox *layoutBox = new Gui::VBox();
 	layoutBox->SetSpacing(10.0f);
 	Add(layoutBox, 420, 0);
@@ -73,7 +72,6 @@ StationShipViewForm::StationShipViewForm(FormController *controller, int marketI
 	dataBox->PackEnd(new Gui::Label(Equip::types[type.hyperdrive].name));
 	statsBox->PackEnd(dataBox);
 
-
 	Gui::HBox *row = new Gui::HBox();
 	row->SetSpacing(10.0f);
 
@@ -107,7 +105,6 @@ StationShipViewForm::StationShipViewForm(FormController *controller, int marketI
 	if (pos > 0)
 		layoutBox->PackEnd(row);
 
-
 	Gui::HBox *buttonBox = new Gui::HBox();
 	buttonBox->SetSpacing(5.0f);
 
@@ -122,7 +119,7 @@ void StationShipViewForm::BuyShip()
 {
 	Sint64 cost = ShipType::types[m_sos.id].baseprice;
 	if (Pi::player->GetMoney() < cost) {
-		Pi::cpan->MsgLog()->Message("", Lang::YOU_NOT_ENOUGH_MONEY);
+		Pi::game->log->Add(Lang::YOU_NOT_ENOUGH_MONEY);
 		return;
 	}
 
@@ -138,7 +135,7 @@ void StationShipViewForm::BuyShip()
 
 	m_station->ReplaceShipOnSale(m_marketIndex, old);
 
-    Pi::cpan->MsgLog()->Message("", Lang::THANKS_AND_REMEMBER_TO_BUY_FUEL);
+    Pi::game->log->Add(Lang::THANKS_AND_REMEMBER_TO_BUY_FUEL);
 
     m_formController->CloseForm();
 }
