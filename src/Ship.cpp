@@ -288,6 +288,9 @@ double Ship::GetSpeedReachedWithFuel() const
 
 bool Ship::OnDamage(Object *attacker, float kgDamage)
 {
+	//give feedback, if shot by player
+	Pi::worldView->ReportHit(this);
+
 	if (m_invulnerable) {
 		Sound::BodyMakeNoise(this, "Hull_hit_Small", 0.5f);
 		return true;

@@ -62,6 +62,8 @@ namespace Gui {
 
 		static Graphics::Renderer *GetRenderer() { return s_renderer; }
 
+		static FontCache &GetFontCache() { return s_fontCache; }
+
 	private:
 		static void AddShortcutWidget(Widget *w);
 		static void RemoveShortcutWidget(Widget *w);

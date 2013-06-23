@@ -265,6 +265,9 @@ public:
 
 	bool ChooseTarget(TargetingCriteria);
 
+	virtual Body *GetCombatTarget() const { return 0; }
+	virtual Body *GetNavTarget() const { return 0; }
+
 protected:
 	virtual void Save(Serializer::Writer &wr, Space *space);
 	virtual void Load(Serializer::Reader &rd, Space *space);
