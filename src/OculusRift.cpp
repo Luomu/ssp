@@ -91,16 +91,15 @@ public:
 
 			if (detectionMessage)
 			{
-				String messageText(detectionMessage);
+				/*String messageText(detectionMessage);
 				messageText += "\n\n"
 							   "Press 'Try Again' to run retry detection.\n"
-							   "Press 'Continue' to run full-screen anyway.";
+							   "Press 'Continue' to run anyway.";
+							   */
+				detectionResult = IDCONTINUE;//::MessageBoxA(0, messageText.ToCStr(), "Oculus Rift Detection", MB_CANCELTRYCONTINUE|MB_ICONWARNING);
 
-				detectionResult = ::MessageBoxA(0, messageText.ToCStr(), "Oculus Rift Detection",
-												MB_CANCELTRYCONTINUE|MB_ICONWARNING);
-
-				if (detectionResult == IDCANCEL)
-					return;
+				//if (detectionResult == IDCANCEL)
+				//	return;
 			}
 
 		} while (detectionResult != IDCONTINUE);
@@ -166,7 +165,7 @@ public:
 				//pManager->Release();
 				pManager.Reset();
 			}
-			System::Destroy();
+			/*System::Destroy();*/
 		}
 	}
 

@@ -192,10 +192,11 @@ void Camera::Draw(Renderer *renderer, const Body *excludeBody)
 	Pi::game->GetSpace()->GetBackground().Draw(renderer, trans2bg);
 
 	{
-		std::vector<Graphics::Light> rendererLights;
+		m_rendererLights.clear();
+		m_rendererLights.reserve(m_lightSources.size());
 		for (size_t i = 0; i < m_lightSources.size(); i++)
-			rendererLights.push_back(m_lightSources[i].GetLight());
-		renderer->SetLights(rendererLights.size(), &rendererLights[0]);
+			m_rendererLights.push_back(m_lightSources[i].GetLight());
+		renderer->SetLights(m_rendererLights.size(), &m_rendererLights[0]);
 	}
 
 	for (std::list<BodyAttrs>::iterator i = m_sortedBodies.begin(); i != m_sortedBodies.end(); ++i) {
@@ -210,15 +211,14 @@ void Camera::Draw(Renderer *renderer, const Body *excludeBody)
 			continue;
 
 		// draw spikes for far objects
-		double screenrad = 500 * rad / attrs->camDist;      // approximate pixel size
+		const double screenrad = 500 * rad / attrs->camDist;      // approximate pixel size
 		if (attrs->body->IsType(Object::PLANET) && screenrad < 2) {
 			// absolute bullshit
-			double spikerad = (7 + 1.5*log10(screenrad)) * rad / screenrad;
+			const double spikerad = (7 + 1.5*log10(screenrad)) * rad / screenrad;
 			DrawSpike(spikerad, attrs->viewCoords, attrs->viewTransform);
-		}
-		else if (screenrad >= 2 || attrs->body->IsType(Object::STAR) ||
-					(attrs->body->IsType(Object::PROJECTILE) && screenrad > 0.25))
+		} else if (screenrad >= 2 || attrs->body->IsType(Object::STAR) || (attrs->body->IsType(Object::PROJECTILE) && screenrad > 0.25)) {
 			attrs->body->Render(renderer, this, attrs->viewCoords, attrs->viewTransform);
+		}
 	}
 
 	Sfx::RenderAll(renderer, Pi::game->GetSpace()->GetRootFrame(), m_camFrame);

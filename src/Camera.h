@@ -132,6 +132,7 @@ private:
 
 	std::list<BodyAttrs> m_sortedBodies;
 	std::vector<LightSource> m_lightSources;
+	std::vector<Graphics::Light> m_rendererLights;
 
 	Graphics::Renderer *m_renderer;
 };
