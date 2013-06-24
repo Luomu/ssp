@@ -390,12 +390,18 @@ void WorldView::Draw3D()
 	assert(Pi::player);
 	assert(!Pi::player->IsDead());
 	m_camera->Draw(m_renderer, GetCamType() == CAM_INTERNAL ? Pi::player : 0);
+
+	if (!Pi::DrawGUI) return;
+
+	// Draw 3D HUD
+	// Speed lines
 	if (m_speedLines.Valid()) m_speedLines->Render(m_renderer);
 
-	//draw contact trails
+	// Contact trails
 	for (auto it = Pi::player->GetContacts().begin(); it != Pi::player->GetContacts().end(); ++it)
 		it->trail->Render(m_renderer);
 
+	// Target info (not really 3d)
 	m_reticle->Draw();
 }
 
