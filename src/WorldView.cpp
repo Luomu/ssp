@@ -566,7 +566,7 @@ void WorldView::RefreshButtonStateAndVisibility()
 			ss << stringf("AbsPos: %0{f.2}, %1{f.2}, %2{f.2}\n", abs_pos.x, abs_pos.y, abs_pos.z);
 
 			const SystemPath &path(Pi::player->GetFrame()->GetSystemBody()->path);
-			ss << stringf("Rel-to: %0 [%1{d},%2{d},%3{d},%4{u},%5{u}] ", 
+			ss << stringf("Rel-to: %0 [%1{d},%2{d},%3{d},%4{u},%5{u}] ",
 				Pi::player->GetFrame()->GetLabel(),
 				path.sectorX, path.sectorY, path.sectorZ, path.systemIndex, path.bodyIndex);
 			ss << stringf("(%0{f.2} km), rotating: %1\n",
@@ -1257,8 +1257,8 @@ void WorldView::UpdateProjectedObjects()
 	for (Space::BodyIterator i = Pi::game->GetSpace()->BodiesBegin(); i != Pi::game->GetSpace()->BodiesEnd(); ++i) {
 		Body *b = *i;
 
-		// don't show the player label on internal camera
-		if (b->IsType(Object::PLAYER) && GetCamType() == CAM_INTERNAL)
+		// don't show label for player or locked targets
+		if (b->IsType(Object::PLAYER))
 			continue;
 		if (b == Pi::player->GetCombatTarget())
 			continue;
