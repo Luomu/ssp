@@ -29,6 +29,7 @@ end
 
 local buttonDefs = {
 	{ t("Start at Tau Ceti"), function () Game.StartGame(SystemPath.New(0,-2,-1,1,6)) setupPlayerWave() end },
+	{ t("Start at Gliese 1"), function () Game.StartGame(SystemPath.New(0,-2,-2,0,1)) setupPlayerWave() end },
 	{ t("Start at Earth"),    function () Game.StartGame(SystemPath.New(0,0,0,0,9))   setupPlayerWave() end },
 	{ t("Start at New Hope"), function () Game.StartGame(SystemPath.New(1,-1,-1,0,4)) setupPlayerWave() end },
 	{ t("Load game"),         doLoadDialog },
