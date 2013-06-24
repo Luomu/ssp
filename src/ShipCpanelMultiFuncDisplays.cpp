@@ -133,6 +133,8 @@ void ScannerWidget::Draw()
 
 	m_renderer->SetBlendMode(BLEND_SOLID);
 
+	glLineWidth(1.f);
+
 	SetScissor(false);
 }
 

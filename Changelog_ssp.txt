@@ -11,3 +11,5 @@ Implemented features, bits and pieces:
 * Couple of test lua commands: SpawnTargetDrone, SpawnEnemy
 * Add Tau Ceti start point, in orbit
 * Multi-line hud message log
+* Show target info next to reticle, report hits
+* Combat padlock in external camera

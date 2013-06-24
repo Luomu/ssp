@@ -107,7 +107,9 @@ public:
 	virtual void Reset() { }
 };
 
-// Zoomable, rotatable orbit camera, always looks at the ship
+// Zoomable, rotatable orbit camera
+// - in combat padlocks the target
+// - otherwise looks at the ship
 class ExternalCameraController : public MoveableCameraController {
 public:
 	ExternalCameraController(Camera *camera, const Ship *ship);
