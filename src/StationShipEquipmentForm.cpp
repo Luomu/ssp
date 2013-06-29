@@ -12,7 +12,7 @@
 #include "StringF.h"
 #include "Game.h"
 
-#define REMOVAL_VALUE_PERCENT 90
+static const int REMOVAL_VALUE_PERCENT = 90;
 
 class PickLaserMountForm : public FaceForm {
 public:

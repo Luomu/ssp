@@ -25,7 +25,8 @@
 #include "StringF.h"
 #include "Player.h"
 
-#define TONS_HULL_PER_SHIELD 10.0f
+static const float TONS_HULL_PER_SHIELD = 10.f;
+static const double KINETIC_ENERGY_MULT	= 0.01;
 
 bool ContactDistanceSort(const Ship::RadarContact &a, const Ship::RadarContact &b)
 {
@@ -339,7 +340,6 @@ bool Ship::OnDamage(Object *attacker, float kgDamage)
 	return true;
 }
 
-#define KINETIC_ENERGY_MULT	0.01
 bool Ship::OnCollision(Object *b, Uint32 flags, double relVel)
 {
 	// hitting space station docking surfaces shouldn't do damage

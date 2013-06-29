@@ -27,6 +27,8 @@ SpaceStationType::SpaceStationType()
 , angVel(0.f)
 , dockMethod(SURFACE)
 , numDockingPorts(0)
+, numDockingStages(0)
+, numUndockStages(0)
 , shipLaunchStage(0)
 , dockAnimStageDuration(0)
 , undockAnimStageDuration(0)
@@ -63,7 +65,7 @@ void SpaceStationType::OnSetupComplete()
 			PiVerify(bay>0 && stage>0);
 			m_ports[bay].m_docking[stage+1] = (*dockIter)->GetTransform();
 		}
-		
+
 		SceneGraph::Model::TVecMT::const_iterator leaveIter = leaving_mts.begin();
 		for (; leaveIter!=leaving_mts.end() ; ++leaveIter)
 		{
@@ -74,36 +76,36 @@ void SpaceStationType::OnSetupComplete()
 		}
 
 		assert(m_ports.size() > 0);
-		assert(GetNumDockingStages() > 0);
-		assert(GetNumUndockStages() > 0);
+		assert(numDockingStages > 0);
+		assert(numUndockStages > 0);
 
 		for (PortMap::const_iterator pIt = m_ports.begin(), pItEnd = m_ports.end(); pIt!=pItEnd; ++pIt)
 		{
-			if (uint32_t(GetNumDockingStages()-1) < pIt->second.m_docking.size()) {
+			if (Uint32(numDockingStages-1) < pIt->second.m_docking.size()) {
 				OS::Error(
 					"(%s): numDockingStages (%d) vs number of docking stages (" SIZET_FMT ")\n"
 					"Must have at least the same number of entries as the number of docking stages "
 					"PLUS the docking timeout at the start of the array.",
-					modelName.c_str(), (GetNumDockingStages()-1), pIt->second.m_docking.size());
+					modelName.c_str(), (numDockingStages-1), pIt->second.m_docking.size());
 
-			} else if (uint32_t(GetNumDockingStages()-1) != pIt->second.m_docking.size()) {
+			} else if (Uint32(numDockingStages-1) != pIt->second.m_docking.size()) {
 				OS::Warning(
 					"(%s): numDockingStages (%d) vs number of docking stages (" SIZET_FMT ")\n",
-					modelName.c_str(), (GetNumDockingStages()-1), pIt->second.m_docking.size());
+					modelName.c_str(), (numDockingStages-1), pIt->second.m_docking.size());
 			}
-			
-			if (0!=pIt->second.m_leaving.size() && uint32_t(GetNumUndockStages()) < pIt->second.m_leaving.size()) {
+
+			if (0!=pIt->second.m_leaving.size() && Uint32(numUndockStages) < pIt->second.m_leaving.size()) {
 				OS::Error(
 					"(%s): numUndockStages (%d) vs number of leaving stages (" SIZET_FMT ")\n"
 					"Must have at least the same number of entries as the number of leaving stages.",
-					modelName.c_str(), (GetNumDockingStages()-1), pIt->second.m_docking.size());
+					modelName.c_str(), (numDockingStages-1), pIt->second.m_docking.size());
 
-			} else if(0!=pIt->second.m_leaving.size() && uint32_t(GetNumUndockStages()) != pIt->second.m_leaving.size()) {
+			} else if(0!=pIt->second.m_leaving.size() && Uint32(numUndockStages) != pIt->second.m_leaving.size()) {
 				OS::Warning(
 					"(%s): numUndockStages (%d) vs number of leaving stages (" SIZET_FMT ")\n",
-					modelName.c_str(), GetNumUndockStages(), pIt->second.m_leaving.size());
+					modelName.c_str(), numUndockStages, pIt->second.m_leaving.size());
 			}
-			
+
 		}
 	}
 }
@@ -158,13 +160,13 @@ bool SpaceStationType::GetShipApproachWaypoints(const unsigned int port, const i
 
 double SpaceStationType::GetDockAnimStageDuration(const int stage) const
 {
-	assert(stage>=0 && stage<GetNumDockingStages());
+	assert(stage>=0 && stage<numDockingStages);
 	return dockAnimStageDuration[stage];
 }
 
 double SpaceStationType::GetUndockAnimStageDuration(const int stage) const
 {
-	assert(stage>=0 && stage<GetNumUndockStages());
+	assert(stage>=0 && stage<numUndockStages);
 	return undockAnimStageDuration[stage];
 }
 
@@ -174,7 +176,7 @@ vector3d vlerp(const double t, const vector3d& v1, const vector3d& v2)
 	return t*v2 + (1.0-t)*v1;
 }
 
-static bool GetPosOrient(const SpaceStationType::TMapBayIDMat &bayMap, const int stage, const double t, const vector3d &from, 
+static bool GetPosOrient(const SpaceStationType::TMapBayIDMat &bayMap, const int stage, const double t, const vector3d &from,
 				  SpaceStationType::positionOrient_t &outPosOrient, const Ship *ship)
 {
 	bool gotOrient = false;
@@ -209,7 +211,7 @@ static bool GetPosOrient(const SpaceStationType::TMapBayIDMat &bayMap, const int
 bool SpaceStationType::GetDockAnimPositionOrient(const unsigned int port, int stage, double t, const vector3d &from, positionOrient_t &outPosOrient, const Ship *ship) const
 {
 	if (stage < -shipLaunchStage) { stage = -shipLaunchStage; t = 1.0; }
-	if (stage > GetNumDockingStages() || !stage) { stage = GetNumDockingStages(); t = 1.0; }
+	if (stage > numDockingStages || !stage) { stage = numDockingStages; t = 1.0; }
 	// note case for stageless launch (shipLaunchStage==0)
 
 	bool gotOrient = false;
@@ -231,7 +233,7 @@ bool SpaceStationType::GetDockAnimPositionOrient(const unsigned int port, int st
 	return gotOrient;
 }
 
-static int _get_stage_durations(lua_State *L, const char *key, std::vector<double> &outDurationArray)
+static int _get_stage_durations(lua_State *L, const char *key, int &outNumStages, double **outDurationArray)
 {
 	LUA_DEBUG_START(L);
 	LuaTable stages = LuaTable(L, -1).Sub(key);
@@ -240,11 +242,9 @@ static int _get_stage_durations(lua_State *L, const char *key, std::vector<doubl
 	}
 	if (stages.Size() < 1)
 		return luaL_error(L, "Station must have at least 1 stage in %s", key);
-	outDurationArray.reserve(stages.Size());
-	//std::copy(stages.Begin<double>(), stages.End<double>(), outDurationArray);
-	for(LuaTable::VecIter<double> iter = stages.Begin<double>(), itEnd=stages.End<double>(); iter!=itEnd; ++iter) {
-		outDurationArray.push_back( (*iter) );
-	}
+	outNumStages = stages.Size();
+	*outDurationArray = new double[stages.Size()];
+	std::copy(stages.Begin<double>(), stages.End<double>(), *outDurationArray);
 	lua_pop(L, 1); // Popping t
 	LUA_DEBUG_END(L, 0);
 	return 0;
@@ -309,8 +309,8 @@ static int _define_station(lua_State *L, SpaceStationType &station)
 	station.parkingGapSize = t.Get("parking_gap_size", 2000.f);
 	station.shipLaunchStage = t.Get<int>("ship_launch_stage");
 	_get_bay_ids(L, "bay_groups", station.bayGroups, station.numDockingPorts);
-	_get_stage_durations(L, "dock_anim_stage_duration", station.dockAnimStageDuration);
-	_get_stage_durations(L, "undock_anim_stage_duration", station.undockAnimStageDuration);
+	_get_stage_durations(L, "dock_anim_stage_duration", station.numDockingStages, &station.dockAnimStageDuration);
+	_get_stage_durations(L, "undock_anim_stage_duration", station.numUndockStages, &station.undockAnimStageDuration);
 	LUA_DEBUG_END(L, 0);
 
 	assert(!station.modelName.empty());
@@ -374,12 +374,12 @@ void SpaceStationType::Uninit()
 {
 	std::vector<SpaceStationType>::iterator i;
 	for (i=surfaceStationTypes.begin(); i!=surfaceStationTypes.end(); ++i) {
-		(*i).dockAnimStageDuration.clear();
-		(*i).undockAnimStageDuration.clear();
+		delete[] (*i).dockAnimStageDuration;
+		delete[] (*i).undockAnimStageDuration;
 	}
 	for (i=orbitalStationTypes.begin(); i!=orbitalStationTypes.end(); ++i) {
-		(*i).dockAnimStageDuration.clear();
-		(*i).undockAnimStageDuration.clear();
+		delete[] (*i).dockAnimStageDuration;
+		delete[] (*i).undockAnimStageDuration;
 	}
 
 	lua_close(s_lua); s_lua = 0;
