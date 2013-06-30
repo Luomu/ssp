@@ -26,6 +26,7 @@ public:
 	void Update(const Ship* owner);
 
 private:
+	bool m_gunsLockedOn;
 	Graphics::Renderer *m_renderer;
 	RefCountedPtr<Text::TextureFont> m_font;
 	std::string m_targetDist;

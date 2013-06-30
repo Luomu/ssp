@@ -10,7 +10,8 @@ const float RETICLE_RADIUS = 0.15f;
 const Uint32 BLINK_TIME = 1500;
 
 HudReticle::HudReticle(RefCountedPtr<Text::TextureFont> font, Graphics::Renderer *r)
-: m_font(font)
+: m_gunsLockedOn(false)
+, m_font(font)
 , m_renderer(r)
 , m_blinkTimer(0)
 {
@@ -32,6 +33,7 @@ void HudReticle::Update(const Ship *owner)
 		m_targetDist = format_distance(tgt->GetInterpPositionRelTo(owner).Length());
 		m_targetVel = stringf("%0{f.0}m/s", tgt->GetVelocityRelTo(owner).Length());
 	}
+	m_gunsLockedOn = owner->TargetInSight();
 }
 
 void HudReticle::Draw()
@@ -60,4 +62,8 @@ void HudReticle::Draw()
 	m_renderer->SetTransform(matrix4x4f::Identity());
 	Graphics::Drawables::Circle circ(RETICLE_RADIUS, Colors::HUD_TARGET_INFO);
 	circ.Draw(m_renderer);
+	if (m_gunsLockedOn) {
+		m_renderer->SetTransform(matrix4x4f::ScaleMatrix(0.9));
+		circ.Draw(m_renderer);
+	}
 }

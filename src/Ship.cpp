@@ -27,6 +27,7 @@
 
 static const float TONS_HULL_PER_SHIELD = 10.f;
 static const double KINETIC_ENERGY_MULT	= 0.01;
+static const double AIM_CONE = 0.98;
 
 bool ContactDistanceSort(const Ship::RadarContact &a, const Ship::RadarContact &b)
 {
@@ -192,7 +193,8 @@ void Ship::PostLoadFixup(Space *space)
 Ship::Ship(ShipType::Id shipId): DynamicBody(),
 	m_controller(0),
 	m_thrusterFuel(1.0),
-	m_reserveFuel(0.0)
+	m_reserveFuel(0.0),
+	m_targetInSight(false)
 {
 	m_flightState = FLYING;
 	m_alertState = ALERT_NONE;
@@ -808,23 +810,19 @@ void Ship::FireWeapon(int num)
 	const Body *tgt = GetCombatTarget();
 	//fire at target when it's near the center reticle
 	//deliberately using ship's dir and not gun's dir
-	if (tgt) {
-		vector3d tdir = tgt->GetPositionRelTo(this);
-		const vector3d shipDir = -m.VectorZ();
+	if (tgt && m_targetInSight) {
+		const vector3d tdir = tgt->GetPositionRelTo(this);
+		const vector3d targvel = tgt->GetVelocityRelTo(this);
+		const double projspeed = lt.speed;
+		double projtime = tdir.Length() / projspeed;
+		const vector3d targaccel(0,0,0);
 
-		if (tdir.Normalized().Dot(shipDir) > 0.98) {
-			const vector3d targvel = tgt->GetVelocityRelTo(this);
-			const double projspeed = lt.speed;
-			double projtime = tdir.Length() / projspeed;
-			const vector3d targaccel(0,0,0);
+		vector3d leadpos = tdir + targvel*projtime + 0.5*targaccel*projtime*projtime;
+		// second pass
+		projtime = leadpos.Length() / projspeed;
+		leadpos = tdir + targvel*projtime + 0.5*targaccel*projtime*projtime;
 
-			vector3d leadpos = tdir + targvel*projtime + 0.5*targaccel*projtime*projtime;
-			// second pass
-			projtime = leadpos.Length() / projspeed;
-			leadpos = tdir + targvel*projtime + 0.5*targaccel*projtime*projtime;
-
-			dir = leadpos.Normalized();
-		}
+		dir = leadpos.Normalized();
 	}
 
 	//disabled, cooling rate is too slow
@@ -995,6 +993,17 @@ void Ship::StaticUpdate(const float timeStep)
 		Explode();
 
 	UpdateAlertState();
+
+	m_targetInSight = false;
+	const Body *target = GetCombatTarget();
+	if (target) {
+		const matrix3x3d &m = GetOrient();
+		vector3d tdir = target->GetPositionRelTo(this);
+		const vector3d shipDir = -m.VectorZ();
+
+		if (tdir.Normalized().Dot(shipDir) > AIM_CONE)
+			m_targetInSight = true;
+	}
 
 	/* FUEL SCOOPING!!!!!!!!! */
 	if ((m_flightState == FLYING) && (m_equipment.Get(Equip::SLOT_FUELSCOOP) != Equip::NONE)) {
