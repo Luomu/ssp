@@ -791,22 +791,50 @@ void Ship::TimeAccelAdjust(const float timeStep)
 	SetVelocity(GetVelocity() + vdiff);
 }
 
+//this is all experimental
 void Ship::FireWeapon(int num)
 {
 	if (m_flightState != FLYING) return;
 
 	const matrix3x3d &m = GetOrient();
-	const vector3d dir = m * vector3d(m_type->gunMount[num].dir);
-	const vector3d pos = m * vector3d(m_type->gunMount[num].pos) + GetPosition();
-
-	m_gunTemperature[num] += 0.01f;
+	vector3d dir = m * vector3d(m_type->gunMount[num].dir);
+	//const vector3d pos = m * vector3d(m_type->gunMount[num].pos) + GetPosition();
+	vector3d pos = GetPosition(); //spawn from center
 
 	Equip::Type t = m_equipment.Get(Equip::SLOT_LASER, num);
 	const LaserType &lt = Equip::lasers[Equip::types[t].tableIndex];
 	m_gunRecharge[num] = lt.rechargeTime;
+
+	const Body *tgt = GetCombatTarget();
+	//fire at target when it's near the center reticle
+	//deliberately using ship's dir and not gun's dir
+	if (tgt) {
+		vector3d tdir = tgt->GetPositionRelTo(this);
+		const vector3d shipDir = -m.VectorZ();
+
+		if (tdir.Normalized().Dot(shipDir) > 0.98) {
+			const vector3d targvel = tgt->GetVelocityRelTo(this);
+			const double projspeed = lt.speed;
+			double projtime = tdir.Length() / projspeed;
+			const vector3d targaccel(0,0,0);
+
+			vector3d leadpos = tdir + targvel*projtime + 0.5*targaccel*projtime*projtime;
+			// second pass
+			projtime = leadpos.Length() / projspeed;
+			leadpos = tdir + targvel*projtime + 0.5*targaccel*projtime*projtime;
+
+			dir = leadpos.Normalized();
+		}
+	}
+
+	//disabled, cooling rate is too slow
+	//fire rate is also too high to my taste
+	//m_gunTemperature[num] += 0.01f;
+
 	vector3d baseVel = GetVelocity();
 	vector3d dirVel = lt.speed * dir.Normalized();
 
+/*
 	if (lt.flags & Equip::LASER_DUAL)
 	{
 		const ShipType::DualLaserOrientation orient = m_type->gunMount[num].orient;
@@ -818,6 +846,7 @@ void Ship::FireWeapon(int num)
 		Projectile::Add(this, t, pos - sep, baseVel, dirVel);
 	}
 	else
+*/
 		Projectile::Add(this, t, pos, baseVel, dirVel);
 
 	/*
