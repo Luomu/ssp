@@ -38,16 +38,6 @@ void Player::Load(Serializer::Reader &rd, Space *space)
 	MarketAgent::Load(rd);
 }
 
-//XXX perhaps remove this, the sound is very annoying
-bool Player::OnDamage(Object *attacker, float kgDamage)
-{
-	bool r = Ship::OnDamage(attacker, kgDamage);
-	if (!IsDead() && (GetPercentHull() < 25.0f)) {
-		Sound::BodyMakeNoise(this, "warning", .5f);
-	}
-	return r;
-}
-
 //XXX handle killcounts in lua
 void Player::SetDockedWith(SpaceStation *s, int port)
 {
