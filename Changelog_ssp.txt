@@ -13,3 +13,4 @@ Implemented features, bits and pieces:
 * Multi-line hud message log
 * Show target info next to reticle, report hits
 * Combat padlock in external camera
+* Auto-aim lasers when targeting cone
