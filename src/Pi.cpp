@@ -1009,8 +1009,6 @@ void Pi::Start()
 
 		Pi::BeginRenderTarget();
 		Pi::renderer->BeginFrame();
-		Pi::renderer->SetPerspectiveProjection(75, Pi::GetScrAspect(), 1.f, 10000.f);
-		Pi::renderer->SetTransform(matrix4x4f::Identity());
 		if (intro) intro->Draw(_time);
 		Pi::renderer->EndFrame();
 
