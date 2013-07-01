@@ -311,9 +311,8 @@ bool Ship::OnDamage(Object *attacker, float kgDamage)
 			}
 		}
 
-		if(!Pi::IsGodModeOn()) {
-			m_stats.hull_mass_left -= dam;
-		}
+		m_stats.hull_mass_left -= dam;
+
 		if (m_stats.hull_mass_left < 0.0f) {
 			if (attacker) {
 				if (attacker->IsType(Object::BODY))
@@ -391,8 +390,7 @@ bool Ship::OnCollision(Object *b, Uint32 flags, double relVel)
 //destroy ship in an explosion
 void Ship::Explode()
 {
-	if(Pi::IsGodModeOn())
-		return;
+	if (m_invulnerable) return;
 
 	Pi::game->GetSpace()->KillBody(this);
 	Sfx::Add(this, Sfx::TYPE_EXPLOSION);
