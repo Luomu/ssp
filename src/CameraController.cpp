@@ -156,26 +156,45 @@ void ExternalCameraController::Reset()
 
 void ExternalCameraController::Update()
 {
-	// when landed don't let external view look from below
-	// XXX shouldn't be limited to player
 	const Ship *ship = GetShip();
-	if (ship->IsType(Object::PLAYER)) {
+	const Body *tgt = ship->GetCombatTarget();
+
+	//always pad lock target
+	if (tgt) {
+		// player is between camera and target
+		const matrix3x3d &m = ship->GetInterpOrient();
+		const double crad = ship->GetClipRadius();
+		vector3d offset = tgt->GetInterpPositionRelTo(ship);
+		offset = offset.Normalized() * -4.0 * crad;
+		offset += (m * vector3d(0,crad,0));
+
+		const vector3d eye = ship->GetInterpPosition() + offset;
+		const vector3d target = tgt->GetInterpPosition();
+		const vector3d up = m.VectorY();//.Normalized();
+
+		m_extOrient = matrix3x3d::LookAt(eye, target, up);
+
+		m_camera->SetFrame(ship->GetFrame());
+		m_camera->SetOrient(m_extOrient);
+		m_camera->SetPosition(eye);
+	} else {
+		// when landed don't let external view look from below
 		if (ship->GetFlightState() == Ship::LANDED ||
 			ship->GetFlightState() == Ship::DOCKED) {
 			m_rotX = Clamp(m_rotX, -170.0, -10.0);
 		}
+
+		vector3d p = vector3d(0, 0, m_dist);
+		p = matrix3x3d::RotateX(-DEG2RAD(m_rotX)) * p;
+		p = matrix3x3d::RotateY(-DEG2RAD(m_rotY)) * p;
+		m_extOrient = matrix3x3d::RotateY(-DEG2RAD(m_rotY)) *
+			matrix3x3d::RotateX(-DEG2RAD(m_rotX));
+
+		SetPosition(p);
+		SetOrient(m_extOrient);
+
+		CameraController::Update();
 	}
-
-	vector3d p = vector3d(0, 0, m_dist);
-	p = matrix3x3d::RotateX(-DEG2RAD(m_rotX)) * p;
-	p = matrix3x3d::RotateY(-DEG2RAD(m_rotY)) * p;
-	m_extOrient = matrix3x3d::RotateY(-DEG2RAD(m_rotY)) *
-		matrix3x3d::RotateX(-DEG2RAD(m_rotX));
-
-	SetPosition(p);
-	SetOrient(m_extOrient);
-
-	CameraController::Update();
 }
 
 void ExternalCameraController::Save(Serializer::Writer &wr)

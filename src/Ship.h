@@ -264,6 +264,10 @@ public:
 	void SetInvulnerable(bool b) { m_invulnerable = b; }
 
 	bool ChooseTarget(TargetingCriteria);
+	bool TargetInSight() const { return m_targetInSight; }
+
+	virtual Body *GetCombatTarget() const { return 0; }
+	virtual Body *GetNavTarget() const { return 0; }
 
 protected:
 	virtual void Save(Serializer::Writer &wr, Space *space);
@@ -339,6 +343,8 @@ private:
 
 	SceneGraph::Animation *m_landingGearAnimation;
 	ScopedPtr<NavLights> m_navLights;
+
+	bool m_targetInSight;
 };
 
 #endif /* _SHIP_H */

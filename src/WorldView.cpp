@@ -2,35 +2,35 @@
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "WorldView.h"
-#include "Pi.h"
+#include "Colors.h"
 #include "Frame.h"
-#include "Player.h"
+#include "Game.h"
+#include "HyperspaceCloud.h"
+#include "KeyBindings.h"
+#include "Lang.h"
+#include "Pi.h"
 #include "Planet.h"
-#include "galaxy/Sector.h"
+#include "Player.h"
+#include "Quaternion.h"
 #include "SectorView.h"
 #include "Serializer.h"
 #include "ShipCpanel.h"
 #include "Sound.h"
 #include "Space.h"
 #include "SpaceStation.h"
-#include "galaxy/StarSystem.h"
-#include "HyperspaceCloud.h"
-#include "KeyBindings.h"
-#include "perlin.h"
-#include "Lang.h"
 #include "StringF.h"
-#include "Game.h"
+#include "galaxy/Sector.h"
+#include "galaxy/StarSystem.h"
+#include "graphics/Drawables.h"
+#include "graphics/Frustum.h"
 #include "graphics/Graphics.h"
 #include "graphics/Renderer.h"
-#include "graphics/Frustum.h"
 #include "graphics/TextureBuilder.h"
-#include "graphics/Drawables.h"
-#include "matrix4x4.h"
-#include "Quaternion.h"
+
 #include <algorithm>
+#include <sstream>
 
 const double WorldView::PICK_OBJECT_RECT_SIZE = 20.0;
-static const Color s_hudTextColor(0.0f,1.0f,0.0f,0.9f);
 static const float ZOOM_SPEED = 1.f;
 static const float WHEEL_SENSITIVITY = .2f;	// Should be a variable in user settings.
 
@@ -159,7 +159,7 @@ void WorldView::InitObject()
 	Gui::Screen::PopFont();
 #endif
 
-	m_hudHyperspaceInfo = (new Gui::Label(""))->Color(s_hudTextColor);
+	m_hudHyperspaceInfo = (new Gui::Label(""))->Color(Colors::HUD_TEXT);
 	Add(m_hudHyperspaceInfo, Gui::Screen::GetWidth()*0.4f, Gui::Screen::GetHeight()*0.3f);
 
 	m_hudHullTemp = new Gui::MeterBar(100.0f, Lang::HULL_TEMP, Color(1.0f,0.0f,0.0f,0.8f));
@@ -178,7 +178,7 @@ void WorldView::InitObject()
 	Add(m_hudTargetHullIntegrity, Gui::Screen::GetWidth() - 105.0f, 5.0f);
 	Add(m_hudTargetShieldIntegrity, Gui::Screen::GetWidth() - 105.0f, 45.0f);
 
-	m_hudTargetInfo = (new Gui::Label(""))->Color(s_hudTextColor);
+	m_hudTargetInfo = (new Gui::Label(""))->Color(Colors::HUD_TEXT);
 	Add(m_hudTargetInfo, 0, 85.0f);
 
 	Gui::Screen::PushFont("OverlayFont");
@@ -189,14 +189,10 @@ void WorldView::InitObject()
 
 	m_navTargetIndicator.label = (new Gui::Label(""))->Color(0.0f, 1.0f, 0.0f);
 	m_navVelIndicator.label = (new Gui::Label(""))->Color(0.0f, 1.0f, 0.0f);
-	m_combatTargetIndicator.label = new Gui::Label(""); // colour set dynamically
-	m_targetLeadIndicator.label = new Gui::Label("");
 
 	// these labels are repositioned during Draw3D()
 	Add(m_navTargetIndicator.label, 0, 0);
 	Add(m_navVelIndicator.label, 0, 0);
-	Add(m_combatTargetIndicator.label, 0, 0);
-	Add(m_targetLeadIndicator.label, 0, 0);
 
 	// XXX m_renderer not set yet
 	Graphics::TextureBuilder b = Graphics::TextureBuilder::UI("icons/indicator_mousedir.png");
@@ -204,6 +200,9 @@ void WorldView::InitObject()
 
 	const Graphics::TextureDescriptor &descriptor = b.GetDescriptor();
 	m_indicatorMousedirSize = vector2f(descriptor.dataSize.x*descriptor.texSize.x,descriptor.dataSize.y*descriptor.texSize.y);
+
+	RefCountedPtr<Text::TextureFont> hudFont = Gui::Screen::GetFontCache().GetTextureFont("OverlayFont");
+	m_reticle.Reset(new HudReticle(hudFont, Gui::Screen::GetRenderer()));
 
 	if (Pi::config->Int("SpeedLines") == 1)
 		m_speedLines.Reset(new SpeedLines(Pi::player));
@@ -354,6 +353,12 @@ void WorldView::OnPlayerChangeFlightControlState()
 	m_flightControlButton->SetActiveState(Pi::player->GetPlayerController()->GetFlightControlState());
 }
 
+void WorldView::ReportHit(const Body *b)
+{
+	if (b == Pi::player->GetCombatTarget())
+		m_reticle->BlinkTargetLabel();
+}
+
 void WorldView::OnClickBlastoff()
 {
 	Pi::BoinkNoise();
@@ -386,11 +391,19 @@ void WorldView::Draw3D()
 	assert(Pi::player);
 	assert(!Pi::player->IsDead());
 	m_camera->Draw(m_renderer, GetCamType() == CAM_INTERNAL ? Pi::player : 0);
+
+	if (!Pi::DrawGUI) return;
+
+	// Draw 3D HUD
+	// Speed lines
 	if (m_speedLines.Valid()) m_speedLines->Render(m_renderer);
 
-	//draw contact trails
+	// Contact trails
 	for (auto it = Pi::player->GetContacts().begin(); it != Pi::player->GetContacts().end(); ++it)
 		it->trail->Render(m_renderer);
+
+	// Target info (not really 3d)
+	m_reticle->Draw();
 }
 
 void WorldView::OnToggleLabels()
@@ -543,30 +556,35 @@ void WorldView::RefreshButtonStateAndVisibility()
 	}
 #if WITH_DEVKEYS
 	if (Pi::showDebugInfo) {
-		char buf[1024], aibuf[256];
-		vector3d pos = Pi::player->GetPosition();
-		vector3d abs_pos = Pi::player->GetPositionRelTo(Pi::game->GetSpace()->GetRootFrame());
+		std::ostringstream ss;
 
-		//Calculate lat/lon for ship position
-		const vector3d dir = pos.NormalizedSafe();
-		const float lat = RAD2DEG(asin(dir.y));
-		const float lon = RAD2DEG(atan2(dir.x, dir.z));
+		if (Pi::player->GetFlightState() != Ship::HYPERSPACE) {
+			vector3d pos = Pi::player->GetPosition();
+			vector3d abs_pos = Pi::player->GetPositionRelTo(Pi::game->GetSpace()->GetRootFrame());
 
-		const char *rel_to = (Pi::player->GetFrame() ? Pi::player->GetFrame()->GetLabel().c_str() : "System");
-		const char *rot_frame = (Pi::player->GetFrame()->IsRotFrame() ? "yes" : "no");
-		const SystemPath &path(Pi::player->GetFrame()->GetSystemBody()->path);
+			ss << stringf("Pos: %0{f.2}, %1{f.2}, %2{f.2}\n", pos.x, pos.y, pos.z);
+			ss << stringf("AbsPos: %0{f.2}, %1{f.2}, %2{f.2}\n", abs_pos.x, abs_pos.y, abs_pos.z);
+
+			const SystemPath &path(Pi::player->GetFrame()->GetSystemBody()->path);
+			ss << stringf("Rel-to: %0 [%1{d},%2{d},%3{d},%4{u},%5{u}] ",
+				Pi::player->GetFrame()->GetLabel(),
+				path.sectorX, path.sectorY, path.sectorZ, path.systemIndex, path.bodyIndex);
+			ss << stringf("(%0{f.2} km), rotating: %1\n",
+				pos.Length()/1000, (Pi::player->GetFrame()->IsRotFrame() ? "yes" : "no"));
+
+			//Calculate lat/lon for ship position
+			const vector3d dir = pos.NormalizedSafe();
+			const float lat = RAD2DEG(asin(dir.y));
+			const float lon = RAD2DEG(atan2(dir.x, dir.z));
+
+			ss << stringf("Lat / Lon: %0{f.8} / %1{f.8}\n", lat, lon);
+		}
+
+		char aibuf[256];
 		Pi::player->AIGetStatusText(aibuf); aibuf[255] = 0;
-		snprintf(buf, sizeof(buf), "Pos: %.1f,%.1f,%.1f\n"
-			"AbsPos: %.1f,%.1f,%.1f (%.3f AU)\n"
-			"Rel-to: %s [%d,%d,%d,%d,%d] (%.0f km), rotating: %s\n"
-			"%s\n"
-			"Lat / Lon : %.8f / %.8f",
-			pos.x, pos.y, pos.z,
-			abs_pos.x, abs_pos.y, abs_pos.z, abs_pos.Length()/AU,
-			rel_to, path.sectorX, path.sectorY, path.sectorZ, path.systemIndex, path.bodyIndex,
-			pos.Length()/1000, rot_frame, aibuf, lat, lon);
+		ss << aibuf << std::endl;
 
-		m_debugInfo->SetText(buf);
+		m_debugInfo->SetText(ss.str());
 		m_debugInfo->Show();
 	} else {
 		m_debugInfo->Hide();
@@ -848,15 +866,18 @@ void WorldView::Update()
 	m_activeCameraController->Update();
 	m_camera->Update();
 
+	m_reticle->Update(Pi::player);
+
 	UpdateProjectedObjects();
 
+	//speedlines and contact trails need cam_frame for transform, so they
+	//must be updated here (or don't delete cam_frame so early...)
 	if (m_speedLines.Valid()) {
 		m_speedLines->Update(Pi::game->GetTimeStep());
 		const Frame *cam_frame = m_camera->GetCamFrame();
 		matrix4x4d trans;
 		Frame::GetFrameRenderTransform(Pi::player->GetFrame(), cam_frame, trans);
 
-		//draw contact trails
 		for (auto it = Pi::player->GetContacts().begin(); it != Pi::player->GetContacts().end(); ++it)
 			it->trail->SetTransform(trans);
 
@@ -1228,7 +1249,7 @@ void WorldView::UpdateProjectedObjects()
 	const Graphics::Frustum frustum = m_camera->GetFrustum();
 
 	const Frame *cam_frame = m_camera->GetCamFrame();
-	matrix3x3d cam_rot = cam_frame->GetOrient();
+	const matrix3x3d cam_rot = cam_frame->GetOrient();
 
 	// determine projected positions and update labels
 	m_bodyLabels->Clear();
@@ -1236,8 +1257,10 @@ void WorldView::UpdateProjectedObjects()
 	for (Space::BodyIterator i = Pi::game->GetSpace()->BodiesBegin(); i != Pi::game->GetSpace()->BodiesEnd(); ++i) {
 		Body *b = *i;
 
-		// don't show the player label on internal camera
-		if (b->IsType(Object::PLAYER) && GetCamType() == CAM_INTERNAL)
+		// don't show label for player or locked targets
+		if (b->IsType(Object::PLAYER))
+			continue;
+		if (b == Pi::player->GetCombatTarget())
 			continue;
 
 		vector3d pos = b->GetInterpPositionRelTo(cam_frame);
@@ -1312,13 +1335,9 @@ void WorldView::UpdateProjectedObjects()
 	// update combat HUD
 	Ship *enemy = static_cast<Ship *>(Pi::player->GetCombatTarget());
 	if (enemy) {
-		char buf[128];
 		const vector3d targpos = enemy->GetInterpPositionRelTo(Pi::player) * cam_rot;
 		const double dist = targpos.Length();
 		const vector3d targScreenPos = enemy->GetInterpPositionRelTo(cam_frame);
-
-		snprintf(buf, sizeof(buf), "%.0fm", dist);
-		m_combatTargetIndicator.label->SetText(buf);
 		UpdateIndicator(m_combatTargetIndicator, targScreenPos);
 
 		// calculate firing solution and relative velocity along our z axis
@@ -1348,26 +1367,11 @@ void WorldView::UpdateProjectedObjects()
 			double raccel =
 				Pi::player->GetShipType()->linThrust[ShipType::THRUSTER_REVERSE] / Pi::player->GetMass();
 
-			double c = Clamp(vel / sqrt(2.0 * raccel * dist), -1.0, 1.0);
-			float r = float(0.2+(c+1.0)*0.4);
-			float b = float(0.2+(1.0-c)*0.4);
-
-			m_combatTargetIndicator.label->Color(r, 0.0f, b);
-			m_targetLeadIndicator.label->Color(r, 0.0f, b);
-
-			snprintf(buf, sizeof(buf), "%0.fm/s", vel);
-			m_targetLeadIndicator.label->SetText(buf);
 			UpdateIndicator(m_targetLeadIndicator, leadpos);
 
 			if ((m_targetLeadIndicator.side != INDICATOR_ONSCREEN) || (m_combatTargetIndicator.side != INDICATOR_ONSCREEN))
 				HideIndicator(m_targetLeadIndicator);
 
-			// if the lead indicator is very close to the position indicator
-			// try (just a little) to keep the labels from interfering with one another
-			if (m_targetLeadIndicator.side == INDICATOR_ONSCREEN) {
-				assert(m_combatTargetIndicator.side == INDICATOR_ONSCREEN);
-				SeparateLabels(m_combatTargetIndicator.label, m_targetLeadIndicator.label);
-			}
 		} else
 			HideIndicator(m_targetLeadIndicator);
 	} else {

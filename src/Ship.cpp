@@ -25,7 +25,9 @@
 #include "StringF.h"
 #include "Player.h"
 
-#define TONS_HULL_PER_SHIELD 10.0f
+static const float TONS_HULL_PER_SHIELD = 10.f;
+static const double KINETIC_ENERGY_MULT	= 0.01;
+static const double AIM_CONE = 0.98;
 
 bool ContactDistanceSort(const Ship::RadarContact &a, const Ship::RadarContact &b)
 {
@@ -191,7 +193,8 @@ void Ship::PostLoadFixup(Space *space)
 Ship::Ship(ShipType::Id shipId): DynamicBody(),
 	m_controller(0),
 	m_thrusterFuel(1.0),
-	m_reserveFuel(0.0)
+	m_reserveFuel(0.0),
+	m_targetInSight(false)
 {
 	m_flightState = FLYING;
 	m_alertState = ALERT_NONE;
@@ -288,6 +291,9 @@ double Ship::GetSpeedReachedWithFuel() const
 
 bool Ship::OnDamage(Object *attacker, float kgDamage)
 {
+	//give feedback, if shot by player
+	Pi::worldView->ReportHit(this);
+
 	if (m_invulnerable) {
 		Sound::BodyMakeNoise(this, "Hull_hit_Small", 0.5f);
 		return true;
@@ -336,7 +342,6 @@ bool Ship::OnDamage(Object *attacker, float kgDamage)
 	return true;
 }
 
-#define KINETIC_ENERGY_MULT	0.01
 bool Ship::OnCollision(Object *b, Uint32 flags, double relVel)
 {
 	// hitting space station docking surfaces shouldn't do damage
@@ -788,22 +793,46 @@ void Ship::TimeAccelAdjust(const float timeStep)
 	SetVelocity(GetVelocity() + vdiff);
 }
 
+//this is all experimental
 void Ship::FireWeapon(int num)
 {
 	if (m_flightState != FLYING) return;
 
 	const matrix3x3d &m = GetOrient();
-	const vector3d dir = m * vector3d(m_type->gunMount[num].dir);
-	const vector3d pos = m * vector3d(m_type->gunMount[num].pos) + GetPosition();
-
-	m_gunTemperature[num] += 0.01f;
+	vector3d dir = m * vector3d(m_type->gunMount[num].dir);
+	//const vector3d pos = m * vector3d(m_type->gunMount[num].pos) + GetPosition();
+	vector3d pos = GetPosition(); //spawn from center
 
 	Equip::Type t = m_equipment.Get(Equip::SLOT_LASER, num);
 	const LaserType &lt = Equip::lasers[Equip::types[t].tableIndex];
 	m_gunRecharge[num] = lt.rechargeTime;
+
+	const Body *tgt = GetCombatTarget();
+	//fire at target when it's near the center reticle
+	//deliberately using ship's dir and not gun's dir
+	if (tgt && m_targetInSight) {
+		const vector3d tdir = tgt->GetPositionRelTo(this);
+		const vector3d targvel = tgt->GetVelocityRelTo(this);
+		const double projspeed = lt.speed;
+		double projtime = tdir.Length() / projspeed;
+		const vector3d targaccel(0,0,0);
+
+		vector3d leadpos = tdir + targvel*projtime + 0.5*targaccel*projtime*projtime;
+		// second pass
+		projtime = leadpos.Length() / projspeed;
+		leadpos = tdir + targvel*projtime + 0.5*targaccel*projtime*projtime;
+
+		dir = leadpos.Normalized();
+	}
+
+	//disabled, cooling rate is too slow
+	//fire rate is also too high to my taste
+	//m_gunTemperature[num] += 0.01f;
+
 	vector3d baseVel = GetVelocity();
 	vector3d dirVel = lt.speed * dir.Normalized();
 
+/*
 	if (lt.flags & Equip::LASER_DUAL)
 	{
 		const ShipType::DualLaserOrientation orient = m_type->gunMount[num].orient;
@@ -815,6 +844,7 @@ void Ship::FireWeapon(int num)
 		Projectile::Add(this, t, pos - sep, baseVel, dirVel);
 	}
 	else
+*/
 		Projectile::Add(this, t, pos, baseVel, dirVel);
 
 	/*
@@ -963,6 +993,17 @@ void Ship::StaticUpdate(const float timeStep)
 		Explode();
 
 	UpdateAlertState();
+
+	m_targetInSight = false;
+	const Body *target = GetCombatTarget();
+	if (target) {
+		const matrix3x3d &m = GetOrient();
+		vector3d tdir = target->GetPositionRelTo(this);
+		const vector3d shipDir = -m.VectorZ();
+
+		if (tdir.Normalized().Dot(shipDir) > AIM_CONE)
+			m_targetInSight = true;
+	}
 
 	/* FUEL SCOOPING!!!!!!!!! */
 	if ((m_flightState == FLYING) && (m_equipment.Get(Equip::SLOT_FUELSCOOP) != Equip::NONE)) {
@@ -1142,7 +1183,7 @@ void Ship::Render(Graphics::Renderer *renderer, const Camera *camera, const vect
 	if (m_stats.shield_mass_left < m_stats.shield_mass) {
 		const float shield = 0.01f*GetPercentShields();
 		renderer->SetBlendMode(Graphics::BLEND_ADDITIVE);
-		glPushMatrix();
+
 		matrix4x4f trans = matrix4x4f::Identity();
 		trans.Translate(viewCoords.x, viewCoords.y, viewCoords.z);
 		trans.Scale(GetPhysRadius());
@@ -1152,7 +1193,7 @@ void Ship::Render(Graphics::Renderer *renderer, const Camera *camera, const vect
 		Sfx::shieldEffect->GetMaterial()->diffuse =
 			Color((1.0f-shield),shield,0.0,0.33f*(1.0f-shield));
 		Sfx::shieldEffect->Draw(renderer);
-		glPopMatrix();
+
 		renderer->SetBlendMode(Graphics::BLEND_SOLID);
 	}
 

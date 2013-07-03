@@ -12,13 +12,13 @@ class Ship;
 namespace SceneGraph { class Model; }
 
 struct SpaceStationType {
-	typedef std::map<uint32_t, matrix4x4f> TMapBayIDMat;
+	typedef std::map<Uint32, matrix4x4f> TMapBayIDMat;
 	struct Port
 	{
 		TMapBayIDMat m_docking;
 		TMapBayIDMat m_leaving;
 	};
-	typedef std::map<uint32_t, Port> PortMap;
+	typedef std::map<Uint32, Port> PortMap;
 	PortMap m_ports;
 
 	struct SBayGroup {
@@ -36,13 +36,17 @@ struct SpaceStationType {
 	float angVel;
 	enum DOCKMETHOD { SURFACE, ORBITAL } dockMethod;
 	unsigned int numDockingPorts;
-	inline int GetNumDockingStages() const	{ return dockAnimStageDuration.size(); }
-	inline int GetNumUndockStages() const	{ return undockAnimStageDuration.size(); }
+	int numDockingStages;
+	int numUndockStages;
 	int shipLaunchStage;
-	std::vector<double> dockAnimStageDuration;
-	std::vector<double> undockAnimStageDuration;
+	double *dockAnimStageDuration;
+	double *undockAnimStageDuration;
 	float parkingDistance;
 	float parkingGapSize;
+	//std::string dockAnimFunction;
+	//std::string approachWaypointsFunction;
+	//bool bHasDockAnimFunction;
+	//bool bHasApproachWaypointsFunction;
 	TBayGroups bayGroups;
 
 	struct positionOrient_t {

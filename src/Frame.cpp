@@ -227,7 +227,7 @@ void Frame::UpdateOrbitRails(double time, double timestep)
 	}
 	// temporary test thing
 	else m_pos = m_pos + m_vel * timestep;
-	
+
 	// update frame rotation
 	double ang = m_angSpeed * timestep;		// hmm. cumulative inaccuracy? worse!
 	if (!is_zero_exact(ang)) {			// frequently used with e^-10 etc

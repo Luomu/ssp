@@ -33,7 +33,7 @@ public:
 	Sint64 GetPrice(Equip::Type t) const;
 
 	PlayerShipController *GetPlayerController() const;
-	//XXX temporary things to avoid causing too many changes right now
+
 	Body *GetCombatTarget() const;
 	Body *GetNavTarget() const;
 	Body *GetSetSpeedTarget() const;

@@ -445,8 +445,9 @@ void Pi::Init()
 	EnumStrings::Init();
 
 	// get threads up
-	uint32_t numThreads = config->Int("WorkerThreads");
-	uint32_t numCores = getNumCores();
+	Uint32 numThreads = config->Int("WorkerThreads");
+	const Uint32 numCores = getNumCores();
+	assert(numCores > 0);
 	if (numThreads == 0) numThreads = std::max(numCores-1,1U);
 	jobQueue.Reset(new JobQueue(numThreads));
 	printf("started %d worker threads\n", numThreads);
@@ -1013,8 +1014,6 @@ void Pi::Start()
 
 		Pi::BeginRenderTarget();
 		Pi::renderer->BeginFrame();
-		Pi::renderer->SetPerspectiveProjection(75, Pi::GetScrAspect(), 1.f, 10000.f);
-		Pi::renderer->SetTransform(matrix4x4f::Identity());
 		if (intro) intro->Draw(_time);
 		Pi::renderer->EndFrame();
 

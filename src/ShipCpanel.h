@@ -5,11 +5,11 @@
 #define _SHIPCPANEL_H
 
 #include "libs.h"
-#include "gui/Gui.h"
-#include "ShipCpanelMultiFuncDisplays.h"
-#include "Ship.h"
-#include "Serializer.h"
 #include "Game.h"
+#include "gui/Gui.h"
+#include "Serializer.h"
+#include "Ship.h"
+#include "ShipCpanelMultiFuncDisplays.h"
 #include "WorldView.h"
 
 class Body;

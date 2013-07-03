@@ -1,25 +1,19 @@
 // Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
-#include "libs.h"
-#include "Pi.h"
-#include "ShipCpanel.h"
-#include "SpaceStationView.h"
-#include "Player.h"
-#include "WorldView.h"
-#include "SpaceStation.h"
-#include "ShipCpanelMultiFuncDisplays.h"
-#include "SectorView.h"
-#include "SystemView.h"
-#include "SystemInfoView.h"
+#include "Colors.h"
 #include "GalacticView.h"
 #include "GameMenuView.h"
-#include "UIView.h"
 #include "Lang.h"
-#include "Game.h"
-
-// XXX duplicated in WorldView. should probably be a theme variable
-static const Color s_hudTextColor(0.0f,1.0f,0.0f,0.8f);
+#include "Pi.h"
+#include "Player.h"
+#include "SectorView.h"
+#include "ShipCpanel.h"
+#include "SpaceStation.h"
+#include "SpaceStationView.h"
+#include "SystemInfoView.h"
+#include "SystemView.h"
+#include "UIView.h"
 
 ShipCpanel::ShipCpanel(Graphics::Renderer *r): Gui::Fixed(float(Gui::Screen::GetWidth()), 80)
 {
@@ -206,10 +200,10 @@ void ShipCpanel::InitObject()
 	Add(img, 780, 37);
 	m_alertLights[2] = img;
 
-	m_overlay[OVERLAY_TOP_LEFT]     = (new Gui::Label(""))->Color(s_hudTextColor);
-	m_overlay[OVERLAY_TOP_RIGHT]    = (new Gui::Label(""))->Color(s_hudTextColor);
-	m_overlay[OVERLAY_BOTTOM_LEFT]  = (new Gui::Label(""))->Color(s_hudTextColor);
-	m_overlay[OVERLAY_BOTTOM_RIGHT] = (new Gui::Label(""))->Color(s_hudTextColor);
+	m_overlay[OVERLAY_TOP_LEFT]     = (new Gui::Label(""))->Color(Colors::HUD_TEXT);
+	m_overlay[OVERLAY_TOP_RIGHT]    = (new Gui::Label(""))->Color(Colors::HUD_TEXT);
+	m_overlay[OVERLAY_BOTTOM_LEFT]  = (new Gui::Label(""))->Color(Colors::HUD_TEXT);
+	m_overlay[OVERLAY_BOTTOM_RIGHT] = (new Gui::Label(""))->Color(Colors::HUD_TEXT);
 	Add(m_overlay[OVERLAY_TOP_LEFT],     170.0f, 2.0f);
 	Add(m_overlay[OVERLAY_TOP_RIGHT],    500.0f, 2.0f);
 	Add(m_overlay[OVERLAY_BOTTOM_LEFT],  150.0f, 62.0f);

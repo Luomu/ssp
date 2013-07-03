@@ -5,14 +5,14 @@
 #define _WORLDVIEW_H
 
 #include "libs.h"
+#include "CameraController.h"
+#include "EquipType.h"
+#include "HudReticle.h"
+#include "Serializer.h"
+#include "SpeedLines.h"
+#include "View.h"
 #include "gui/Gui.h"
 #include "gui/GuiWidget.h"
-#include "View.h"
-#include "Serializer.h"
-#include "Background.h"
-#include "EquipType.h"
-#include "CameraController.h"
-#include "SpeedLines.h"
 
 class Body;
 class Frame;
@@ -23,35 +23,38 @@ namespace Gui { class TexturedQuad; }
 
 class WorldView: public View {
 public:
-	friend class NavTunnelWidget;
-	WorldView();
-	WorldView(Serializer::Reader &reader);
-	virtual ~WorldView();
-	virtual void ShowAll();
-	virtual void Update();
-	virtual void Draw3D();
-	virtual void Draw();
-	static const double PICK_OBJECT_RECT_SIZE;
-	virtual void Save(Serializer::Writer &wr);
 	enum CamType {
 		CAM_INTERNAL,
 		CAM_EXTERNAL,
 		CAM_SIDEREAL
 	};
-	void SetCamType(enum CamType);
-	enum CamType GetCamType() const { return m_camType; }
+	friend class NavTunnelWidget;
+	WorldView();
+	WorldView(Serializer::Reader &reader);
+	virtual ~WorldView();
 	CameraController *GetCameraController() const { return m_activeCameraController; }
-	void ToggleTargetActions();
-	void ShowTargetActions();
-	void HideTargetActions();
+	enum CamType GetCamType() const { return m_camType; }
 	int GetActiveWeapon() const;
+	virtual void Draw();
+	virtual void Draw3D();
+	virtual void Save(Serializer::Writer &wr);
+	virtual void ShowAll();
+	virtual void Update();
+	void HideTargetActions();
 	void OnClickBlastoff();
+	void ReportHit(const Body *b);
+	void SetCamType(enum CamType);
+	void ShowTargetActions();
+	void ToggleTargetActions();
 
 	sigc::signal<void> onChangeCamType;
+
+	static const double PICK_OBJECT_RECT_SIZE;
 
 protected:
 	virtual void OnSwitchTo();
 	virtual void OnSwitchFrom();
+
 private:
 	void InitObject();
 
@@ -116,6 +119,7 @@ private:
 	void MouseButtonDown(int button, int x, int y);
 
 	NavTunnelWidget *m_navTunnel;
+	ScopedPtr<HudReticle> m_reticle;
 	ScopedPtr<SpeedLines> m_speedLines;
 
 	Gui::ImageButton *m_hyperspaceButton;

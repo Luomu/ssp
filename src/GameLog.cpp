@@ -1,4 +1,5 @@
 #include "GameLog.h"
+#include "Colors.h"
 #include "StringF.h"
 #include "graphics/Renderer.h"
 
@@ -62,12 +63,14 @@ void GameLog::DrawHudMessages(Graphics::Renderer *r)
 	r->SetTransform(matrix4x4f::Identity());
 	r->SetDepthWrite(false);
 
+	const Color &c = Colors::HUD_MESSAGE;
+
 	float y = 0;
 	for (auto it = m_messages.rbegin(); it != m_messages.rend(); ++it) {
 		float alpha = 1.f;
 		if (it->time > FADE_AFTER)
 			alpha = 1.0 - (float(it->time - FADE_AFTER) / FADE_TIME);
-		m_font->RenderString(it->msg.c_str(), m_offset.x, m_offset.y + y, Color4f(1.f, 1.f, 1.f, alpha));
+		m_font->RenderString(it->msg.c_str(), m_offset.x, m_offset.y + y, Color(c.r, c.g, c.b, alpha));
 		y -= m_lineHeight;
 	}
 }
