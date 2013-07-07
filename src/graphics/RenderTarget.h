@@ -19,10 +19,10 @@ namespace Graphics {
 // Specifying a depth format with no allowDepthTexture will create a depth buffer
 // fixed to this rendertarget
 struct RenderTargetDesc {
-	RenderTargetDesc(Uint16 _width, Uint16 _height, TextureFormat _colorFormat, TextureFormat _depthFormat, bool _allowDepthTexture) : 
+	RenderTargetDesc(Uint16 _width, Uint16 _height, TextureFormat _colorFormat, TextureFormat _depthFormat, bool _allowDepthTexture) :
 		width(_width), height(_height), colorFormat(_colorFormat), depthFormat(_depthFormat), allowDepthTexture(_allowDepthTexture)
 	{}
-	
+
 	const Uint16 width;
 	const Uint16 height;
 	const TextureFormat colorFormat;

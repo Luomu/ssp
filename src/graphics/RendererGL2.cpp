@@ -170,7 +170,7 @@ RenderTarget *RendererGL2::CreateRenderTarget(const RenderTargetDesc &desc)
 {
 	GL2::RenderTarget* rt = new GL2::RenderTarget(desc);
 	rt->Bind();
-	if (desc.colorFormat != TEXTURE_FORMAT_NONE) {
+	if (desc.colorFormat != TEXTURE_NONE) {
 		Graphics::TextureDescriptor cdesc(
 			desc.colorFormat,
 			vector2f(desc.width, desc.height),
@@ -181,7 +181,7 @@ RenderTarget *RendererGL2::CreateRenderTarget(const RenderTargetDesc &desc)
 		TextureGL *colorTex = new TextureGL(cdesc, false);
 		rt->SetColorTexture(colorTex);
 	}
-	if (desc.depthFormat != TEXTURE_FORMAT_NONE) {
+	if (desc.depthFormat != TEXTURE_NONE) {
 		if (desc.allowDepthTexture) {
 			Graphics::TextureDescriptor ddesc(
 				TEXTURE_DEPTH,
