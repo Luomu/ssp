@@ -65,6 +65,8 @@ public:
 	float GetLowThrustPower() const { return m_lowThrustPower; }
 	void SetLowThrustPower(float power);
 
+	void SetTurnSensitivity(double s) { m_turnSensitivity = s; }
+
 	bool GetRotationDamping() const { return m_rotationDamping; }
 	void SetRotationDamping(bool enabled);
 	void ToggleRotationDamping();
@@ -96,6 +98,7 @@ private:
 	double m_mouseX;
 	double m_mouseY;
 	double m_setSpeed;
+	double m_turnSensitivity;
 	FlightControlState m_flightControlState;
 	float m_fovY; //for mouse acceleration adjustment
 	float m_joystickDeadzone;

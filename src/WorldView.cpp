@@ -423,6 +423,8 @@ void WorldView::OnToggleLabels()
 void WorldView::OnToggleCameraMagnification()
 {
 	m_internalCameraController->ToggleMagnification();
+	Pi::player->GetPlayerController()->SetTurnSensitivity(
+		m_internalCameraController->IsMagnified() ? 0.25 : 1.0);
 }
 
 void WorldView::ShowAll()

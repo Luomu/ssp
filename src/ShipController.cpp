@@ -12,6 +12,8 @@
 #include "WorldView.h"
 #include "OS.h"
 
+static const double TURN_SOFTNESS = 20.0; //start turning with a bit of accel
+
 void ShipController::StaticUpdate(float timeStep)
 {
 	OS::EnableFPE();
@@ -31,6 +33,7 @@ PlayerShipController::PlayerShipController() :
 	m_mouseX(0.0),
 	m_mouseY(0.0),
 	m_setSpeed(0.0),
+	m_turnSensitivity(1.0),
 	m_flightControlState(CONTROL_MANUAL),
 	m_lowThrustPower(0.25), // note: overridden by the default value in GameConfig.cpp (DefaultLowThrustPower setting)
 	m_mouseDir(0.0)
@@ -61,6 +64,7 @@ void PlayerShipController::Save(Serializer::Writer &wr, Space *space)
 {
 	wr.Int32(static_cast<int>(m_flightControlState));
 	wr.Double(m_setSpeed);
+	wr.Double(m_turnSensitivity);
 	wr.Float(m_lowThrustPower);
 	wr.Bool(m_rotationDamping);
 	wr.Int32(space->GetIndexForBody(m_combatTarget));
@@ -72,6 +76,7 @@ void PlayerShipController::Load(Serializer::Reader &rd)
 {
 	m_flightControlState = static_cast<FlightControlState>(rd.Int32());
 	m_setSpeed = rd.Double();
+	m_turnSensitivity = rd.Double();
 	m_lowThrustPower = rd.Float();
 	m_rotationDamping = rd.Bool();
 	//figure out actual bodies in PostLoadFixup - after Space body index has been built
@@ -166,8 +171,6 @@ void PlayerShipController::PollControls(const float timeStep, const bool force_r
 
 	vector3d wantAngVel(0.0);
 
-	double angThrustSoftness = 10.0;
-
 	if (!m_controlsLocked)
 	{
 		const float linearThrustPower = (KeyBindings::thrustLowPower.IsActive() ? m_lowThrustPower : 1.0f);
@@ -241,15 +244,12 @@ void PlayerShipController::PollControls(const float timeStep, const bool force_r
 				m_ship->SetGunState(Pi::worldView->GetActiveWeapon(), 1);
 		}
 
-		if (KeyBindings::yawLeft.IsActive()) wantAngVel.y += 1.0;
-		if (KeyBindings::yawRight.IsActive()) wantAngVel.y += -1.0;
-		if (KeyBindings::pitchDown.IsActive()) wantAngVel.x += -1.0;
-		if (KeyBindings::pitchUp.IsActive()) wantAngVel.x += 1.0;
-		if (KeyBindings::rollLeft.IsActive()) wantAngVel.z += 1.0;
-		if (KeyBindings::rollRight.IsActive()) wantAngVel.z -= 1.0;
-
-		if (KeyBindings::thrustLowPower.IsActive())
-			angThrustSoftness = 50.0;
+		if (KeyBindings::yawLeft.IsActive())   wantAngVel.y += m_turnSensitivity;
+		if (KeyBindings::yawRight.IsActive())  wantAngVel.y -= m_turnSensitivity;
+		if (KeyBindings::pitchDown.IsActive()) wantAngVel.x -= m_turnSensitivity;
+		if (KeyBindings::pitchUp.IsActive())   wantAngVel.x += m_turnSensitivity;
+		if (KeyBindings::rollLeft.IsActive())  wantAngVel.z += m_turnSensitivity;
+		if (KeyBindings::rollRight.IsActive()) wantAngVel.z -= m_turnSensitivity;
 
 		vector3d changeVec;
 		changeVec.x = KeyBindings::pitchAxis.GetValue();
@@ -265,12 +265,15 @@ void PlayerShipController::PollControls(const float timeStep, const bool force_r
 	}
 
 	const double invTimeAccelRate = 1.0 / Pi::game->GetTimeAccelRate();
-	if(wantAngVel.Length() >= 0.001 || force_rotation_damping || m_rotationDamping) {
+	if (wantAngVel.LengthSqr() >= 0.001) {// || force_rotation_damping || m_rotationDamping) {
 		for (int axis=0; axis<3; axis++)
 			wantAngVel[axis] = Clamp(wantAngVel[axis], -invTimeAccelRate, invTimeAccelRate);
 
-		m_ship->AIModelCoordsMatchAngVel(wantAngVel, angThrustSoftness);
+		m_ship->AIModelCoordsMatchAngVel(wantAngVel, TURN_SOFTNESS);
 	}
+	else
+		m_ship->AIMatchAngVelObjSpace(wantAngVel);
+
 	if (m_mouseActive && !m_controlsLocked) m_ship->AIFaceDirection(m_mouseDir);
 }
 

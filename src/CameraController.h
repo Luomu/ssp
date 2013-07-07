@@ -72,6 +72,7 @@ public:
 	Mode GetMode() const { return m_mode; }
 	void Save(Serializer::Writer &wr);
 	void Load(Serializer::Reader &rd);
+	bool IsMagnified() const { return m_magnify; }
 	void ToggleMagnification();
 
 	virtual void ZoomEventUpdate(float frameTime);
