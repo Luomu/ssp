@@ -75,7 +75,6 @@
 #include "scenegraph/Lua.h"
 #include "ui/Context.h"
 #include "ui/Lua.h"
-#include "CoreCount.h"
 #include <algorithm>
 #include <sstream>
 
@@ -217,6 +216,18 @@ void Pi::EndRenderTarget() {
 	Pi::renderer->SetRenderTarget(NULL);
 }
 
+static void draw_progress(UI::Gauge *gauge, UI::Label *label, float progress)
+{
+	gauge->SetValue(progress);
+	label->SetText(stringf(Lang::SIMULATING_UNIVERSE_EVOLUTION_N_BYEARS, formatarg("age", progress * 13.7f)));
+
+	Pi::ui->Update();
+	Pi::ui->Draw();
+
+	Pi::renderer->SwapBuffers();
+}
+
+/*
 static void draw_progress(float progress)
 {
 	Pi::BeginRenderTarget();
@@ -247,8 +258,8 @@ static void draw_progress(float progress)
 	Pi::EndRenderTarget();
 
 	Pi::DrawRenderTarget();
-	Pi::renderer->SwapBuffers();
 }
+*/
 
 static void LuaInit()
 {
@@ -440,9 +451,9 @@ void Pi::Init()
 
 	// get threads up
 	Uint32 numThreads = config->Int("WorkerThreads");
-	const Uint32 numCores = getNumCores();
+	const int numCores = OS::GetNumCores();
 	assert(numCores > 0);
-	if (numThreads == 0) numThreads = std::max(numCores-1,1U);
+	if (numThreads == 0) numThreads = std::max(Uint32(numCores) - 1, 1U);
 	jobQueue.Reset(new JobQueue(numThreads));
 	printf("started %d worker threads\n", numThreads);
 
@@ -461,39 +472,56 @@ void Pi::Init()
 	// that the capability exists. (Gui does not use VBOs so far)
 	Gui::Init(renderer, Graphics::GetScreenWidth(), Graphics::GetScreenHeight(), 800, 600);
 
-	draw_progress(0.1f);
+	UI::Box *box = Pi::ui->VBox(5);
+	UI::Label *label = Pi::ui->Label("");
+	label->SetFont(UI::Widget::FONT_HEADING_NORMAL);
+	UI::Gauge *gauge = Pi::ui->Gauge();
+	Pi::ui->SetInnerWidget(
+		Pi::ui->Margin(10, UI::Margin::HORIZONTAL)->SetInnerWidget(
+			Pi::ui->Expand()->SetInnerWidget(
+				Pi::ui->Align(UI::Align::MIDDLE)->SetInnerWidget(
+					box->PackEnd(UI::WidgetSet(
+						label,
+						gauge
+					))
+				)
+			)
+		)
+	);
+
+	draw_progress(gauge, label, 0.1f);
 
 	Galaxy::Init();
-	draw_progress(0.2f);
+	draw_progress(gauge, label, 0.2f);
 
 	Faction::Init();
-	draw_progress(0.3f);
+	draw_progress(gauge, label, 0.3f);
 
 	CustomSystem::Init();
-	draw_progress(0.4f);
+	draw_progress(gauge, label, 0.4f);
 
 	modelCache = new ModelCache(Pi::renderer);
-	draw_progress(0.5f);
+	draw_progress(gauge, label, 0.5f);
 
 //unsigned int control_word;
 //_clearfp();
 //_controlfp_s(&control_word, _EM_INEXACT | _EM_UNDERFLOW | _EM_ZERODIVIDE, _MCW_EM);
 //double fpexcept = Pi::timeAccelRates[1] / Pi::timeAccelRates[0];
 
-	draw_progress(0.6f);
+	draw_progress(gauge, label, 0.6f);
 
 	GeoSphere::Init();
-	draw_progress(0.7f);
+	draw_progress(gauge, label, 0.7f);
 
 	CityOnPlanet::Init();
-	draw_progress(0.8f);
+	draw_progress(gauge, label, 0.8f);
 
 	SpaceStation::Init();
-	draw_progress(0.9f);
+	draw_progress(gauge, label, 0.9f);
 
 	NavLights::Init(Pi::renderer);
 	Sfx::Init(Pi::renderer);
-	draw_progress(0.95f);
+	draw_progress(gauge, label, 0.95f);
 
 	if (!config->Int("DisableSound")) {
 		Sound::Init();
@@ -506,7 +534,7 @@ void Pi::Init()
 		if (config->Int("SfxMuted")) Sound::SetSfxVolume(0.f);
 		if (config->Int("MusicMuted")) GetMusicPlayer().SetEnabled(false);
 	}
-	draw_progress(1.0f);
+	draw_progress(gauge, label, 1.0f);
 
 	OS::NotifyLoadEnd();
 	Pi::pLoadingImage.Reset();
