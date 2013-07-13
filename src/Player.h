@@ -42,10 +42,6 @@ public:
 	virtual Ship::HyperjumpStatus StartHyperspaceCountdown(const SystemPath &dest);
 	virtual void ResetHyperspaceCountdown();
 
-	virtual void StaticUpdate(const float timeStep);
-
-	std::list<RadarContact> &GetContacts() { return m_radarContacts; }
-
 protected:
 	virtual void Save(Serializer::Writer &wr, Space *space);
 	virtual void Load(Serializer::Reader &rd, Space *space);

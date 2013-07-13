@@ -386,5 +386,5 @@ void PlayerShipController::SetNavTarget(Body* const target, bool setSpeedTo)
 
 void PlayerShipController::TargetNearestHostile()
 {
-	m_ship->ChooseTarget(Ship::TARGET_NEAREST_HOSTILE);
+	m_ship->GetSensors()->ChooseTarget(Sensors::TARGET_NEAREST_HOSTILE);
 }

@@ -221,9 +221,9 @@ static void draw_progress(UI::Gauge *gauge, UI::Label *label, float progress)
 	gauge->SetValue(progress);
 	label->SetText(stringf(Lang::SIMULATING_UNIVERSE_EVOLUTION_N_BYEARS, formatarg("age", progress * 13.7f)));
 
+	Pi::renderer->ClearScreen();
 	Pi::ui->Update();
 	Pi::ui->Draw();
-
 	Pi::renderer->SwapBuffers();
 }
 

@@ -218,6 +218,7 @@
     <ClCompile Include="..\..\src\PropertyMap.cpp" />
     <ClCompile Include="..\..\src\SDLWrappers.cpp" />
     <ClCompile Include="..\..\src\SectorView.cpp" />
+    <ClCompile Include="..\..\src\Sensors.cpp" />
     <ClCompile Include="..\..\src\Serializer.cpp" />
     <ClCompile Include="..\..\src\Sfx.cpp" />
     <ClCompile Include="..\..\src\Ship-AI.cpp" />
@@ -388,6 +389,7 @@
     <ClInclude Include="..\..\src\RefCounted.h" />
     <ClInclude Include="..\..\src\SDLWrappers.h" />
     <ClInclude Include="..\..\src\SectorView.h" />
+    <ClInclude Include="..\..\src\Sensors.h" />
     <ClInclude Include="..\..\src\Serializer.h" />
     <ClInclude Include="..\..\src\Sfx.h" />
     <ClInclude Include="..\..\src\Ship.h" />

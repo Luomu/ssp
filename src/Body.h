@@ -110,6 +110,7 @@ protected:
 	// Interpolated draw orientation-position
 	vector3d m_interpPos;
 	matrix3x3d m_interpOrient;
+
 private:
 	vector3d m_pos;
 	matrix3x3d m_orient;
