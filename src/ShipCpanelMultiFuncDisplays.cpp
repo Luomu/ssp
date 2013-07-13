@@ -152,24 +152,23 @@ void ScannerWidget::Update()
 	enum { RANGE_MAX, RANGE_FAR_OTHER, RANGE_NAV, RANGE_FAR_SHIP, RANGE_COMBAT } range_type = RANGE_MAX;
 	float combat_dist = 0, far_ship_dist = 0, nav_dist = 0, far_other_dist = 0;
 
-	// collect the bodies to be displayed, and if AUTO, distances
-	Space::BodyNearList nearby;
-	Pi::game->GetSpace()->GetBodiesMaybeNear(Pi::player, SCANNER_RANGE_MAX, nearby);
-	for (Space::BodyNearIterator i = nearby.begin(); i != nearby.end(); ++i) {
-		if ((*i) == Pi::player) continue;
+	const Sensors::ContactList &contacts = Pi::player->GetSensors()->GetContacts();
+	for (auto it = contacts.begin(); it != contacts.end(); ++it) {
 
-		float dist = float((*i)->GetPositionRelTo(Pi::player).Length());
+		Body *b = it->body;
+
+		double dist = it->distance;
 
 		Contact c;
-		c.type = (*i)->GetType();
-		c.pos = (*i)->GetPositionRelTo(Pi::player);
+		c.type = b->GetType();
+		c.pos = b->GetPositionRelTo(Pi::player);
 		c.isSpecial = false;
 
-		switch ((*i)->GetType()) {
+		switch (b->GetType()) {
 
 			case Object::MISSILE:
 				// player's own missiles are ignored for range calc but still shown
-				if (static_cast<const Missile*>(*i)->GetOwner() == Pi::player) {
+				if (static_cast<const Missile*>(b)->GetOwner() == Pi::player) {
 					c.isSpecial = true;
 					break;
 				}
@@ -177,11 +176,11 @@ void ScannerWidget::Update()
 				// else fall through
 
 			case Object::SHIP: {
-				const Ship *s = static_cast<const Ship*>(*i);
+				const Ship *s = static_cast<const Ship*>(b);
 				if (s->GetFlightState() != Ship::FLYING && s->GetFlightState() != Ship::LANDED)
 					continue;
 
-				if ((*i) == Pi::player->GetCombatTarget()) c.isSpecial = true;
+				if (b == Pi::player->GetCombatTarget()) c.isSpecial = true;
 
 				if (m_mode == SCANNER_MODE_AUTO && range_type != RANGE_COMBAT) {
 					if (c.isSpecial == true) {
@@ -200,7 +199,7 @@ void ScannerWidget::Update()
 			case Object::CARGOBODY:
 			case Object::HYPERSPACECLOUD:
 
-				if ((*i) == Pi::player->GetNavTarget()) c.isSpecial = true;
+				if (b == Pi::player->GetNavTarget()) c.isSpecial = true;
 
 				if (m_mode == SCANNER_MODE_AUTO && range_type < RANGE_NAV) {
 					if (c.isSpecial == true) {

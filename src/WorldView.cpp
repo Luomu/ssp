@@ -1268,25 +1268,23 @@ void WorldView::UpdateProjectedObjects()
 	// determine projected positions and update labels
 	m_bodyLabels->Clear();
 	m_projectedPos.clear();
-	for (Space::BodyIterator i = Pi::game->GetSpace()->BodiesBegin(); i != Pi::game->GetSpace()->BodiesEnd(); ++i) {
-		Body *b = *i;
+
+	auto &contacts = Pi::player->GetSensors()->GetContacts();
+	for (auto i = contacts.begin(); i != contacts.end(); ++i) {
+		Body *b = i->body;
 
 		// don't show label for player or locked targets
-		if (b->IsType(Object::PLAYER))
-			continue;
 		if (b == Pi::player->GetCombatTarget())
 			continue;
 
 		vector3d pos = b->GetInterpPositionRelTo(cam_frame);
 		if ((pos.z < -1.0) && project_to_screen(pos, pos, frustum, guiSize)) {
-
-			// only show labels on large or nearby bodies
-			if (b->IsType(Object::PLANET) || b->IsType(Object::STAR) || b->IsType(Object::SPACESTATION) || Pi::player->GetPositionRelTo(b).LengthSqr() < 1000000.0*1000000.0)
-				m_bodyLabels->Add((*i)->GetLabel(), sigc::bind(sigc::mem_fun(this, &WorldView::SelectBody), *i, true), float(pos.x), float(pos.y));
-
+			m_bodyLabels->Add(b->GetLabel(), sigc::bind(sigc::mem_fun(this, &WorldView::SelectBody), b, true), float(pos.x), float(pos.y), Sensors::IFFColor(i->iff));
 			m_projectedPos[b] = pos;
 		}
 	}
+
+	//XXX show labels for far contacts
 
 	// velocity relative to current frame (white)
 	const vector3d camSpaceVel = Pi::player->GetVelocity() * cam_rot;

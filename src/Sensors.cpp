@@ -10,9 +10,10 @@
 
 Sensors::RadarContact::RadarContact()
 : body(0)
-, fresh(true)
 , trail(0)
-, distance(0.0) {
+, distance(0.0)
+, iff(IFF_UNKNOWN)
+, fresh(true) {
 }
 
 Sensors::RadarContact::~RadarContact() {

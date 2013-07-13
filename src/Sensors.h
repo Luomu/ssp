@@ -29,9 +29,12 @@ public:
 		~RadarContact();
 		Body *body;
 		HudTrail* trail;
-		bool fresh;
 		double distance;
+		IFF iff;
+		bool fresh;
 	};
+
+	typedef std::list<RadarContact> ContactList;
 
 	static Color IFFColor(IFF);
 	static bool ContactDistanceSort(const RadarContact &a, const RadarContact &b);
@@ -39,12 +42,12 @@ public:
 	Sensors(Ship *owner);
 	bool ChooseTarget(TargetingCriteria);
 	IFF CheckIFF(Body *other);
-	std::list<RadarContact> &GetContacts() { return m_radarContacts; }
+	const ContactList &GetContacts() { return m_radarContacts; }
 	void Update(float time);
 
 private:
 	Ship *m_owner;
-	std::list<RadarContact> m_radarContacts;
+	ContactList m_radarContacts;
 };
 
 #endif
