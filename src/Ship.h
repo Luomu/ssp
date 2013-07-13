@@ -231,6 +231,7 @@ public:
 	float GetPercentHull() const;
 	void SetPercentHull(float);
 	float GetGunTemperature(int idx) const { return m_gunTemperature[idx]; }
+	virtual Uint8 GetIntegrity() const;
 
 	enum FuelState { // <enum scope='Ship' name=ShipFuelStatus prefix=FUEL_ public>
 		FUEL_OK,

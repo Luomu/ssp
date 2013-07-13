@@ -38,7 +38,7 @@ public:
 	void SetClipRadius(double r) { m_clipRadius = r; }
 	double GetClipRadius() const { return m_clipRadius; }
 	virtual double GetMass() const { assert(0); return 0; }
-	
+
 	// return true if to do collision response and apply damage
 	virtual bool OnCollision(Object *o, Uint32 flags, double relVel) { return false; }
 	// Attacker may be null
@@ -75,6 +75,8 @@ public:
 	// Only Space::KillBody() should call this method.
 	void MarkDead() { m_dead = true; }
 	bool IsDead() const { return m_dead; }
+
+	virtual Uint8 GetIntegrity() const { return 100; }
 
 	// all Bodies are in space... except where they're not (Ships hidden in hyperspace clouds)
 	virtual bool IsInSpace() const { return true; }

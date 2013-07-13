@@ -265,6 +265,11 @@ void Ship::SetPercentHull(float p)
 	m_stats.hull_mass_left = 0.01f * Clamp(p, 0.0f, 100.0f) * float(m_type->hullMass);
 }
 
+Uint8 Ship::GetIntegrity() const
+{
+	return GetPercentHull();
+}
+
 void Ship::UpdateMass()
 {
 	SetMass((m_stats.total_mass + GetFuel()*GetShipType()->fuelTankMass)*1000);
