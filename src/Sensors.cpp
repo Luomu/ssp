@@ -16,6 +16,14 @@ Sensors::RadarContact::RadarContact()
 , fresh(true) {
 }
 
+Sensors::RadarContact::RadarContact(Body *b)
+: body(b)
+, trail(0)
+, distance(0.0)
+, iff(IFF_UNKNOWN)
+, fresh(true) {
+}
+
 Sensors::RadarContact::~RadarContact() {
 	body = 0;
 	delete trail;
@@ -54,7 +62,7 @@ bool Sensors::ChooseTarget(TargetingCriteria crit)
 		//match object type
 		//match iff
 		if (it->body->IsType(Object::SHIP)) {
-			if (it->iff != IFF_HOSTILE) continue;
+			//if (it->iff != IFF_HOSTILE) continue;
 			//should move the target to ship after all (from PlayerShipController)
 			//targeting inputs stay in PSC
 			static_cast<Player*>(m_owner)->SetCombatTarget(it->body);
@@ -83,6 +91,8 @@ Sensors::IFF Sensors::CheckIFF(Body* other)
 void Sensors::Update(float time)
 {
 	if (m_owner != Pi::player) return;
+
+	PopulateStaticContacts(); //no need to do all the time
 
 	//Find nearby contacts, same range as scanner. Scanner should use these
 	//contacts, worldview labels too.
@@ -135,3 +145,26 @@ void Sensors::UpdateIFF(Body *b)
 	}
 }
 
+void Sensors::PopulateStaticContacts()
+{
+	m_staticContacts.clear();
+
+	auto start = Pi::game->GetSpace()->BodiesBegin();
+	auto end   = Pi::game->GetSpace()->BodiesEnd();
+	for (auto it = start; it != end; ++it) {
+		switch ((*it)->GetType())
+		{
+			case Object::STAR:
+			case Object::PLANET:
+			case Object::CITYONPLANET:
+			case Object::SPACESTATION:
+				break;
+			default:
+				continue;
+		}
+		Body *b = *it;
+		m_staticContacts.push_back(RadarContact(b));
+		RadarContact &rc = m_staticContacts.back();
+		rc.fresh = true;
+	}
+}

@@ -3,6 +3,10 @@
 /*
  * Ship/station subsystem that holds a list of known contacts
  * and handles IFF
+ * Some ideas:
+ *  - targeting should be lost when going out of range
+ *  - don't run radar sweep every frame (more of an optimization than simulation)
+ *  - allow "pinned" radar contacts (visible at all ranges, for missions)
  */
 #include "libs.h"
 #include "Body.h"
@@ -26,6 +30,7 @@ public:
 
 	struct RadarContact {
 		RadarContact();
+		RadarContact(Body *);
 		~RadarContact();
 		Body *body;
 		HudTrail* trail;
@@ -43,12 +48,16 @@ public:
 	bool ChooseTarget(TargetingCriteria);
 	IFF CheckIFF(Body *other);
 	const ContactList &GetContacts() { return m_radarContacts; }
+	const ContactList &GetStaticContacts() { return m_staticContacts; }
 	void Update(float time);
 	void UpdateIFF(Body*);
 
 private:
 	Ship *m_owner;
 	ContactList m_radarContacts;
+	ContactList m_staticContacts; //things we know of regardless of range
+
+	void PopulateStaticContacts();
 };
 
 #endif

@@ -1273,18 +1273,27 @@ void WorldView::UpdateProjectedObjects()
 	for (auto i = contacts.begin(); i != contacts.end(); ++i) {
 		Body *b = i->body;
 
-		// don't show label for player or locked targets
+		// don't show label for locked targets
 		if (b == Pi::player->GetCombatTarget())
 			continue;
 
 		vector3d pos = b->GetInterpPositionRelTo(cam_frame);
 		if ((pos.z < -1.0) && project_to_screen(pos, pos, frustum, guiSize)) {
-			m_bodyLabels->Add(b->GetLabel(), sigc::bind(sigc::mem_fun(this, &WorldView::SelectBody), b, true), float(pos.x), float(pos.y), Sensors::IFFColor(i->iff));
+			m_bodyLabels->Add(b->GetLabel(),
+				sigc::bind(sigc::mem_fun(this, &WorldView::SelectBody), b, true), float(pos.x), float(pos.y), Sensors::IFFColor(i->iff));
 			m_projectedPos[b] = pos;
 		}
 	}
 
-	//XXX show labels for far contacts
+	auto staticContacts = Pi::player->GetSensors()->GetStaticContacts();
+	for (auto i = staticContacts.begin(); i != staticContacts.end(); ++i) {
+		vector3d pos = i->body->GetInterpPositionRelTo(cam_frame);
+		if ((pos.z < -1.0) && project_to_screen(pos, pos, frustum, guiSize)) {
+			m_bodyLabels->Add(i->body->GetLabel(),
+				sigc::bind(sigc::mem_fun(this, &WorldView::SelectBody), i->body, true), float(pos.x), float(pos.y), Sensors::IFFColor(i->iff));
+			m_projectedPos[i->body] = pos;
+		}
+	}
 
 	// velocity relative to current frame (white)
 	const vector3d camSpaceVel = Pi::player->GetVelocity() * cam_rot;
