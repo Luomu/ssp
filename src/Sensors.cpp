@@ -51,9 +51,10 @@ bool Sensors::ChooseTarget(TargetingCriteria crit)
 	m_radarContacts.sort(ContactDistanceSort);
 
 	for (auto it = m_radarContacts.begin(); it != m_radarContacts.end(); ++it) {
-		//match criteria with object type
+		//match object type
 		//match iff
 		if (it->body->IsType(Object::SHIP)) {
+			if (it->iff != IFF_HOSTILE) continue;
 			//should move the target to ship after all (from PlayerShipController)
 			//targeting inputs stay in PSC
 			static_cast<Player*>(m_owner)->SetCombatTarget(it->body);
@@ -68,11 +69,21 @@ bool Sensors::ChooseTarget(TargetingCriteria crit)
 Sensors::IFF Sensors::CheckIFF(Body* other)
 {
 	//complicated relationship check goes here
-	return IFF_UNKNOWN;
+	if (other->IsType(Object::SHIP)) {
+		Ship *s = static_cast<Ship*>(other);
+		Uint8 rel = m_owner->GetRelations(other);
+		if (rel == 0) return IFF_HOSTILE;
+		else if (rel == 100) return IFF_ALLY;
+		return IFF_NEUTRAL;
+	} else {
+		return IFF_UNKNOWN;
+	}
 }
 
 void Sensors::Update(float time)
 {
+	if (m_owner != Pi::player) return;
+
 	//Find nearby contacts, same range as scanner. Scanner should use these
 	//contacts, worldview labels too.
 	Space::BodyNearList nearby;
@@ -92,7 +103,8 @@ void Sensors::Update(float time)
 			m_radarContacts.push_back(RadarContact());
 			RadarContact &rc = m_radarContacts.back();
 			rc.body = (*i);
-			rc.trail = new HudTrail(rc.body, Color::BLUE); //XXX IFF
+			rc.iff = CheckIFF(rc.body);
+			rc.trail = new HudTrail(rc.body, IFFColor(rc.iff));
 		} else {
 			cit->fresh = true;
 		}
@@ -111,3 +123,15 @@ void Sensors::Update(float time)
 		}
 	}
 }
+
+void Sensors::UpdateIFF(Body *b)
+{
+	for (auto it = m_radarContacts.begin(); it != m_radarContacts.end(); ++it)
+	{
+		if (it->body == b) {
+			it->iff = CheckIFF(b);
+			it->trail->SetColor(IFFColor(it->iff));
+		}
+	}
+}
+

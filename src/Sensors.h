@@ -44,6 +44,7 @@ public:
 	IFF CheckIFF(Body *other);
 	const ContactList &GetContacts() { return m_radarContacts; }
 	void Update(float time);
+	void UpdateIFF(Body*);
 
 private:
 	Ship *m_owner;

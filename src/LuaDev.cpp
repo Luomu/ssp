@@ -42,7 +42,7 @@ static int l_dev_spawn_target_drone(lua_State *l)
 
 	const vector3d dir = -Pi::player->GetOrient().VectorZ();
 	Ship *ship = new Ship("targetdrone");
-	ship->AIKill(Pi::player);
+	ship->AIFlyTo(Pi::player);
 	ship->SetFrame(Pi::player->GetFrame());
 	ship->SetPosition(Pi::player->GetPosition()+500.0*dir);
 	ship->SetVelocity(Pi::player->GetVelocity());

@@ -16,6 +16,7 @@
 #include "Sensors.h"
 #include "Serializer.h"
 #include "ShipType.h"
+#include <unordered_map>
 
 class SpaceStation;
 class HyperspaceCloud;
@@ -261,6 +262,9 @@ public:
 
 	Sensors *GetSensors() const { return m_sensors.Get(); }
 
+	Uint8 GetRelations(Body *other) const; //0=hostile, 50=neutral, 100=ally
+	void SetRelations(Body *other, Uint8 percent);
+
 protected:
 	virtual void Save(Serializer::Writer &wr, Space *space);
 	virtual void Load(Serializer::Reader &rd, Space *space);
@@ -336,6 +340,8 @@ private:
 	ScopedPtr<Sensors> m_sensors;
 
 	bool m_targetInSight;
+
+	std::unordered_map<Body*, Uint8> m_relationsMap;
 };
 
 #endif /* _SHIP_H */
