@@ -27,9 +27,6 @@
     <ClCompile Include="..\..\src\CommodityTradeWidget.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\DeadVideoLink.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\DynamicBody.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -444,9 +441,6 @@
     <ClCompile Include="..\..\src\GeoPatchJobs.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\CoreCount.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\JobQueue.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -456,9 +450,6 @@
     <ClCompile Include="..\..\src\HudTrail.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\contrib\PicoDDS\PicoDDS.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\GameLog.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -466,6 +457,12 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\Colors.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\contrib\PicoDDS\PicoDDS.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\Sensors.cpp">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>
@@ -495,9 +492,6 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\CommodityTradeWidget.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\DeadVideoLink.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\DeleteEmitter.h">
@@ -959,9 +953,6 @@
     <ClInclude Include="..\..\src\GeoPatchJobs.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\CoreCount.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\JobQueue.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -971,19 +962,25 @@
     <ClInclude Include="..\..\src\HudTrail.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\contrib\PicoDDS\PicoDDS.h">
+    <ClInclude Include="..\..\src\HudReticle.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\GameLog.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\Colors.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\src\KeyBindings.inc.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\HudReticle.h">
+    <ClInclude Include="..\..\contrib\PicoDDS\PicoDDS.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\Colors.h">
+    <ClInclude Include="..\..\src\OS.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Sensors.h">
       <Filter>src</Filter>
     </ClInclude>
   </ItemGroup>

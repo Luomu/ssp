@@ -14,6 +14,7 @@ public:
 	void Update(float time);
 	void Render(Graphics::Renderer *r);
 
+	void SetColor(const Color &c) { m_color = c; }
 	void SetTransform(const matrix4x4d &t) { m_transform = t; }
 
 private:

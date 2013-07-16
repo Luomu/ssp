@@ -29,7 +29,7 @@ void HudReticle::Update(const Ship *owner)
 
 	Body *tgt = owner->GetCombatTarget();
 	if (tgt) {
-		m_targetLabel = tgt->GetLabel();
+		m_targetLabel = stringf("%0{u}%% %1", tgt->GetIntegrity(), tgt->GetLabel());
 		m_targetDist = format_distance(tgt->GetInterpPositionRelTo(owner).Length());
 		m_targetVel = stringf("%0{f.0}m/s", tgt->GetVelocityRelTo(owner).Length());
 	}

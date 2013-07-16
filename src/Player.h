@@ -19,7 +19,6 @@ public:
 	Player(ShipType::Id shipId);
 	Player() { }; //default constructor used before Load
 	virtual void SetDockedWith(SpaceStation *, int port);
-	virtual bool OnDamage(Object *attacker, float kgDamage);
 	virtual bool SetWheelState(bool down); // returns success of state change, NOT state itself
 	virtual Missile * SpawnMissile(ShipType::Id missile_type, int power=-1);
 	virtual void SetAlertState(Ship::AlertState as);
@@ -42,10 +41,6 @@ public:
 
 	virtual Ship::HyperjumpStatus StartHyperspaceCountdown(const SystemPath &dest);
 	virtual void ResetHyperspaceCountdown();
-
-	virtual void StaticUpdate(const float timeStep);
-
-	std::list<RadarContact> &GetContacts() { return m_radarContacts; }
 
 protected:
 	virtual void Save(Serializer::Writer &wr, Space *space);

@@ -83,9 +83,7 @@
     <ClInclude Include="..\..\..\src\graphics\gl2\StarfieldMaterial.h">
       <Filter>gl2</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\src\graphics\GLDebug.h" />
     <ClInclude Include="..\..\..\src\graphics\RenderTarget.h" />
-    <ClInclude Include="..\..\..\src\graphics\GraphicsTypes.h" />
     <ClInclude Include="..\..\..\src\graphics\gl2\GL2RenderTarget.h">
       <Filter>gl2</Filter>
     </ClInclude>

@@ -9,7 +9,6 @@
 #include "Pi.h"
 #include "Game.h"
 #include "SectorView.h"
-#include "Sound.h"
 
 /*
  * Class: Player
@@ -315,35 +314,6 @@ static int l_set_hyperspace_target(lua_State *l)
 		return luaL_error(l, "Player:SetHyperspaceTarget() cannot be used while in hyperspace");
 }
 
-/*
- * Method: OutsideContextProblem
- *
- * Toggle God Mode
- *
- * > player:OutsideContextProblem()
- *
- * Parameters:
- *
- * Availability:
- *
- *   SSP (Summer Side Project)
- *
- * Status:
- *
- *   experimental
- */
-
-static int l_outside_context_problem(lua_State *l)
-{
-	if (Pi::ToggleGodMode()) {
-		Sound::PlaySfx("OK");
-		return 0;
-	} else {
-		Sound::PlaySfx("warning", 0.2f, 0.2f, 0);
-		return 0;
-	}
-}
-
 template <> const char *LuaObject<Player>::s_type = "Player";
 
 template <> void LuaObject<Player>::RegisterClass()
@@ -365,9 +335,6 @@ template <> void LuaObject<Player>::RegisterClass()
 		{ "SetCombatTarget", l_set_combat_target },
 		{ "GetHyperspaceTarget", l_get_hyperspace_target },
 		{ "SetHyperspaceTarget", l_set_hyperspace_target },
-
-		{ "OutsideContextProblem", l_outside_context_problem },
-
 		{ 0, 0 }
 	};
 

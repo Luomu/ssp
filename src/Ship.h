@@ -9,12 +9,14 @@
 #include "DynamicBody.h"
 #include "EquipSet.h"
 #include "galaxy/SystemPath.h"
+#include "HudTrail.h"
 #include "NavLights.h"
+#include "scenegraph/ModelSkin.h"
+#include "scenegraph/SceneGraph.h"
+#include "Sensors.h"
 #include "Serializer.h"
 #include "ShipType.h"
-#include "scenegraph/SceneGraph.h"
-#include "scenegraph/ModelSkin.h"
-#include "HudTrail.h"
+#include <unordered_map>
 
 class SpaceStation;
 class HyperspaceCloud;
@@ -49,19 +51,8 @@ public:
 class Ship: public DynamicBody {
 	friend class ShipController; //only controllers need access to AITimeStep
 	friend class PlayerShipController;
-public:
-	struct RadarContact {
-		RadarContact() : body(0), fresh(true), trail(0), distance(0.0) { }
-		~RadarContact() { body = 0; delete trail; }
-		Body *body;
-		HudTrail* trail;
-		bool fresh;
-		double distance;
-	};
 
-	enum TargetingCriteria {
-		TARGET_NEAREST_HOSTILE
-	};
+public:
 
 	OBJDEF(Ship, DynamicBody, SHIP);
 	Ship(ShipType::Id shipId);
@@ -231,6 +222,7 @@ public:
 	float GetPercentHull() const;
 	void SetPercentHull(float);
 	float GetGunTemperature(int idx) const { return m_gunTemperature[idx]; }
+	virtual Uint8 GetIntegrity() const;
 
 	enum FuelState { // <enum scope='Ship' name=ShipFuelStatus prefix=FUEL_ public>
 		FUEL_OK,
@@ -263,11 +255,15 @@ public:
 	bool IsInvulnerable() const { return m_invulnerable; }
 	void SetInvulnerable(bool b) { m_invulnerable = b; }
 
-	bool ChooseTarget(TargetingCriteria);
 	bool TargetInSight() const { return m_targetInSight; }
 
 	virtual Body *GetCombatTarget() const { return 0; }
 	virtual Body *GetNavTarget() const { return 0; }
+
+	Sensors *GetSensors() const { return m_sensors.Get(); }
+
+	Uint8 GetRelations(Body *other) const; //0=hostile, 50=neutral, 100=ally
+	void SetRelations(Body *other, Uint8 percent);
 
 protected:
 	virtual void Save(Serializer::Writer &wr, Space *space);
@@ -289,8 +285,6 @@ protected:
 	float m_ecmRecharge;
 
 	ShipController *m_controller;
-
-	std::list<RadarContact> m_radarContacts;
 
 private:
 	float GetECMRechargeTime();
@@ -343,8 +337,11 @@ private:
 
 	SceneGraph::Animation *m_landingGearAnimation;
 	ScopedPtr<NavLights> m_navLights;
+	ScopedPtr<Sensors> m_sensors;
 
 	bool m_targetInSight;
+
+	std::unordered_map<Body*, Uint8> m_relationsMap;
 };
 
 #endif /* _SHIP_H */

@@ -185,6 +185,13 @@ void WorldView::InitObject()
 	m_bodyLabels = new Gui::LabelSet();
 	m_bodyLabels->SetLabelColor(Color(1.0f, 1.0f, 1.0f, 0.9f));
 	Add(m_bodyLabels, 0, 0);
+
+	{
+		m_pauseText = new Gui::Label(std::string("#f7f") + Lang::PAUSED);
+		float w, h;
+		Gui::Screen::MeasureString(Lang::PAUSED, w, h);
+		Add(m_pauseText, 0.5f * (Gui::Screen::GetWidth() - w), 100);
+	}
 	Gui::Screen::PopFont();
 
 	m_navTargetIndicator.label = (new Gui::Label(""))->Color(0.0f, 1.0f, 0.0f);
@@ -399,7 +406,7 @@ void WorldView::Draw3D()
 	if (m_speedLines.Valid()) m_speedLines->Render(m_renderer);
 
 	// Contact trails
-	for (auto it = Pi::player->GetContacts().begin(); it != Pi::player->GetContacts().end(); ++it)
+	for (auto it = Pi::player->GetSensors()->GetContacts().begin(); it != Pi::player->GetSensors()->GetContacts().end(); ++it)
 		it->trail->Render(m_renderer);
 
 	// Target info (not really 3d)
@@ -423,6 +430,8 @@ void WorldView::OnToggleLabels()
 void WorldView::OnToggleCameraMagnification()
 {
 	m_internalCameraController->ToggleMagnification();
+	Pi::player->GetPlayerController()->SetTurnSensitivity(
+		m_internalCameraController->IsMagnified() ? 0.25 : 1.0);
 }
 
 void WorldView::ShowAll()
@@ -456,6 +465,11 @@ void WorldView::RefreshButtonStateAndVisibility()
 	assert(!Pi::player->IsDead());
 
 	Pi::cpan->ClearOverlay();
+
+	if (Pi::game->IsPaused())
+		m_pauseText->Show();
+	else
+		m_pauseText->Hide();
 
 	if (Pi::player->GetFlightState() != Ship::HYPERSPACE) {
 		Pi::cpan->SetOverlayToolTip(ShipCpanel::OVERLAY_TOP_LEFT,     Lang::SHIP_VELOCITY_BY_REFERENCE_OBJECT);
@@ -878,7 +892,7 @@ void WorldView::Update()
 		matrix4x4d trans;
 		Frame::GetFrameRenderTransform(Pi::player->GetFrame(), cam_frame, trans);
 
-		for (auto it = Pi::player->GetContacts().begin(); it != Pi::player->GetContacts().end(); ++it)
+		for (auto it = Pi::player->GetSensors()->GetContacts().begin(); it != Pi::player->GetSensors()->GetContacts().end(); ++it)
 			it->trail->SetTransform(trans);
 
 		trans[12] = trans[13] = trans[14] = 0.0;
@@ -1254,23 +1268,30 @@ void WorldView::UpdateProjectedObjects()
 	// determine projected positions and update labels
 	m_bodyLabels->Clear();
 	m_projectedPos.clear();
-	for (Space::BodyIterator i = Pi::game->GetSpace()->BodiesBegin(); i != Pi::game->GetSpace()->BodiesEnd(); ++i) {
-		Body *b = *i;
 
-		// don't show label for player or locked targets
-		if (b->IsType(Object::PLAYER))
-			continue;
+	auto &contacts = Pi::player->GetSensors()->GetContacts();
+	for (auto i = contacts.begin(); i != contacts.end(); ++i) {
+		Body *b = i->body;
+
+		// don't show label for locked targets
 		if (b == Pi::player->GetCombatTarget())
 			continue;
 
 		vector3d pos = b->GetInterpPositionRelTo(cam_frame);
 		if ((pos.z < -1.0) && project_to_screen(pos, pos, frustum, guiSize)) {
-
-			// only show labels on large or nearby bodies
-			if (b->IsType(Object::PLANET) || b->IsType(Object::STAR) || b->IsType(Object::SPACESTATION) || Pi::player->GetPositionRelTo(b).LengthSqr() < 1000000.0*1000000.0)
-				m_bodyLabels->Add((*i)->GetLabel(), sigc::bind(sigc::mem_fun(this, &WorldView::SelectBody), *i, true), float(pos.x), float(pos.y));
-
+			m_bodyLabels->Add(b->GetLabel(),
+				sigc::bind(sigc::mem_fun(this, &WorldView::SelectBody), b, true), float(pos.x), float(pos.y), Sensors::IFFColor(i->iff));
 			m_projectedPos[b] = pos;
+		}
+	}
+
+	auto staticContacts = Pi::player->GetSensors()->GetStaticContacts();
+	for (auto i = staticContacts.begin(); i != staticContacts.end(); ++i) {
+		vector3d pos = i->body->GetInterpPositionRelTo(cam_frame);
+		if ((pos.z < -1.0) && project_to_screen(pos, pos, frustum, guiSize)) {
+			m_bodyLabels->Add(i->body->GetLabel(),
+				sigc::bind(sigc::mem_fun(this, &WorldView::SelectBody), i->body, true), float(pos.x), float(pos.y), Sensors::IFFColor(i->iff));
+			m_projectedPos[i->body] = pos;
 		}
 	}
 
