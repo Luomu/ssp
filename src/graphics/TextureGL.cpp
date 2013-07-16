@@ -49,7 +49,7 @@ inline GLint GLImageFormat(TextureFormat format) {
 
 inline GLint GLImageType(TextureFormat format) {
 	return GL_UNSIGNED_BYTE;
-	}
+}
 
 inline int GetMinSize(TextureFormat flag) {
 	switch(flag) {
@@ -59,10 +59,10 @@ inline int GetMinSize(TextureFormat flag) {
 	return 1;
 }
 
-	}
-
 inline bool IsCompressed(TextureFormat format) {
-	return (format == TEXTURE_DXT1 || format == TEXTURE_DXT5);}
+	return (format == TEXTURE_DXT1 || format == TEXTURE_DXT5);
+}
+
 TextureGL::TextureGL(const TextureDescriptor &descriptor, const bool useCompressed) :
 	Texture(descriptor), m_target(GL_TEXTURE_2D) // XXX don't force target
 {

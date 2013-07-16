@@ -162,6 +162,7 @@
     <ClCompile Include="..\..\src\GeoSphere.cpp" />
     <ClCompile Include="..\..\src\HudReticle.cpp" />
     <ClCompile Include="..\..\src\HudTrail.cpp" />
+    <ClCompile Include="..\..\src\Sensors.cpp" />
     <ClCompile Include="..\..\src\SpeedLines.cpp" />
     <ClCompile Include="..\..\src\GameLog.cpp" />
     <ClCompile Include="..\..\src\Colors.cpp" />
@@ -397,6 +398,7 @@
     <ClInclude Include="..\..\src\RefList.h" />
     <ClInclude Include="..\..\src\SDLWrappers.h" />
     <ClInclude Include="..\..\src\SectorView.h" />
+    <ClInclude Include="..\..\src\Sensors.h" />
     <ClInclude Include="..\..\src\Serializer.h" />
     <ClInclude Include="..\..\src\Sfx.h" />
     <ClInclude Include="..\..\src\Ship.h" />
