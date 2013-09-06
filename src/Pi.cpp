@@ -1039,6 +1039,8 @@ void Pi::Start()
 				while (SDL_PollEvent(&event)) {}
 		}
 
+		OculusRiftInterface::Update();
+
 		Pi::BeginRenderTarget();
 		Pi::renderer->BeginFrame();
 		if (intro) intro->Draw(_time);
@@ -1101,7 +1103,7 @@ void Pi::MainLoop()
 	Uint32 last_stats = SDL_GetTicks();
 	int frame_stat = 0;
 	int phys_stat = 0;
-	char fps_readout[256];
+	char fps_readout[1024];
 	memset(fps_readout, 0, sizeof(fps_readout));
 #endif
 
@@ -1163,6 +1165,8 @@ void Pi::MainLoop()
 				time_player_died = Pi::game->GetTime();
 			}
 		}
+
+		OculusRiftInterface::Update();
 
 		Pi::BeginRenderTarget();
 
@@ -1245,6 +1249,9 @@ void Pi::MainLoop()
 
 #if WITH_DEVKEYS
 		if (Pi::showDebugInfo && SDL_GetTicks() - last_stats > 1000) {
+			float yaw, pitch, roll;
+			OculusRiftInterface::GetYawPitchRoll(yaw, pitch, roll);
+
 			size_t lua_mem = Lua::manager->GetMemoryUsage();
 			int lua_memB = int(lua_mem & ((1u << 10) - 1));
 			int lua_memKB = int(lua_mem >> 10) % 1024;
@@ -1253,10 +1260,10 @@ void Pi::MainLoop()
 			snprintf(
 				fps_readout, sizeof(fps_readout),
 				"%d fps (%.1f ms/f), %d phys updates, %d triangles, %.3f M tris/sec, %d terrain vtx/sec, %d glyphs/sec\n"
-				"Lua mem usage: %d MB + %d KB + %d bytes",
+				"Lua mem usage: %d MB + %d KB + %d bytes\n\n Oculus Yaw: %.3f, Pitch: %.3f, Roll %.3f",
 				frame_stat, (1000.0/frame_stat), phys_stat, Pi::statSceneTris, Pi::statSceneTris*frame_stat*1e-6,
 				GeoSphere::GetVtxGenCount(), Text::TextureFont::GetGlyphCount(),
-				lua_memMB, lua_memKB, lua_memB
+				lua_memMB, lua_memKB, lua_memB, yaw, pitch, roll
 			);
 			frame_stat = 0;
 			phys_stat = 0;

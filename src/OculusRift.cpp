@@ -168,6 +168,33 @@ public:
 			/*System::Destroy();*/
 		}
 	}
+	#pragma optimize("",off)
+	void OnUpdate()
+	{
+		// Handle Sensor motion.
+		// We extract Yaw, Pitch, Roll instead of directly using the orientation
+		// to allow "additional" yaw manipulation with mouse/controller.
+		if(pSensor)
+		{
+			Quatf    hmdOrient = SFusion.GetPredictedOrientation();
+
+			hmdOrient.GetEulerAngles<Axis_Y, Axis_X, Axis_Z>(&m_yaw, &m_pitch, &m_roll);
+
+			/*Player.EyeYaw += (yaw - Player.LastSensorYaw);
+			Player.LastSensorYaw = yaw;*/
+
+			// NOTE: We can get a matrix from orientation as follows:
+			// Matrix4f hmdMat(hmdOrient);
+
+			// Test logic - assign quaternion result directly to view:
+			// Quatf hmdOrient = SFusion.GetOrientation();
+			// View = Matrix4f(hmdOrient.Inverted()) * Matrix4f::Translation(-EyePos);
+		}
+	}
+
+	float Yaw() const { return m_yaw; }
+	float Pitch() const { return m_pitch; }
+	float Roll() const { return m_roll; }
 
 private:
 	// *** Oculus HMD Variables
@@ -182,6 +209,11 @@ private:
 
 	int Width;
     int Height;
+
+	// 
+	float	m_yaw;
+	float	m_pitch;
+	float	m_roll;
 };
 
 // static members for the interface class.
@@ -196,8 +228,17 @@ void OculusRiftInterface::Uninit()
 {
 	mPimpl.Reset();
 }
-
+#pragma optimize("",off)
 void OculusRiftInterface::Update()
 {
+	mPimpl->OnUpdate();
 }
-
+#ifdef _DEBUG
+//static 
+void OculusRiftInterface::GetYawPitchRoll(float &yaw, float &pitch, float &roll)
+{
+	yaw		= mPimpl->Yaw();
+	pitch	= mPimpl->Pitch();
+	roll	= mPimpl->Roll();
+}
+#endif

@@ -12,6 +12,9 @@ public:
 	static void Uninit();
 	static void Update();
 
+#ifdef _DEBUG
+	static void GetYawPitchRoll(float &yaw, float &pitch, float &roll);
+#endif
 private:
 	static ScopedPtr<OculusRiftImplemetation> mPimpl;
 };
