@@ -18,7 +18,8 @@ public:
 	enum Type { //can be used for serialization & identification
 		INTERNAL,
 		EXTERNAL,
-		SIDEREAL
+		SIDEREAL,
+		STEREOHMD
 	};
 
 	CameraController(Camera *camera, const Ship *ship);
@@ -174,6 +175,29 @@ public:
 private:
 	double m_dist, m_distTo;
 	matrix3x3d m_sidOrient;
+};
+
+class StereoCameraController : public CameraController {
+public:
+	StereoCameraController(std::vector<Camera*> &cameras, const Ship *ship);
+
+	Type GetType() const { return STEREOHMD; }
+	const char *GetName() const { return "Stereo HMD"; }
+	void Save(Serializer::Writer &wr);
+	void Load(Serializer::Reader &rd);
+	bool IsMagnified() const { return m_magnify; }
+	void ToggleMagnification();
+
+	virtual void ZoomEventUpdate(float frameTime);
+	virtual void Update();
+
+protected:
+	std::vector<Camera*> m_cameras;
+
+private:
+	bool m_magnify;
+	float m_fov;
+	float m_fovTo;
 };
 
 #endif

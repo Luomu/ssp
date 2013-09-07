@@ -98,7 +98,7 @@ void GalacticView::PutLabels(vector3d offset)
 }
 
 
-void GalacticView::Draw3D()
+void GalacticView::Draw3D(const ViewEye eye /*= ViewEye_Centre*/)
 {
 	vector3f pos = Pi::sectorView->GetPosition();
 	float offset_x = (pos.x*Sector::SIZE + Galaxy::SOL_OFFSET_X)/Galaxy::GALAXY_RADIUS;
@@ -140,7 +140,7 @@ void GalacticView::Draw3D()
 	m_renderer->SetDepthTest(true);
 }
 
-void GalacticView::Update()
+void GalacticView::Update(const ViewEye eye /*= ViewEye_Centre*/)
 {
 	const float frameTime = Pi::GetFrameTime();
 

@@ -178,6 +178,7 @@ void Pi::CreateRenderTarget(const Uint16 width, const Uint16 height) {
 //static
 void Pi::DrawRenderTarget() {
 	Pi::renderer->BeginFrame();
+	Pi::renderer->SetViewport(0, 0, Graphics::GetScreenWidth(), Graphics::GetScreenHeight());	
 	Pi::renderer->SetTransform(matrix4x4f::Identity());
 
 	//Gui::Screen::EnterOrtho();
@@ -1180,8 +1181,18 @@ void Pi::MainLoop()
 		}
 		game->GetSpace()->GetRootFrame()->UpdateInterpTransform(Pi::GetGameTickAlpha());
 
-		currentView->Update();
-		currentView->Draw3D();
+		if( !OculusRiftInterface::HasHMD() ) {
+			// no HMD
+			currentView->Update(ViewEye_Centre);
+			currentView->Draw3D(ViewEye_Centre);
+		} else {
+			// has HMD - render both views
+			currentView->Update(ViewEye_Left);
+			currentView->Draw3D(ViewEye_Left);
+
+			currentView->Update(ViewEye_Right);
+			currentView->Draw3D(ViewEye_Right);
+		}
 		// XXX HandleEvents at the moment must be after view->Draw3D and before
 		// Gui::Draw so that labels drawn to screen can have mouse events correctly
 		// detected. Gui::Draw wipes memory of label positions.

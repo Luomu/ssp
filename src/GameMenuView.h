@@ -61,8 +61,8 @@ class GameMenuView: public View {
 public:
 	GameMenuView();
 	virtual ~GameMenuView();
-	virtual void Update() {}
-	virtual void Draw3D() {}
+	virtual void Update(const ViewEye eye = ViewEye_Centre) {}
+	virtual void Draw3D(const ViewEye eye = ViewEye_Centre) {}
 	virtual void ShowAll();
 	void OpenLoadDialog();
 	void OpenSaveDialog();

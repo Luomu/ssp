@@ -12,6 +12,8 @@ public:
 	static void Uninit();
 	static void Update();
 
+	static bool HasHMD();
+
 #ifdef _DEBUG
 	static void GetYawPitchRoll(float &yaw, float &pitch, float &roll);
 #endif

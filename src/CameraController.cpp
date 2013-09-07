@@ -14,7 +14,7 @@ CameraController::CameraController(Camera *camera, const Ship *ship) :
 	m_orient(matrix3x3d::Identity())
 {
 }
-
+#pragma optimize("",off)
 void CameraController::Update()
 {
 	m_camera->SetFrame(m_ship->GetFrame());
@@ -87,7 +87,7 @@ void InternalCameraController::ZoomEventUpdate(float frameTime)
 	AnimationCurves::Approach(m_fov, m_fovTo, frameTime);
 	m_camera->SetFov(m_fov);
 }
-
+#pragma optimize("",off)
 void InternalCameraController::Update()
 {
 	SetPosition(GetShip()->GetShipType()->cameraOffset);
@@ -309,4 +309,58 @@ void SiderealCameraController::Load(Serializer::Reader &rd)
 	for (int i = 0; i < 9; i++) m_sidOrient[i] = rd.Double();
 	m_dist = rd.Double();
 	m_distTo = m_dist;
+}
+
+StereoCameraController::StereoCameraController(std::vector<Camera*> &cameras, const Ship *ship) :
+	CameraController(cameras[0], ship), m_cameras(cameras)
+{
+	m_magnify = false;
+	m_fov = cameras[0]->GetDefaultFov();
+	m_fovTo = cameras[0]->GetDefaultFov();
+}
+
+void StereoCameraController::Save(Serializer::Writer &wr)
+{
+}
+
+void StereoCameraController::Load(Serializer::Reader &rd)
+{
+}
+
+void StereoCameraController::ToggleMagnification()
+{
+	m_magnify = !m_magnify;
+	m_fovTo = m_magnify ? m_camera->GetZoomedInFov() : m_camera->GetDefaultFov();
+}
+
+void StereoCameraController::ZoomEventUpdate(float frameTime)
+{
+	AnimationCurves::Approach(m_fov, m_fovTo, frameTime);
+	for(std::vector<Camera*>::iterator it = m_cameras.begin(), itEnd = m_cameras.end(); it!=itEnd; ++it) {
+		(*it)->SetFov(m_fov);
+	}
+	
+}
+#pragma optimize("",off)
+void StereoCameraController::Update()
+{
+	SetPosition(GetShip()->GetShipType()->cameraOffset);
+
+	const Ship* ship = GetShip();
+	const matrix3x3d &orient = GetOrient();
+	const vector3d pos = GetPosition();
+
+	// interpolate between last physics tick position and current one,
+	// to remove temporal aliasing
+	const matrix3x3d &m = ship->GetInterpOrient();
+	const matrix3x3d finalorient = (m * orient);
+	const vector3d finalpos = (m * pos + ship->GetInterpPosition());
+	
+	for(std::vector<Camera*>::iterator it = m_cameras.begin(), itEnd = m_cameras.end(); it!=itEnd; ++it) {
+		(*it)->SetFrame(ship->GetFrame());
+		(*it)->SetOrient(finalorient);
+		(*it)->SetPosition(finalpos);
+	}
+
+	//CameraController::Update();
 }

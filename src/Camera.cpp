@@ -96,7 +96,7 @@ static void position_system_lights(Frame *camFrame, Frame *frame, std::vector<Ca
 		position_system_lights(camFrame, *it, lights);
 	}
 }
-
+#pragma optimize("",off)
 void Camera::Update()
 {
 	if (!m_frame) return;
@@ -130,7 +130,7 @@ void Camera::Update()
 	// depth sort
 	m_sortedBodies.sort();
 }
-
+#pragma optimize("",off)
 void Camera::Draw(Renderer *renderer, const Body *excludeBody)
 {
 	if (!m_camFrame) return;
@@ -145,7 +145,7 @@ void Camera::Draw(Renderer *renderer, const Body *excludeBody)
 
 	m_renderer->SetPerspectiveProjection(m_fovAng, m_width/m_height, m_zNear, m_zFar);
 	m_renderer->SetTransform(matrix4x4f::Identity());
-	m_renderer->ClearScreen();
+	//m_renderer->ClearScreen();
 
 	matrix4x4d trans2bg;
 	Frame::GetFrameRenderTransform(Pi::game->GetSpace()->GetRootFrame(), m_camFrame, trans2bg);

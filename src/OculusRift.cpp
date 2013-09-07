@@ -165,7 +165,7 @@ public:
 				//pManager->Release();
 				pManager.Reset();
 			}
-			/*System::Destroy();*/
+			System::Destroy();
 		}
 	}
 	#pragma optimize("",off)
@@ -191,6 +191,8 @@ public:
 			// View = Matrix4f(hmdOrient.Inverted()) * Matrix4f::Translation(-EyePos);
 		}
 	}
+
+	bool HasSensor() const { return pSensor.Valid(); }
 
 	float Yaw() const { return m_yaw; }
 	float Pitch() const { return m_pitch; }
@@ -232,6 +234,12 @@ void OculusRiftInterface::Uninit()
 void OculusRiftInterface::Update()
 {
 	mPimpl->OnUpdate();
+}
+#pragma optimize("",off)
+//static
+bool OculusRiftInterface::HasHMD()
+{
+	return mPimpl->HasSensor();
 }
 #ifdef _DEBUG
 //static 

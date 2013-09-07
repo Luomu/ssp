@@ -408,13 +408,13 @@ void SystemInfoView::SystemChanged(const SystemPath &path)
 	ShowAll();
 }
 
-void SystemInfoView::Draw3D()
+void SystemInfoView::Draw3D(const ViewEye eye /*= ViewEye_Centre*/)
 {
 	m_renderer->SetTransform(matrix4x4f::Identity());
 	m_renderer->ClearScreen();
 }
 
-void SystemInfoView::Update()
+void SystemInfoView::Update(const ViewEye eye /*= ViewEye_Centre*/)
 {
 	if (m_refresh) {
 		SystemChanged(Pi::sectorView->GetSelectedSystem());

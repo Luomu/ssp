@@ -368,7 +368,7 @@ void SectorView::OnSearchBoxKeyPress(const SDL_keysym *keysym)
 static const int DRAW_RAD = 3;
 #define FFRAC(_x)	((_x)-floor(_x))
 
-void SectorView::Draw3D()
+void SectorView::Draw3D(const ViewEye eye /*= ViewEye_Centre*/)
 {
 	m_lineVerts->Clear();
 	m_clickableLabels->Clear();
@@ -1029,7 +1029,7 @@ void SectorView::OnKeyPressed(SDL_keysym *keysym)
 	}
 }
 
-void SectorView::Update()
+void SectorView::Update(const ViewEye eye /*= ViewEye_Centre*/)
 {
 	SystemPath last_current = m_current;
 	bool last_inSystem = m_inSystem;

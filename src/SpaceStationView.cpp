@@ -86,7 +86,7 @@ SpaceStationView::~SpaceStationView()
 	m_undockConnection.disconnect();
 }
 
-void SpaceStationView::Update()
+void SpaceStationView::Update(const ViewEye eye /*= ViewEye_Centre*/)
 {
 	char buf[64];
 	m_money->SetText(format_money(Pi::player->GetMoney()));
