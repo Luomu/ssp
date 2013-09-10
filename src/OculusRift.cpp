@@ -150,20 +150,21 @@ public:
 		// No OVR functions involving memory are allowed after this.
 		if(System::IsInitialized())
 		{
-			if(pHMD.Valid())
+			RemoveHandlerFromDevices();
+			/*if(pSensor.Valid())
 			{
-				//pHMD->Release();
-				pHMD.Reset();
-			}
-			if(pSensor.Valid())
-			{
-				//pSensor->Release();
+				(pSensor.Get())->Release();
 				pSensor.Reset();
 			}
+			if(pHMD.Valid())
+			{
+				(pHMD.Get())->Release();
+				pHMD.Reset();
+			}*/
 			if(pManager.Valid())
 			{
-				//pManager->Release();
-				pManager.Reset();
+				(pManager.Get())->Release();
+				//pManager.Reset();
 			}
 			System::Destroy();
 		}
@@ -197,6 +198,17 @@ public:
 	float Yaw() const { return m_yaw; }
 	float Pitch() const { return m_pitch; }
 	float Roll() const { return m_roll; }
+
+	void GetDistortionValues(float &XCenterOffset, float &Scale, float &K0, float &K1, float &K2, float &K3)
+	{
+		const DistortionConfig& Distortion = SConfig.GetDistortionConfig();
+		XCenterOffset	= Distortion.XCenterOffset;
+		Scale			= Distortion.Scale;
+		K0				= Distortion.K[0];
+		K1				= Distortion.K[1];
+		K2				= Distortion.K[2];
+		K3				= Distortion.K[3];
+	}
 
 private:
 	// *** Oculus HMD Variables
@@ -233,20 +245,28 @@ void OculusRiftInterface::Uninit()
 #pragma optimize("",off)
 void OculusRiftInterface::Update()
 {
+	assert(mPimpl.Valid());
 	mPimpl->OnUpdate();
 }
 #pragma optimize("",off)
 //static
 bool OculusRiftInterface::HasHMD()
 {
+	assert(mPimpl.Valid());
 	return mPimpl->HasSensor();
 }
-#ifdef _DEBUG
+
 //static 
 void OculusRiftInterface::GetYawPitchRoll(float &yaw, float &pitch, float &roll)
 {
+	assert(mPimpl.Valid());
 	yaw		= mPimpl->Yaw();
 	pitch	= mPimpl->Pitch();
 	roll	= mPimpl->Roll();
 }
-#endif
+
+//static
+void OculusRiftInterface::GetDistortionValues(float &XCenterOffset, float &Scale, float &K0, float &K1, float &K2, float &K3)
+{
+	mPimpl->GetDistortionValues(XCenterOffset, Scale, K0, K1, K2, K3);
+}

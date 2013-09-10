@@ -349,17 +349,26 @@ void StereoCameraController::Update()
 	const Ship* ship = GetShip();
 	const matrix3x3d &orient = GetOrient();
 	const vector3d pos = GetPosition();
+	const vector3d offsetAxis = 10.0 * orient.VectorX().Normalized();
 
 	// interpolate between last physics tick position and current one,
 	// to remove temporal aliasing
 	const matrix3x3d &m = ship->GetInterpOrient();
 	const matrix3x3d finalorient = (m * orient);
-	const vector3d finalpos = (m * pos + ship->GetInterpPosition());
 	
-	for(std::vector<Camera*>::iterator it = m_cameras.begin(), itEnd = m_cameras.end(); it!=itEnd; ++it) {
-		(*it)->SetFrame(ship->GetFrame());
-		(*it)->SetOrient(finalorient);
-		(*it)->SetPosition(finalpos);
+	assert(m_cameras.size()==2);
+	{
+		m_cameras[0]->SetFrame(ship->GetFrame());
+		m_cameras[0]->SetOrient(finalorient);
+		const vector3d finalpos = (m * (pos+offsetAxis) + ship->GetInterpPosition());
+		m_cameras[0]->SetPosition(finalpos);
+	}
+
+	{
+		m_cameras[1]->SetFrame(ship->GetFrame());
+		m_cameras[1]->SetOrient(finalorient);
+		const vector3d finalpos = (m * (pos-offsetAxis) + ship->GetInterpPosition());
+		m_cameras[1]->SetPosition(finalpos);
 	}
 
 	//CameraController::Update();

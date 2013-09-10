@@ -159,7 +159,14 @@ void Pi::CreateRenderTarget(const Uint16 width, const Uint16 height) {
 		vector2f(width, height),
 		Graphics::LINEAR_CLAMP, false, false, 0);
 	Pi::m_texture.Reset(Pi::renderer->CreateTexture(texDesc));
-	Pi::m_quad.Reset(new Graphics::Drawables::TexturedQuad(Pi::renderer, m_texture.Get(), vector2f(0.0f,0.0f), vector2f(800.0f, 600.0f)));
+	/*if( OculusRiftInterface::HasHMD() ) {
+		Graphics::MaterialDescriptor desc;
+		desc.effect = Graphics::EFFECT_HMDWARP;
+		desc.textures = 1;
+		Pi::m_quad.Reset(new Graphics::Drawables::TexturedQuad(Pi::renderer, m_texture.Get(), Pi::renderer->CreateMaterial(desc), vector2f(0.0f,0.0f), vector2f(800.0f, 600.0f)));
+	} else*/ {
+		Pi::m_quad.Reset(new Graphics::Drawables::TexturedQuad(Pi::renderer, m_texture.Get(), vector2f(0.0f,0.0f), vector2f(800.0f, 600.0f)));
+	}
 
 	// Oculus Rift is 1280×800 (640×800 per eye)
 	Graphics::RenderTargetDesc rtDesc(
@@ -435,9 +442,9 @@ void Pi::Init()
 		fclose(f);
 	}
 
-	Pi::CreateRenderTarget(videoSettings.width, videoSettings.height);
-
 	OculusRiftInterface::Init();
+
+	Pi::CreateRenderTarget(videoSettings.width, videoSettings.height);
 
 	OS::LoadWindowIcon();
 	SDL_WM_SetCaption("Pioneer","Pioneer");

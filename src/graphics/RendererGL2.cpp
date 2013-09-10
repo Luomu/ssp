@@ -15,6 +15,7 @@
 #include "gl2/Program.h"
 #include "gl2/RingMaterial.h"
 #include "gl2/StarfieldMaterial.h"
+#include "gl2/HMDWarpMaterial.h"
 
 namespace Graphics {
 
@@ -142,6 +143,9 @@ Material *RendererGL2::CreateMaterial(const MaterialDescriptor &d)
 		break;
 	case EFFECT_GEOSPHERE_SKY:
 		mat = new GL2::GeoSphereSkyMaterial();
+		break;
+	case EFFECT_HMDWARP:
+		mat = new GL2::HMDWarpMaterial();
 		break;
 	default:
 		if (desc.lighting)

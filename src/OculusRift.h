@@ -14,9 +14,9 @@ public:
 
 	static bool HasHMD();
 
-#ifdef _DEBUG
 	static void GetYawPitchRoll(float &yaw, float &pitch, float &roll);
-#endif
+
+	static void GetDistortionValues(float &XCenterOffset, float &Scale, float &K0, float &K1, float &K2, float &K3);
 private:
 	static ScopedPtr<OculusRiftImplemetation> mPimpl;
 };
