@@ -151,7 +151,7 @@ public:
 		if(System::IsInitialized())
 		{
 			RemoveHandlerFromDevices();
-			/*if(pSensor.Valid())
+			if(pSensor.Valid())
 			{
 				(pSensor.Get())->Release();
 				pSensor.Reset();
@@ -160,11 +160,11 @@ public:
 			{
 				(pHMD.Get())->Release();
 				pHMD.Reset();
-			}*/
+			}
 			if(pManager.Valid())
 			{
 				(pManager.Get())->Release();
-				//pManager.Reset();
+				pManager.Reset();
 			}
 			System::Destroy();
 		}
