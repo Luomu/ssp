@@ -426,18 +426,19 @@ void WorldView::Draw3D(const ViewEye eye /*= ViewEye_Centre*/)
 	assert(!Pi::player->IsDead());
 	const int screenW = Graphics::GetScreenWidth();
 	const int halfScreenW = screenW>>1;
+	const Body *pExcluded = (GetCamType() == CameraController::INTERNAL || GetCamType() == CameraController::STEREOHMD) ? Pi::player : nullptr;
 	switch(eye) {
 	case ViewEye_Centre:	
 		m_renderer->SetViewport(0, 0, screenW, Graphics::GetScreenHeight());
-		m_cameras[0]->Draw(m_renderer, GetCamType() == CameraController::INTERNAL ? Pi::player : nullptr);
+		m_cameras[0]->Draw(m_renderer, pExcluded);
 		break;
 	case ViewEye_Left:		
 		m_renderer->SetViewport(0, 0, halfScreenW, Graphics::GetScreenHeight());
-		m_cameras[0]->Draw(m_renderer, GetCamType() == CameraController::INTERNAL ? Pi::player : nullptr);
+		m_cameras[0]->Draw(m_renderer, pExcluded);
 		break;
 	case ViewEye_Right:		
 		m_renderer->SetViewport(halfScreenW,0, halfScreenW, Graphics::GetScreenHeight());
-		m_cameras[1]->Draw(m_renderer, GetCamType() == CameraController::INTERNAL ? Pi::player : nullptr);
+		m_cameras[1]->Draw(m_renderer, pExcluded);
 		break;
 	}
 

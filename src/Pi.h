@@ -206,7 +206,7 @@ private:
 
 	static Graphics::RenderTarget *pRTarget;
 	static RefCountedPtr<Graphics::Texture> m_texture;
-	static ScopedPtr<Graphics::Drawables::TexturedQuad> m_quad;
+	static ScopedPtr<Graphics::Drawables::TexturedQuad> m_quads[2];
 };
 
 #endif /* _PI_H */

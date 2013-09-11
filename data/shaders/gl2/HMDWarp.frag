@@ -1,40 +1,36 @@
 #ifdef TEXTURE0
 uniform sampler2D texture0; //diffuse
-uniform sampler2D texture1; //specular
-uniform sampler2D texture2; //glow
-uniform sampler2D texture3; //pattern
-uniform sampler2D texture4; //color
 varying vec2 texCoord0;
+varying vec2 oTexCoord;
 #endif
-#ifdef VERTEXCOLOR
-varying vec4 vertexColor;
-#endif
+
+uniform vec2 LensCenter;
+uniform vec2 ScreenCenter;
+uniform vec2 Scale;
+uniform vec2 ScaleIn;
+uniform vec4 HmdWarpParam;
 
 uniform Scene scene;
 uniform Material material;
 
+vec2 HmdWarp(vec2 in01)
+{
+   vec2  theta = (in01 - LensCenter) * ScaleIn; // Scales to [-1, 1]
+   float rSq = theta.x * theta.x + theta.y * theta.y;
+   vec2  theta1 = theta * (HmdWarpParam.x + HmdWarpParam.y * rSq + 
+                           HmdWarpParam.z * rSq * rSq + HmdWarpParam.w * rSq * rSq * rSq);
+   return LensCenter + Scale * theta1;
+}
+
 void main(void)
 {
-#ifdef VERTEXCOLOR
-	vec4 color = vertexColor;
-#else
 	vec4 color = material.diffuse;
-#endif
-#ifdef TEXTURE0
-	color *= texture2D(texture0, texCoord0);
-#endif
-//patterns - simple lookup
-#ifdef MAP_COLOR
-	float pat = texture2D(texture3, texCoord0).r;
-	vec4 mapColor = texture2D(texture4, vec2(pat, 0.0));
-	color *= mapColor;
-#endif
-
-#ifdef ALPHA_TEST
-	if (color.a < 0.5)
-		discard;
-#endif
-
+	vec2 tc = HmdWarp(oTexCoord);
+	if (!all(equal(clamp(tc, ScreenCenter-vec2(0.25,0.5), ScreenCenter+vec2(0.25,0.5)), tc)))
+		color = vec4(1.0,0.0,1.0,1.0);
+	else
+		color = texture2D(texture0, tc);
+	
 	gl_FragColor = color;
 
 	SetFragDepth();

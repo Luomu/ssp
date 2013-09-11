@@ -6,6 +6,7 @@
 #include "Camera.h"
 #include "StringF.h"
 #include "graphics/Graphics.h"
+#include "graphics/TextureGL.h"
 #include "graphics/RendererGL2.h"
 #include "OculusRift.h"
 #include <sstream>
@@ -37,44 +38,57 @@ Program *HMDWarpMaterial::CreateProgram(const MaterialDescriptor &desc)
 {
 	assert((desc.effect == EFFECT_HMDWARP));
 	std::stringstream ss;
+	if (desc.textures > 0)
+		ss << "#define TEXTURE0\n";
 	return new Graphics::GL2::HMDWarpProgram("HMDWarp", ss.str());
 }
-
+#pragma optimize("",off)
 void HMDWarpMaterial::Apply()
 {
 	SetGSUniforms();
+	glPushAttrib(GL_ENABLE_BIT);
+	glDisable(GL_CULL_FACE);
 }
-
+#pragma optimize("",off)
+void HMDWarpMaterial::Unapply()
+{
+	glPopAttrib();
+	if (texture0) {
+		static_cast<TextureGL*>(texture0)->Unbind();
+	}
+	m_program->Unuse();
+}
+#pragma optimize("",off)
 void HMDWarpMaterial::SetGSUniforms()
 {
 	HMDWarpProgram *p = static_cast<HMDWarpProgram*>(m_program);
 
 	p->Use();
+	p->diffuse.Set(this->diffuse);
+	p->texture0.Set(this->texture0, 0);
 	p->emission.Set(this->emissive);
 	p->sceneAmbient.Set(m_renderer->GetAmbientColor());
-	//p->atmosColor.Set(ap.atmosCol);
 	const float WindowWidth = Graphics::GetScreenWidth();
 	const float WindowHeight = Graphics::GetScreenHeight();
-	const float w = 1.0f,
-          h = 1.0f,
-          x = 0.0f,
-          y = 0.0f;
 
-	/*float w = float(VP.w) / float(WindowWidth),
-          h = float(VP.h) / float(WindowHeight),
-          x = float(VP.x) / float(WindowWidth),
-          y = float(VP.y) / float(WindowHeight);*/
+	assert(specialParameter0);
+	OculusRiftInterface::Viewport* VP = static_cast<OculusRiftInterface::Viewport*>(specialParameter0);
+	const float w = float(VP->w) / float(WindowWidth),
+                h = float(VP->h) / float(WindowHeight),
+                x = float(VP->x) / float(WindowWidth),
+                y = float(VP->y) / float(WindowHeight);
 
-    const float as = float(WindowWidth) / float(WindowHeight);
+    const float as = float(VP->w) / float(VP->h);
 
 	float XCenterOffset;
 	float Scale;
 	float K0,K1,K2,K3;
 	OculusRiftInterface::GetDistortionValues(XCenterOffset, Scale, K0, K1, K2, K3);
+	if(VP->x > 0)
+		XCenterOffset = -XCenterOffset;
 
     // We are using 1/4 of DistortionCenter offset value here, since it is
     // relative to [-1,1] range that gets mapped to [0, 0.5].
-	
 	p->LensCenter.Set(x + (w + XCenterOffset * 0.5f)*0.5f, y + h*0.5f);
 	p->ScreenCenter.Set(x + w*0.5f, y + h*0.5f);
 
@@ -101,62 +115,8 @@ void HMDWarpMaterial::SetGSUniforms()
                     0.f, 0.f, 0.f, 0.f,
 					0.f, 0.f, 0.f, 1.f};
     matrix4x4f texm(texf);
-    p->Texm.Set(texm);
+    p->Texm.Set(texm,true);
 }
-
-/*void RenderDevice::FinishScene1()
-{
-    float r, g, b, a;
-    DistortionClearColor.GetRGBA(&r, &g, &b, &a);
-    Clear(r, g, b, a);
-
-    float w = float(VP.w) / float(WindowWidth),
-          h = float(VP.h) / float(WindowHeight),
-          x = float(VP.x) / float(WindowWidth),
-          y = float(VP.y) / float(WindowHeight);
-
-    float as = float(VP.w) / float(VP.h);
-
-    // We are using 1/4 of DistortionCenter offset value here, since it is
-    // relative to [-1,1] range that gets mapped to [0, 0.5].
-    pPostProcessShader->SetUniform2f("LensCenter",
-                                     x + (w + Distortion.XCenterOffset * 0.5f)*0.5f, y + h*0.5f);
-    pPostProcessShader->SetUniform2f("ScreenCenter", x + w*0.5f, y + h*0.5f);
-
-    // MA: This is more correct but we would need higher-res texture vertically; we should adopt this
-    // once we have asymmetric input texture scale.
-    float scaleFactor = 1.0f / Distortion.Scale;
-
-    pPostProcessShader->SetUniform2f("Scale",   (w/2) * scaleFactor, (h/2) * scaleFactor * as);
-    pPostProcessShader->SetUniform2f("ScaleIn", (2/w),               (2/h) / as);
-
-    pPostProcessShader->SetUniform4f("HmdWarpParam",
-                                     Distortion.K[0], Distortion.K[1], Distortion.K[2], Distortion.K[3]);
-
-    if (PostProcessShaderRequested == PostProcessShader_DistortionAndChromAb)
-    {
-        pPostProcessShader->SetUniform4f("ChromAbParam",
-                                        Distortion.ChromaticAberration[0], 
-                                        Distortion.ChromaticAberration[1],
-                                        Distortion.ChromaticAberration[2],
-                                        Distortion.ChromaticAberration[3]);
-    }
-
-    Matrix4f texm(w, 0, 0, x,
-                  0, h, 0, y,
-                  0, 0, 0, 0,
-                  0, 0, 0, 1);
-    pPostProcessShader->SetUniform4x4f("Texm", texm);
-
-    Matrix4f view(2, 0, 0, -1,
-                  0, 2, 0, -1,
-                   0, 0, 0, 0,
-                   0, 0, 0, 1);
-
-    ShaderFill fill(pPostProcessShader);
-    fill.SetTexture(0, pSceneColorTex);
-    RenderWithAlpha(&fill, pFullScreenVertexBuffer, NULL, view, 0, 4, Prim_TriangleStrip);
-}*/
 
 }	// namespace GL2
 }	// namespace Graphics

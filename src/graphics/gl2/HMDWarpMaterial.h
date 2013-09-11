@@ -32,6 +32,7 @@ namespace Graphics {
 		class HMDWarpMaterial : public Material {
 			virtual Program *CreateProgram(const MaterialDescriptor &);
 			virtual void Apply();
+			virtual void Unapply();
 
 		protected:
 			void SetGSUniforms();

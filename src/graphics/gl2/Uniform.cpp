@@ -80,10 +80,10 @@ void Uniform::Set(Texture *tex, unsigned int unit)
 	}
 }
 
-void Uniform::Set(const matrix4x4f &mat)
+void Uniform::Set(const matrix4x4f &mat, const bool bTranspose /*= false*/)
 {
 	if (m_location != -1)
-		glUniformMatrix4fv(m_location, 1, false, mat.Data());
+		glUniformMatrix4fv(m_location, 1, bTranspose, mat.Data());
 }
 
 }

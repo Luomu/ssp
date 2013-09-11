@@ -423,7 +423,7 @@ bool RendererLegacy::DrawPoints(int count, const vector3f *points, const Color *
 
 	return true;
 }
-
+#pragma optimize("",off)
 bool RendererLegacy::DrawTriangles(const VertexArray *v, Material *m, PrimitiveType t)
 {
 	if (!v || v->position.size() < 3) return false;

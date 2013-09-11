@@ -342,6 +342,7 @@ void StereoCameraController::ZoomEventUpdate(float frameTime)
 	
 }
 #pragma optimize("",off)
+static double eye_offset_scale = 0.0;
 void StereoCameraController::Update()
 {
 	SetPosition(GetShip()->GetShipType()->cameraOffset);
@@ -349,25 +350,27 @@ void StereoCameraController::Update()
 	const Ship* ship = GetShip();
 	const matrix3x3d &orient = GetOrient();
 	const vector3d pos = GetPosition();
-	const vector3d offsetAxis = 10.0 * orient.VectorX().Normalized();
+	const vector3d offsetAxis = eye_offset_scale * orient.VectorX().Normalized();
+	const vector3d shipInterpPosition = ship->GetInterpPosition();
 
 	// interpolate between last physics tick position and current one,
 	// to remove temporal aliasing
 	const matrix3x3d &m = ship->GetInterpOrient();
 	const matrix3x3d finalorient = (m * orient);
 	
+	
 	assert(m_cameras.size()==2);
 	{
 		m_cameras[0]->SetFrame(ship->GetFrame());
 		m_cameras[0]->SetOrient(finalorient);
-		const vector3d finalpos = (m * (pos+offsetAxis) + ship->GetInterpPosition());
+		const vector3d finalpos = (m * (pos - offsetAxis) + shipInterpPosition);
 		m_cameras[0]->SetPosition(finalpos);
 	}
 
 	{
 		m_cameras[1]->SetFrame(ship->GetFrame());
 		m_cameras[1]->SetOrient(finalorient);
-		const vector3d finalpos = (m * (pos-offsetAxis) + ship->GetInterpPosition());
+		const vector3d finalpos = (m * (pos + offsetAxis) + shipInterpPosition);
 		m_cameras[1]->SetPosition(finalpos);
 	}
 

@@ -26,7 +26,7 @@ namespace Graphics {
 			void Set(const int v[3]);
 			void Set(const float m[9]);
 			void Set(Texture *t, unsigned int unit);
-			void Set(const matrix4x4f&);
+			void Set(const matrix4x4f&, const bool bTranspose = false);
 
 		//private:
 			GLint m_location;
