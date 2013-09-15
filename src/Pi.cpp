@@ -133,7 +133,7 @@ ModelCache *Pi::modelCache;
 Intro *Pi::intro;
 Graphics::RenderTarget *Pi::pRTarget;
 RefCountedPtr<Graphics::Texture> Pi::m_texture;
-ScopedPtr<Graphics::Drawables::TexturedQuad> Pi::m_quads[2];
+ScopedPtr<Graphics::Drawables::TexturedQuad> Pi::m_quads[eVP_MAX];
 ScopedPtr<Gui::Image> Pi::pLoadingImage;
 
 #if WITH_OBJECTVIEWER
@@ -159,6 +159,7 @@ void Pi::CreateRenderTarget(const Uint16 width, const Uint16 height) {
 		vector2f(width, height),
 		Graphics::LINEAR_CLAMP, false, false, 0);
 	Pi::m_texture.Reset(Pi::renderer->CreateTexture(texDesc));
+	Pi::m_quads[eVPCentre].Reset(new Graphics::Drawables::TexturedQuad(Pi::renderer, m_texture.Get(), vector2f(0.0f,0.0f), vector2f(800.0f, 600.0f)));
 	if( OculusRiftInterface::HasHMD() ) {
 		Graphics::MaterialDescriptor desc;
 		desc.effect = Graphics::EFFECT_HMDWARP;
@@ -167,15 +168,13 @@ void Pi::CreateRenderTarget(const Uint16 width, const Uint16 height) {
 		// create first (left) viewport material and quad
 		Graphics::Material* hmdMat = Pi::renderer->CreateMaterial(desc);
 		hmdMat->specialParameter0 = new OculusRiftInterface::Viewport(0,0,640,800);
-		Pi::m_quads[0].Reset(new Graphics::Drawables::TexturedQuad(Pi::renderer, m_texture.Get(), hmdMat, vector2f(0.0f,0.0f), vector2f(400.0f, 600.0f)));
+		Pi::m_quads[eVPLeft].Reset(new Graphics::Drawables::TexturedQuad(Pi::renderer, m_texture.Get(), hmdMat, vector2f(0.0f,0.0f), vector2f(400.0f, 600.0f)));
 
 		// create second (right) viewport material and quad
 		hmdMat = Pi::renderer->CreateMaterial(desc);
 		hmdMat->specialParameter0 = new OculusRiftInterface::Viewport(640,0,640,800);
-		Pi::m_quads[1].Reset(new Graphics::Drawables::TexturedQuad(Pi::renderer, m_texture.Get(), hmdMat, vector2f(400.0f,0.0f), vector2f(400.0f, 600.0f)));
-	} else {
-		Pi::m_quads[0].Reset(new Graphics::Drawables::TexturedQuad(Pi::renderer, m_texture.Get(), vector2f(0.0f,0.0f), vector2f(800.0f, 600.0f)));
-	}
+		Pi::m_quads[eVPRight].Reset(new Graphics::Drawables::TexturedQuad(Pi::renderer, m_texture.Get(), hmdMat, vector2f(400.0f,0.0f), vector2f(400.0f, 600.0f)));
+	} 
 
 	// Oculus Rift is 1280×800 (640×800 per eye)
 	Graphics::RenderTargetDesc rtDesc(
@@ -192,7 +191,7 @@ void Pi::CreateRenderTarget(const Uint16 width, const Uint16 height) {
 }
 
 //static
-void Pi::DrawRenderTarget() {
+void Pi::DrawRenderTarget(const bool bAllowHMD /*= false*/) {
 	Pi::renderer->BeginFrame();
 	Pi::renderer->SetViewport(0, 0, Graphics::GetScreenWidth(), Graphics::GetScreenHeight());	
 	Pi::renderer->SetTransform(matrix4x4f::Identity());
@@ -210,12 +209,12 @@ void Pi::DrawRenderTarget() {
 		glPushMatrix();
 		glLoadIdentity();
 	}
-
-	if( OculusRiftInterface::HasHMD() ) {
-		Pi::m_quads[0]->Draw( Pi::renderer );
-		Pi::m_quads[1]->Draw( Pi::renderer );
+	
+	if( OculusRiftInterface::HasHMD() && bAllowHMD ) {
+		Pi::m_quads[eVPLeft]->Draw( Pi::renderer );
+		Pi::m_quads[eVPRight]->Draw( Pi::renderer );
 	} else {
-		Pi::m_quads[0]->Draw( Pi::renderer );
+		Pi::m_quads[eVPCentre]->Draw( Pi::renderer );
 	}
 
 	//Gui::Screen::LeaveOrtho();
@@ -1257,7 +1256,7 @@ void Pi::MainLoop()
 #endif
 
 		Pi::EndRenderTarget();
-		Pi::DrawRenderTarget();
+		Pi::DrawRenderTarget(true);
 		Pi::renderer->SwapBuffers();
 
 		// game exit or failed load from GameMenuView will have cleared

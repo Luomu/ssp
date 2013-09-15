@@ -68,6 +68,14 @@ bool RendererGL2::SetRenderTarget(RenderTarget *rt)
 	return true;
 }
 
+bool RendererGL2::SetPerspectiveProjection(float fov, float far, const matrix4x4f &m)
+{
+	// update values for log-z hack
+	m_invLogZfarPlus1 = 1.0f / (log(far+1.0f)/log(2.0f));
+
+	return RendererLegacy::SetPerspectiveProjection(fov, far, m);
+}
+
 bool RendererGL2::SetPerspectiveProjection(float fov, float aspect, float near, float far)
 {
 	// update values for log-z hack

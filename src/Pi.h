@@ -98,7 +98,7 @@ public:
 	static SceneGraph::Model *FindModel(const std::string&, bool allowPlaceholder = true);
 
 	static void CreateRenderTarget(const Uint16 width, const Uint16 height);
-	static void DrawRenderTarget();
+	static void DrawRenderTarget(const bool bAllowHMD = false);
 	static void BeginRenderTarget();
 	static void EndRenderTarget();
 
@@ -206,7 +206,13 @@ private:
 
 	static Graphics::RenderTarget *pRTarget;
 	static RefCountedPtr<Graphics::Texture> m_texture;
-	static ScopedPtr<Graphics::Drawables::TexturedQuad> m_quads[2];
+	enum EViewports {
+		eVPCentre=0,
+		eVPLeft,
+		eVPRight,
+		eVP_MAX
+	};
+	static ScopedPtr<Graphics::Drawables::TexturedQuad> m_quads[eVP_MAX];
 };
 
 #endif /* _PI_H */

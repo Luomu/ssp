@@ -6,6 +6,14 @@
 
 class OculusRiftImplemetation;
 
+// ViewEye specifies which eye we are rendering for; it is used to
+enum ViewEye
+{
+    ViewEye_Centre,
+    ViewEye_Left,
+    ViewEye_Right    
+};
+
 class OculusRiftInterface {
 public:
 	//-----------------------------------------------------------------------------------
@@ -35,6 +43,8 @@ public:
 	static void GetYawPitchRoll(float &yaw, float &pitch, float &roll);
 
 	static void GetDistortionValues(float &XCenterOffset, float &Scale, float &K0, float &K1, float &K2, float &K3);
+	static matrix4x4f GetPerspectiveMatrix(const ViewEye eye);
+	static float GetYFOVDegrees();
 private:
 	static ScopedPtr<OculusRiftImplemetation> mPimpl;
 };

@@ -51,7 +51,6 @@ WorldView::WorldView(Serializer::Reader &rd): View()
 	m_internalCameraController->Load(rd);
 	m_externalCameraController->Load(rd);
 	m_siderealCameraController->Load(rd);
-	m_stereoCameraController->Load(rd);
 }
 
 static const float LOW_THRUST_LEVELS[] = { 0.75, 0.5, 0.25, 0.1, 0.05, 0.01 };
@@ -236,17 +235,15 @@ void WorldView::InitObject()
 		pCam = new Camera(halfWidth, Graphics::GetScreenHeight(), fovY, znear, zfar);
 		pCam->SetZoomedInFov(Pi::config->Float("FOVMagnified"));
 		m_cameras.push_back(pCam);
-
-		m_camType = CameraController::STEREOHMD;
 	} else {
 		// no HMD found
-		m_cameras.push_back(new Camera(Graphics::GetScreenWidth(), Graphics::GetScreenHeight(), fovY, znear, zfar));
-		m_cameras[0]->SetZoomedInFov(Pi::config->Float("FOVMagnified"));
+		Camera *pCam = new Camera(Graphics::GetScreenWidth(), Graphics::GetScreenHeight(), fovY, znear, zfar);
+		pCam->SetZoomedInFov(Pi::config->Float("FOVMagnified"));
+		m_cameras.push_back(pCam);
 	}
-	m_internalCameraController.Reset(new InternalCameraController(m_cameras[0], Pi::player));
-	m_externalCameraController.Reset(new ExternalCameraController(m_cameras[0], Pi::player));
-	m_siderealCameraController.Reset(new SiderealCameraController(m_cameras[0], Pi::player));
-	m_stereoCameraController.Reset(new StereoCameraController(m_cameras, Pi::player));
+	m_internalCameraController.Reset(new InternalCameraController(m_cameras, Pi::player));
+	m_externalCameraController.Reset(new ExternalCameraController(m_cameras, Pi::player));
+	m_siderealCameraController.Reset(new SiderealCameraController(m_cameras, Pi::player));
 	SetCamType(m_camType); //set the active camera
 
 	m_onHyperspaceTargetChangedCon =
@@ -284,7 +281,6 @@ void WorldView::Save(Serializer::Writer &wr)
 	m_internalCameraController->Save(wr);
 	m_externalCameraController->Save(wr);
 	m_siderealCameraController->Save(wr);
-	m_stereoCameraController->Save(wr);
 }
 
 void WorldView::SetCamType(enum CameraController::Type c)
@@ -307,9 +303,6 @@ void WorldView::SetCamType(enum CameraController::Type c)
 			break;
 		case CameraController::SIDEREAL:
 			m_activeCameraController = m_siderealCameraController.Get();
-			break;
-		case CameraController::STEREOHMD:
-			m_activeCameraController = m_stereoCameraController.Get();
 			break;
 	}
 
@@ -426,19 +419,19 @@ void WorldView::Draw3D(const ViewEye eye /*= ViewEye_Centre*/)
 	assert(!Pi::player->IsDead());
 	const int screenW = Graphics::GetScreenWidth();
 	const int halfScreenW = screenW>>1;
-	const Body *pExcluded = (GetCamType() == CameraController::INTERNAL || GetCamType() == CameraController::STEREOHMD) ? Pi::player : nullptr;
+	const Body *pExcluded = GetCamType() == CameraController::INTERNAL ? Pi::player : nullptr;
 	switch(eye) {
 	case ViewEye_Centre:	
 		m_renderer->SetViewport(0, 0, screenW, Graphics::GetScreenHeight());
-		m_cameras[0]->Draw(m_renderer, pExcluded);
+		m_cameras[0]->Draw(m_renderer, pExcluded, eye);
 		break;
 	case ViewEye_Left:		
 		m_renderer->SetViewport(0, 0, halfScreenW, Graphics::GetScreenHeight());
-		m_cameras[0]->Draw(m_renderer, pExcluded);
+		m_cameras[0]->Draw(m_renderer, pExcluded, eye);
 		break;
 	case ViewEye_Right:		
 		m_renderer->SetViewport(halfScreenW,0, halfScreenW, Graphics::GetScreenHeight());
-		m_cameras[1]->Draw(m_renderer, pExcluded);
+		m_cameras[1]->Draw(m_renderer, pExcluded, eye);
 		break;
 	}
 
@@ -893,8 +886,6 @@ void WorldView::Update(const ViewEye eye /*= ViewEye_Centre*/)
 			else if (KeyBindings::topCamera.IsActive())    ChangeInternalCameraMode(InternalCameraController::MODE_TOP);
 			else if (KeyBindings::bottomCamera.IsActive()) ChangeInternalCameraMode(InternalCameraController::MODE_BOTTOM);
 			m_internalCameraController->ZoomEventUpdate(frameTime);
-		} else if (GetCamType() == CameraController::STEREOHMD) {
-			// ??? 
 		} else {
 			MoveableCameraController *cam = static_cast<MoveableCameraController*>(m_activeCameraController);
 			if (KeyBindings::cameraRotateUp.IsActive()) cam->RotateUp(frameTime);
@@ -925,7 +916,7 @@ void WorldView::Update(const ViewEye eye /*= ViewEye_Centre*/)
 	if( OculusRiftInterface::HasHMD() ) {
 		float yaw, pitch, roll;
 		OculusRiftInterface::GetYawPitchRoll(yaw, pitch, roll);
-		matrix3x3d finalorientation = matrix3x3d::RotateX(-pitch) * matrix3x3d::RotateY(-yaw) * matrix3x3d::RotateZ(-roll);
+		matrix3x3d finalorientation = matrix3x3d::RotateY(-yaw) * matrix3x3d::RotateX(-pitch) * matrix3x3d::RotateZ(-roll);
 		m_activeCameraController->SetOrient(finalorientation);
 	}
 	m_activeCameraController->Update();
@@ -1303,7 +1294,6 @@ int WorldView::GetActiveWeapon() const
 {
 	switch (GetCamType()) {
 		case CameraController::INTERNAL:
-		case CameraController::STEREOHMD:
 			return m_internalCameraController->GetMode() == InternalCameraController::MODE_REAR ? 1 : 0;
 
 		case CameraController::EXTERNAL:

@@ -14,6 +14,7 @@
 #include "graphics/Renderer.h"
 #include "graphics/VertexArray.h"
 #include "graphics/Material.h"
+#include "OculusRift.h"
 
 using namespace Graphics;
 
@@ -131,7 +132,7 @@ void Camera::Update()
 	m_sortedBodies.sort();
 }
 #pragma optimize("",off)
-void Camera::Draw(Renderer *renderer, const Body *excludeBody)
+void Camera::Draw(Renderer *renderer, const Body *excludeBody, const ViewEye eye)
 {
 	if (!m_camFrame) return;
 	if (!renderer) return;
@@ -143,7 +144,13 @@ void Camera::Draw(Renderer *renderer, const Body *excludeBody)
 
 	glPushAttrib(GL_ALL_ATTRIB_BITS & (~GL_POINT_BIT));
 
-	m_renderer->SetPerspectiveProjection(m_fovAng, m_width/m_height, m_zNear, m_zFar);
+	if(OculusRiftInterface::HasHMD()) {
+		const matrix4x4f persp = OculusRiftInterface::GetPerspectiveMatrix(eye);
+		const float YFOV = OculusRiftInterface::GetYFOVDegrees();
+		m_renderer->SetPerspectiveProjection(YFOV, m_zFar, persp);
+	} else {
+		m_renderer->SetPerspectiveProjection(m_fovAng, m_width/m_height, m_zNear, m_zFar);
+	}
 	m_renderer->SetTransform(matrix4x4f::Identity());
 	//m_renderer->ClearScreen();
 

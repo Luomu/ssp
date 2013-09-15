@@ -141,7 +141,7 @@ public:
 			else
 				SConfig.SetDistortionFitPointVP(0.0f, 1.0f);
 		}
-		
+
 		SConfig.Set2DAreaFov(DegreeToRad(85.0f));
 	}
 	#pragma optimize("",off)
@@ -202,6 +202,7 @@ public:
 	void GetDistortionValues(float &XCenterOffset, float &Scale, float &K0, float &K1, float &K2, float &K3)
 	{
 		const DistortionConfig& Distortion = SConfig.GetDistortionConfig();
+		//StereoEyeParams eyeParams = SConfig.GetEyeRenderParams();
 		XCenterOffset	= Distortion.XCenterOffset;
 		Scale			= Distortion.Scale;
 		K0				= Distortion.K[0];
@@ -209,6 +210,22 @@ public:
 		K2				= Distortion.K[2];
 		K3				= Distortion.K[3];
 	}
+
+	matrix4x4f GetPerspectiveMatrix(const ViewEye eye)
+	{
+		StereoEyeParams eyeParams = SConfig.GetEyeRenderParams( StereoEye(eye) );
+		const Matrix4f tMat = eyeParams.Projection.Transposed();
+		
+		matrix4x4f persp;
+		for(int i=0;i<4;++i) {
+			for(int j=0;j<4;++j) {
+				persp[(i*4)+j] = tMat.M[i][j];
+			}
+		}
+		return persp;
+	}
+
+	float GetYFOVDegrees() { return SConfig.GetYFOVDegrees(); }
 
 private:
 	// *** Oculus HMD Variables
@@ -268,5 +285,19 @@ void OculusRiftInterface::GetYawPitchRoll(float &yaw, float &pitch, float &roll)
 //static
 void OculusRiftInterface::GetDistortionValues(float &XCenterOffset, float &Scale, float &K0, float &K1, float &K2, float &K3)
 {
+	assert(mPimpl.Valid());
 	mPimpl->GetDistortionValues(XCenterOffset, Scale, K0, K1, K2, K3);
+}
+
+//static 
+matrix4x4f OculusRiftInterface::GetPerspectiveMatrix(const ViewEye eye)
+{
+	assert(mPimpl.Valid());
+	return mPimpl->GetPerspectiveMatrix(eye);
+}
+
+//static 
+float OculusRiftInterface::GetYFOVDegrees() 
+{ 
+	return mPimpl->GetYFOVDegrees(); 
 }

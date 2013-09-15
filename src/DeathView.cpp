@@ -48,5 +48,5 @@ void DeathView::Update(const ViewEye eye /*= ViewEye_Centre*/)
 
 void DeathView::Draw3D(const ViewEye eye /*= ViewEye_Centre*/)
 {
-	m_cam->Draw(m_renderer);
+	m_cam->Draw(m_renderer, nullptr, eye);
 }

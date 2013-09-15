@@ -39,6 +39,7 @@ public:
 
 	virtual bool SetRenderTarget(RenderTarget*);
 
+	virtual bool SetPerspectiveProjection(float fov, float far, const matrix4x4f &m);
 	virtual bool SetPerspectiveProjection(float fov, float aspect, float near, float far);
 
 	virtual bool SetAmbientColor(const Color &c);

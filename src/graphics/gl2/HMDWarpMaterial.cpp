@@ -84,7 +84,7 @@ void HMDWarpMaterial::SetGSUniforms()
 	float Scale;
 	float K0,K1,K2,K3;
 	OculusRiftInterface::GetDistortionValues(XCenterOffset, Scale, K0, K1, K2, K3);
-	if(VP->x > 0)
+	if(VP->x > 0) // total hack
 		XCenterOffset = -XCenterOffset;
 
     // We are using 1/4 of DistortionCenter offset value here, since it is

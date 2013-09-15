@@ -10,6 +10,7 @@
 #include "matrix4x4.h"
 #include "Background.h"
 #include "Body.h"
+#include "OculusRift.h"
 
 class Frame;
 namespace Graphics { class Renderer; }
@@ -21,7 +22,7 @@ public:
 	virtual ~Camera();
 
 	void Update();
-	void Draw(Graphics::Renderer *r, const Body *excludeBody = 0);
+	void Draw(Graphics::Renderer *r, const Body *excludeBody, const ViewEye eye);
 
 	void SetFov(float y);
 	float GetFov() const;

@@ -18,11 +18,10 @@ public:
 	enum Type { //can be used for serialization & identification
 		INTERNAL,
 		EXTERNAL,
-		SIDEREAL,
-		STEREOHMD
+		SIDEREAL
 	};
 
-	CameraController(Camera *camera, const Ship *ship);
+	CameraController(std::vector<Camera*> &cameras, const Ship *ship);
 	virtual ~CameraController() {}
 
 	virtual Type GetType() const = 0;
@@ -46,7 +45,7 @@ public:
 	const Ship *GetShip() const { return m_ship; }
 
 protected:
-	Camera *m_camera;
+	std::vector<Camera*> m_cameras;
 
 private:
 	const Ship *m_ship;
@@ -65,7 +64,7 @@ public:
 		MODE_BOTTOM
 	};
 
-	InternalCameraController(Camera *camera, const Ship *ship);
+	InternalCameraController(std::vector<Camera*> &cameras, const Ship *ship);
 
 	Type GetType() const { return INTERNAL; }
 	const char *GetName() const { return m_name; }
@@ -90,8 +89,8 @@ private:
 
 class MoveableCameraController : public CameraController {
 public:
-	MoveableCameraController(Camera *camera, const Ship *ship) :
-		CameraController(camera, ship) {}
+	MoveableCameraController(std::vector<Camera*> &cameras, const Ship *ship) :
+		CameraController(cameras, ship) {}
 
 	virtual void RollLeft(float frameTime) { }
 	virtual void RollRight(float frameTime) { }
@@ -114,7 +113,7 @@ public:
 // - otherwise looks at the ship
 class ExternalCameraController : public MoveableCameraController {
 public:
-	ExternalCameraController(Camera *camera, const Ship *ship);
+	ExternalCameraController(std::vector<Camera*> &cameras, const Ship *ship);
 
 	Type GetType() const { return EXTERNAL; }
 	const char *GetName() const { return Lang::EXTERNAL_VIEW; }
@@ -149,7 +148,7 @@ private:
 // Much like external camera, but does not turn when the ship turns
 class SiderealCameraController : public MoveableCameraController {
 public:
-	SiderealCameraController(Camera *camera, const Ship *ship);
+	SiderealCameraController(std::vector<Camera*> &cameras, const Ship *ship);
 
 	Type GetType() const { return SIDEREAL; }
 	const char *GetName() const { return Lang::SIDEREAL_VIEW; }
@@ -175,29 +174,6 @@ public:
 private:
 	double m_dist, m_distTo;
 	matrix3x3d m_sidOrient;
-};
-
-class StereoCameraController : public CameraController {
-public:
-	StereoCameraController(std::vector<Camera*> &cameras, const Ship *ship);
-
-	Type GetType() const { return STEREOHMD; }
-	const char *GetName() const { return "Stereo HMD"; }
-	void Save(Serializer::Writer &wr);
-	void Load(Serializer::Reader &rd);
-	bool IsMagnified() const { return m_magnify; }
-	void ToggleMagnification();
-
-	virtual void ZoomEventUpdate(float frameTime);
-	virtual void Update();
-
-protected:
-	std::vector<Camera*> m_cameras;
-
-private:
-	bool m_magnify;
-	float m_fov;
-	float m_fovTo;
 };
 
 #endif

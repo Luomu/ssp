@@ -7,16 +7,9 @@
 #include "libs.h"
 #include "Serializer.h"
 #include "gui/Gui.h"
+#include "OculusRift.h"
 
 namespace Graphics { class Renderer; }
-
-// StereoEye specifies which eye we are rendering for; it is used to
-enum ViewEye
-{
-    ViewEye_Centre,
-    ViewEye_Left,
-    ViewEye_Right    
-};
 
 /*
  * For whatever draws crap into the main area of the screen.

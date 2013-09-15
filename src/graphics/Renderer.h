@@ -76,6 +76,7 @@ public:
 	virtual bool SetTransform(const matrix4x4d &m) { return false; }
 	virtual bool SetTransform(const matrix4x4f &m) { return false; }
 	//set projection matrix
+	virtual bool SetPerspectiveProjection(float fov, float far, const matrix4x4f &m) { return false; }
 	virtual bool SetPerspectiveProjection(float fov, float aspect, float near, float far) { return false; }
 	virtual bool SetOrthographicProjection(float xmin, float xmax, float ymin, float ymax, float zmin, float zmax) { return false; }
 

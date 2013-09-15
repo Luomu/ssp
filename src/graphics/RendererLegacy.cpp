@@ -200,6 +200,16 @@ bool RendererLegacy::SetTransform(const matrix4x4f &m)
 	return true;
 }
 
+bool RendererLegacy::SetPerspectiveProjection(float fov, float far, const matrix4x4f &m)
+{
+	Graphics::SetFov(fov);
+
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	glLoadMatrixf(&m[0]);
+	return true;
+}
+
 bool RendererLegacy::SetPerspectiveProjection(float fov, float aspect, float near, float far)
 {
 	Graphics::SetFov(fov);

@@ -7,32 +7,66 @@
 #include "Pi.h"
 #include "Game.h"
 
-CameraController::CameraController(Camera *camera, const Ship *ship) :
-	m_camera(camera),
+CameraController::CameraController(std::vector<Camera*> &cameras, const Ship *ship) :
+	m_cameras(cameras),
 	m_ship(ship),
 	m_pos(0.0),
 	m_orient(matrix3x3d::Identity())
 {
 }
 #pragma optimize("",off)
+static double eye_offset_scale = 0.0;
 void CameraController::Update()
 {
-	m_camera->SetFrame(m_ship->GetFrame());
-
-	// interpolate between last physics tick position and current one,
-	// to remove temporal aliasing
+	Frame *pShipFrame = m_ship->GetFrame();
 	const matrix3x3d &m = m_ship->GetInterpOrient();
-	m_camera->SetOrient(m * m_orient);
-	m_camera->SetPosition(m * m_pos + m_ship->GetInterpPosition());
+	const vector3d shipInterpPosition = m_ship->GetInterpPosition();
+	const matrix3x3d finalorient = (m * m_orient);
+	if( m_cameras.size()!=2 )
+	{
+		for(std::vector<Camera*>::iterator it=m_cameras.begin(), itEnd=m_cameras.end(); it!=itEnd; ++it)
+		{
+			(*it)->SetFrame(pShipFrame);
+
+			// interpolate between last physics tick position and current one,
+			// to remove temporal aliasing
+			(*it)->SetOrient(finalorient);
+			(*it)->SetPosition(m * m_pos + shipInterpPosition);
+		}
+	}
+	else
+	{
+		const vector3d offsetAxis = eye_offset_scale * m_orient.VectorX().Normalized();
+		assert(m_cameras.size()==2);
+		{
+			m_cameras[0]->SetFrame(pShipFrame);
+			
+			// interpolate between last physics tick position and current one,
+			// to remove temporal aliasing
+			m_cameras[0]->SetOrient(finalorient);
+			const vector3d finalpos = (m * (m_pos - offsetAxis) + shipInterpPosition);
+			m_cameras[0]->SetPosition(finalpos);
+		}
+
+		{
+			m_cameras[1]->SetFrame(pShipFrame);
+			
+			// interpolate between last physics tick position and current one,
+			// to remove temporal aliasing
+			m_cameras[1]->SetOrient(finalorient);
+			const vector3d finalpos = (m * (m_pos + offsetAxis) + shipInterpPosition);
+			m_cameras[1]->SetPosition(finalpos);
+		}
+	}
 }
 
-InternalCameraController::InternalCameraController(Camera *camera, const Ship *ship) :
-	CameraController(camera, ship)
+InternalCameraController::InternalCameraController(std::vector<Camera*> &cameras, const Ship *ship) :
+	CameraController(cameras, ship)
 {
 	SetMode(MODE_FRONT);
 	m_magnify = false;
-	m_fov = camera->GetDefaultFov();
-	m_fovTo = camera->GetDefaultFov();
+	m_fov = cameras[0]->GetDefaultFov();
+	m_fovTo = cameras[0]->GetDefaultFov();
 }
 
 void InternalCameraController::SetMode(Mode m)
@@ -79,15 +113,17 @@ void InternalCameraController::Load(Serializer::Reader &rd)
 void InternalCameraController::ToggleMagnification()
 {
 	m_magnify = !m_magnify;
-	m_fovTo = m_magnify ? m_camera->GetZoomedInFov() : m_camera->GetDefaultFov();
+	m_fovTo = m_magnify ? m_cameras[0]->GetZoomedInFov() : m_cameras[0]->GetDefaultFov();
 }
 
 void InternalCameraController::ZoomEventUpdate(float frameTime)
 {
 	AnimationCurves::Approach(m_fov, m_fovTo, frameTime);
-	m_camera->SetFov(m_fov);
+	for(std::vector<Camera*>::iterator it=m_cameras.begin(), itEnd=m_cameras.end(); it!=itEnd; ++it) {
+		(*it)->SetFov(m_fov);
+	}
 }
-#pragma optimize("",off)
+
 void InternalCameraController::Update()
 {
 	SetPosition(GetShip()->GetShipType()->cameraOffset);
@@ -95,8 +131,8 @@ void InternalCameraController::Update()
 	CameraController::Update();
 }
 
-ExternalCameraController::ExternalCameraController(Camera *camera, const Ship *ship) :
-	MoveableCameraController(camera, ship),
+ExternalCameraController::ExternalCameraController(std::vector<Camera*> &cameras, const Ship *ship) :
+	MoveableCameraController(cameras, ship),
 	m_dist(200), m_distTo(m_dist),
 	m_rotX(0),
 	m_rotY(0),
@@ -174,9 +210,11 @@ void ExternalCameraController::Update()
 
 		m_extOrient = matrix3x3d::LookAt(eye, target, up);
 
-		m_camera->SetFrame(ship->GetFrame());
-		m_camera->SetOrient(m_extOrient);
-		m_camera->SetPosition(eye);
+		for(std::vector<Camera*>::iterator it=m_cameras.begin(), itEnd=m_cameras.end(); it!=itEnd; ++it) {
+			(*it)->SetFrame(ship->GetFrame());
+			(*it)->SetOrient(m_extOrient);
+			(*it)->SetPosition(eye);
+		}
 	} else {
 		// when landed don't let external view look from below
 		if (ship->GetFlightState() == Ship::LANDED ||
@@ -212,8 +250,8 @@ void ExternalCameraController::Load(Serializer::Reader &rd)
 	m_distTo = m_dist;
 }
 
-SiderealCameraController::SiderealCameraController(Camera *camera, const Ship *ship) :
-	MoveableCameraController(camera, ship),
+SiderealCameraController::SiderealCameraController(std::vector<Camera*> &cameras, const Ship *ship) :
+	MoveableCameraController(cameras, ship),
 	m_dist(200), m_distTo(m_dist),
 	m_sidOrient(matrix3x3d::Identity())
 {
@@ -309,70 +347,4 @@ void SiderealCameraController::Load(Serializer::Reader &rd)
 	for (int i = 0; i < 9; i++) m_sidOrient[i] = rd.Double();
 	m_dist = rd.Double();
 	m_distTo = m_dist;
-}
-
-StereoCameraController::StereoCameraController(std::vector<Camera*> &cameras, const Ship *ship) :
-	CameraController(cameras[0], ship), m_cameras(cameras)
-{
-	m_magnify = false;
-	m_fov = cameras[0]->GetDefaultFov();
-	m_fovTo = cameras[0]->GetDefaultFov();
-}
-
-void StereoCameraController::Save(Serializer::Writer &wr)
-{
-}
-
-void StereoCameraController::Load(Serializer::Reader &rd)
-{
-}
-
-void StereoCameraController::ToggleMagnification()
-{
-	m_magnify = !m_magnify;
-	m_fovTo = m_magnify ? m_camera->GetZoomedInFov() : m_camera->GetDefaultFov();
-}
-
-void StereoCameraController::ZoomEventUpdate(float frameTime)
-{
-	AnimationCurves::Approach(m_fov, m_fovTo, frameTime);
-	for(std::vector<Camera*>::iterator it = m_cameras.begin(), itEnd = m_cameras.end(); it!=itEnd; ++it) {
-		(*it)->SetFov(m_fov);
-	}
-	
-}
-#pragma optimize("",off)
-static double eye_offset_scale = 0.0;
-void StereoCameraController::Update()
-{
-	SetPosition(GetShip()->GetShipType()->cameraOffset);
-
-	const Ship* ship = GetShip();
-	const matrix3x3d &orient = GetOrient();
-	const vector3d pos = GetPosition();
-	const vector3d offsetAxis = eye_offset_scale * orient.VectorX().Normalized();
-	const vector3d shipInterpPosition = ship->GetInterpPosition();
-
-	// interpolate between last physics tick position and current one,
-	// to remove temporal aliasing
-	const matrix3x3d &m = ship->GetInterpOrient();
-	const matrix3x3d finalorient = (m * orient);
-	
-	
-	assert(m_cameras.size()==2);
-	{
-		m_cameras[0]->SetFrame(ship->GetFrame());
-		m_cameras[0]->SetOrient(finalorient);
-		const vector3d finalpos = (m * (pos - offsetAxis) + shipInterpPosition);
-		m_cameras[0]->SetPosition(finalpos);
-	}
-
-	{
-		m_cameras[1]->SetFrame(ship->GetFrame());
-		m_cameras[1]->SetOrient(finalorient);
-		const vector3d finalpos = (m * (pos + offsetAxis) + shipInterpPosition);
-		m_cameras[1]->SetPosition(finalpos);
-	}
-
-	//CameraController::Update();
 }
