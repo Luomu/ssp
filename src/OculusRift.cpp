@@ -18,7 +18,7 @@ using namespace OVR::Util::Render;
 class OculusRiftImplemetation : public MessageHandler {
 public:
 	#pragma optimize("",off)
-	OculusRiftImplemetation()
+	OculusRiftImplemetation() : pManager(nullptr), pSensor(nullptr), pHMD(nullptr)
 	{
 		Width  = 1280;
 		Height = 800;
@@ -35,8 +35,8 @@ public:
 		// Sensor object is created from the HMD, to ensure that it is on the
 		// correct device.
 
-		pManager.Reset(DeviceManager::Create());
-		if(!pManager.Valid())
+		pManager = DeviceManager::Create();
+		if(!pManager)
 			return;
 
 		// We'll handle it's messages in this case.
@@ -49,13 +49,13 @@ public:
 		do 
 		{
 			// Release Sensor/HMD in case this is a retry.
-			pSensor.Reset();
-			pHMD.Reset();
+			if(pSensor) { delete pSensor; pSensor=nullptr; }
+			if(pHMD) { delete pHMD; pHMD=nullptr; }
 
-			pHMD.Reset(pManager->EnumerateDevices<HMDDevice>().CreateDevice());
-			if (pHMD.Valid())
+			pHMD = pManager->EnumerateDevices<HMDDevice>().CreateDevice();
+			if (nullptr!=pHMD)
 			{
-				pSensor.Reset(pHMD->GetSensor());
+				pSensor = pHMD->GetSensor();
 
 				// This will initialize HMDInfo with information about configured IPD,
 				// screen size and other variables needed for correct projection.
@@ -71,7 +71,7 @@ public:
 				// If we didn't detect an HMD, try to create the sensor directly.
 				// This is useful for debugging sensor interaction; it is not needed in
 				// a shipping app.
-				pSensor.Reset(pManager->EnumerateDevices<SensorDevice>().CreateDevice());
+				pSensor = pManager->EnumerateDevices<SensorDevice>().CreateDevice();
 			}
 
 
@@ -120,7 +120,7 @@ public:
 			// We need to attach sensor to SensorFusion object for it to receive 
 			// body frame messages and update orientation. SFusion.GetOrientation() 
 			// is used in OnIdle() to orient the view.
-			SFusion.AttachToSensor(pSensor.Get());
+			SFusion.AttachToSensor(pSensor);
 			SFusion.SetDelegateMessageHandler(this);
 			SFusion.SetPredictionEnabled(true);
 		}
@@ -147,24 +147,29 @@ public:
 	#pragma optimize("",off)
 	~OculusRiftImplemetation() 
 	{
+		Uninit();
+	}
+	#pragma optimize("",off)
+	void Uninit()
+	{
 		// No OVR functions involving memory are allowed after this.
 		if(System::IsInitialized())
 		{
 			RemoveHandlerFromDevices();
-			if(pSensor.Valid())
+			if(nullptr!=pSensor)
 			{
-				(pSensor.Get())->Release();
-				pSensor.Reset();
+				pSensor->Release();
+				//delete pSensor; pSensor = nullptr;
 			}
-			if(pHMD.Valid())
+			if(nullptr!=pHMD)
 			{
-				(pHMD.Get())->Release();
-				pHMD.Reset();
+				pHMD->Release();
+				//delete pHMD; pHMD = nullptr;
 			}
-			if(pManager.Valid())
+			if(nullptr!=pManager)
 			{
-				(pManager.Get())->Release();
-				pManager.Reset();
+				pManager->Release();
+				//delete pManager; pManager = nullptr;
 			}
 			System::Destroy();
 		}
@@ -193,7 +198,7 @@ public:
 		}
 	}
 
-	bool HasSensor() const { return pSensor.Valid(); }
+	bool HasSensor() const { return (nullptr!=pSensor); }
 
 	float Yaw() const { return m_yaw; }
 	float Pitch() const { return m_pitch; }
@@ -213,9 +218,29 @@ public:
 
 	matrix4x4f GetPerspectiveMatrix(const ViewEye eye)
 	{
+#if 1
+		const float ProjectionCenterOffset = SConfig.GetProjectionCenterOffset();
+		const float YFov = SConfig.GetYFOVRadians();
+		const float Aspect = SConfig.GetAspect();
+
+		// Projection matrix for the center eye, which the left/right matrices are based on.
+		float znear, zfar;
+		Pi::renderer->GetNearFarRange(znear, zfar);
+		Matrix4f projCenter = Matrix4f::PerspectiveRH(YFov, Aspect, znear, zfar);	//0.01f, 2000.0f);
+		Matrix4f projLeft  = Matrix4f::Translation(ProjectionCenterOffset, 0, 0) * projCenter,
+				 projRight = Matrix4f::Translation(-ProjectionCenterOffset, 0, 0) * projCenter;
+
+		Matrix4f tMat = projCenter.Transposed();
+		switch(eye) {
+		case ViewEye_Centre:
+		default:break;
+		case ViewEye_Left: tMat = projLeft.Transposed();break;
+		case ViewEye_Right:tMat = projRight.Transposed();break;
+		}
+#else
 		StereoEyeParams eyeParams = SConfig.GetEyeRenderParams( StereoEye(eye) );
 		const Matrix4f tMat = eyeParams.Projection.Transposed();
-		
+#endif
 		matrix4x4f persp;
 		for(int i=0;i<4;++i) {
 			for(int j=0;j<4;++j) {
@@ -229,9 +254,9 @@ public:
 
 private:
 	// *** Oculus HMD Variables
-    ScopedPtr<DeviceManager>	pManager;
-    ScopedPtr<SensorDevice>		pSensor;
-    ScopedPtr<HMDDevice>		pHMD;
+    DeviceManager	*pManager;
+    SensorDevice	*pSensor;
+    HMDDevice		*pHMD;
     SensorFusion				SFusion;
     OVR::HMDInfo				HMDInfo;
 
@@ -257,7 +282,8 @@ void OculusRiftInterface::Init()
 #pragma optimize("",off)
 void OculusRiftInterface::Uninit()
 {
-	mPimpl.Reset();
+	assert(mPimpl.Valid());
+	mPimpl->Uninit();
 }
 #pragma optimize("",off)
 void OculusRiftInterface::Update()
