@@ -218,7 +218,6 @@ public:
 
 	matrix4x4f GetPerspectiveMatrix(const ViewEye eye)
 	{
-#if 1
 		const float ProjectionCenterOffset = SConfig.GetProjectionCenterOffset();
 		const float YFov = SConfig.GetYFOVRadians();
 		const float Aspect = SConfig.GetAspect();
@@ -226,33 +225,36 @@ public:
 		// Projection matrix for the center eye, which the left/right matrices are based on.
 		float znear, zfar;
 		Pi::renderer->GetNearFarRange(znear, zfar);
-		Matrix4f projCenter = Matrix4f::PerspectiveRH(YFov, Aspect, znear, zfar);	//0.01f, 2000.0f);
-		Matrix4f projLeft  = Matrix4f::Translation(ProjectionCenterOffset, 0, 0) * projCenter,
-				 projRight = Matrix4f::Translation(-ProjectionCenterOffset, 0, 0) * projCenter;
+		matrix4x4f projCenter = PerspectiveRH(YFov, Aspect, znear, zfar);
+		matrix4x4f projLeft  = matrix4x4f::Translation(ProjectionCenterOffset, 0, 0) * projCenter,
+				   projRight = matrix4x4f::Translation(-ProjectionCenterOffset, 0, 0) * projCenter;
 
-		Matrix4f tMat = projCenter.Transposed();
+		matrix4x4f tMat = projCenter;
 		switch(eye) {
 		case ViewEye_Centre:
-		default:break;
-		case ViewEye_Left: tMat = projLeft.Transposed();break;
-		case ViewEye_Right:tMat = projRight.Transposed();break;
+		default:
+			return projCenter;
+		case ViewEye_Left: return projLeft;
+		case ViewEye_Right:return projRight;
 		}
-#else
-		StereoEyeParams eyeParams = SConfig.GetEyeRenderParams( StereoEye(eye) );
-		const Matrix4f tMat = eyeParams.Projection.Transposed();
-#endif
-		matrix4x4f persp;
-		for(int i=0;i<4;++i) {
-			for(int j=0;j<4;++j) {
-				persp[(i*4)+j] = tMat.M[i][j];
-			}
-		}
-		return persp;
 	}
 
 	float GetYFOVDegrees() { return SConfig.GetYFOVDegrees(); }
 
 private:
+	matrix4x4f PerspectiveRH(const float yfov, const float aspect, const float znear, const float zfar)
+	{
+		matrix4x4f m(0.0f);
+		const float tanHalfFov = tan(yfov * 0.5f);
+		m[0] = 1.0f / (aspect * tanHalfFov);
+		m[5] = 1.0f / tanHalfFov;
+		m[10] = zfar / (znear - zfar);
+		m[11] = -1.0f;
+		m[14] = (zfar * znear) / (znear - zfar);
+		m[15] = 0.0f;     
+		return m;
+	}
+
 	// *** Oculus HMD Variables
     DeviceManager	*pManager;
     SensorDevice	*pSensor;

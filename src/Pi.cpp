@@ -1201,6 +1201,7 @@ void Pi::MainLoop()
 		}
 		game->GetSpace()->GetRootFrame()->UpdateInterpTransform(Pi::GetGameTickAlpha());
 
+		Pi::renderer->ClearScreen();
 		if( !OculusRiftInterface::HasHMD() ) {
 			// no HMD
 			currentView->Update(ViewEye_Centre);
