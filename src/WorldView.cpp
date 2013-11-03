@@ -210,10 +210,10 @@ void WorldView::InitObject()
 	m_indicatorMousedirSize = vector2f(descriptor.dataSize.x*descriptor.texSize.x,descriptor.dataSize.y*descriptor.texSize.y);
 
 	RefCountedPtr<Text::TextureFont> hudFont = Gui::Screen::GetFontCache().GetTextureFont("OverlayFont");
-	m_reticle.Reset(new HudReticle(hudFont, Gui::Screen::GetRenderer()));
+	m_reticle.reset(new HudReticle(hudFont, Gui::Screen::GetRenderer()));
 
 	if (Pi::config->Int("SpeedLines") == 1)
-		m_speedLines.Reset(new SpeedLines(Pi::player));
+		m_speedLines.reset(new SpeedLines(Pi::player));
 
 	//get near & far clipping distances
 	//XXX m_renderer not set yet
@@ -405,7 +405,7 @@ void WorldView::Draw3D()
 
 	// Draw 3D HUD
 	// Speed lines
-	if (m_speedLines.Valid()) m_speedLines->Render(m_renderer);
+	if (m_speedLines.get()) m_speedLines->Render(m_renderer);
 
 	// Contact trails
 	for (auto it = Pi::player->GetSensors()->GetContacts().begin(); it != Pi::player->GetSensors()->GetContacts().end(); ++it)
@@ -908,7 +908,7 @@ void WorldView::Update()
 
 	//speedlines and contact trails need cam_frame for transform, so they
 	//must be updated here (or don't delete cam_frame so early...)
-	if (m_speedLines.Valid()) {
+	if (m_speedLines.get()) {
 		m_speedLines->Update(Pi::game->GetTimeStep());
 		const Frame *cam_frame = m_camera->GetCamFrame();
 		matrix4x4d trans;

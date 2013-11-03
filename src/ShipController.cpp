@@ -164,15 +164,17 @@ void PlayerShipController::PollControls(const float timeStep, const bool force_r
 	static bool stickySpeedKey = false;
 
 	CheckControlsLock();
+	if (m_controlsLocked) return;
 
-	m_ship->ClearThrusterState();
-	m_ship->SetGunState(0,0);
-	m_ship->SetGunState(1,0);
-
-	vector3d wantAngVel(0.0);
-
-	if (!m_controlsLocked)
+	// if flying
 	{
+		m_ship->ClearThrusterState();
+		m_ship->SetGunState(0,0);
+		m_ship->SetGunState(1,0);
+
+		vector3d wantAngVel(0.0);
+		double angThrustSoftness = 10.0;
+
 		const float linearThrustPower = (KeyBindings::thrustLowPower.IsActive() ? m_lowThrustPower : 1.0f);
 
 		// have to use this function. SDL mouse position event is bugged in windows
@@ -251,6 +253,9 @@ void PlayerShipController::PollControls(const float timeStep, const bool force_r
 		if (KeyBindings::rollLeft.IsActive())  wantAngVel.z += m_turnSensitivity;
 		if (KeyBindings::rollRight.IsActive()) wantAngVel.z -= m_turnSensitivity;
 
+		if (KeyBindings::thrustLowPower.IsActive())
+			angThrustSoftness = 50.0;
+
 		vector3d changeVec;
 		changeVec.x = KeyBindings::pitchAxis.GetValue();
 		changeVec.y = KeyBindings::yawAxis.GetValue();
@@ -265,7 +270,6 @@ void PlayerShipController::PollControls(const float timeStep, const bool force_r
 		}
 		
 		wantAngVel += changeVec;
-	}
 
 		if (wantAngVel.Length() >= 0.001 || force_rotation_damping || m_rotationDamping) {
 			if (Pi::game->GetTimeAccel()!=Game::TIMEACCEL_1X) {
@@ -278,7 +282,7 @@ void PlayerShipController::PollControls(const float timeStep, const bool force_r
 
 		if (m_mouseActive) m_ship->AIFaceDirection(m_mouseDir);
 
-	if (m_mouseActive && !m_controlsLocked) m_ship->AIFaceDirection(m_mouseDir);
+	}
 }
 
 bool PlayerShipController::IsAnyAngularThrusterKeyDown()

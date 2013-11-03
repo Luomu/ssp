@@ -79,6 +79,7 @@ public:
 	void ToggleMagnification();
 
 	virtual void ZoomEventUpdate(float frameTime);
+	virtual void Update();
 
 private:
 	Mode m_mode;
@@ -87,6 +88,13 @@ private:
 	bool m_magnify;
 	float m_fov;
 	float m_fovTo;
+
+	vector3d m_frontPos;  matrix3x3d m_frontOrient;
+	vector3d m_rearPos;   matrix3x3d m_rearOrient;
+	vector3d m_leftPos;   matrix3x3d m_leftOrient;
+	vector3d m_rightPos;  matrix3x3d m_rightOrient;
+	vector3d m_topPos;    matrix3x3d m_topOrient;
+	vector3d m_bottomPos; matrix3x3d m_bottomOrient;
 };
 
 class MoveableCameraController : public CameraController {

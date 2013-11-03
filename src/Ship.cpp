@@ -178,8 +178,8 @@ void Ship::Init()
 {
 	m_invulnerable = false;
 
-	m_sensors.Reset(new Sensors(this));
-	m_navLights.Reset(new NavLights(GetModel()));
+	m_sensors.reset(new Sensors(this));
+	m_navLights.reset(new NavLights(GetModel()));
 	m_navLights->SetEnabled(true);
 
 	SetMassDistributionFromModel();
@@ -771,7 +771,7 @@ void Ship::TimeStepUpdate(const float timeStep)
 
 	m_navLights->SetEnabled(m_wheelState > 0.01f);
 	m_navLights->Update(timeStep);
-	if (m_sensors.Valid()) m_sensors->Update(timeStep);
+	if (m_sensors.get()) m_sensors->Update(timeStep);
 }
 
 void Ship::DoThrusterSounds() const
@@ -829,7 +829,7 @@ void Ship::FireWeapon(int num)
 	if (m_flightState != FLYING) return;
 
 	const matrix3x3d &m = GetOrient();
-	const vector3d dir = m * vector3d(m_gun[num].dir);
+	vector3d dir = m * vector3d(m_gun[num].dir);
 	const vector3d pos = m * vector3d(m_gun[num].pos) + GetPosition();
 
 	m_gun[num].temperature += 0.01f;
@@ -1368,5 +1368,5 @@ Uint8 Ship::GetRelations(Body *other) const
 void Ship::SetRelations(Body *other, Uint8 percent)
 {
 	m_relationsMap[other] = percent;
-	if (m_sensors.Valid()) m_sensors->UpdateIFF(other);
+	if (m_sensors.get()) m_sensors->UpdateIFF(other);
 }

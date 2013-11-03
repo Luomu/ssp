@@ -159,7 +159,7 @@ public:
 	static JobQueue *Jobs() { return jobQueue.get();}
 
 	static bool DrawGUI;
-	static ScopedPtr<Gui::Image> pLoadingImage;
+	static std::unique_ptr<Gui::Image> pLoadingImage;
 
 private:
 	static void HandleEvents();
@@ -206,7 +206,7 @@ private:
 
 	static Graphics::RenderTarget *pRTarget;
 	static RefCountedPtr<Graphics::Texture> m_texture;
-	static ScopedPtr<Graphics::Drawables::TexturedQuad> m_quad;
+	static std::unique_ptr<Graphics::Drawables::TexturedQuad> m_quad;
 };
 
 #endif /* _PI_H */

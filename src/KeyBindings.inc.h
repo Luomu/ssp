@@ -20,7 +20,6 @@
 BINDING_PAGE(CONTROLS)
 
 BINDING_GROUP(Lang::WEAPONS)
-KEY_BINDING(fireMissile, "BindFireMissile", Lang::FIRE_MISSILE, SDLK_m)
 KEY_BINDING(targetObject, "BindTargetObject", Lang::TARGET_OBJECT_IN_SIGHTS, SDLK_y, 0)
 KEY_BINDING(targetNearest, "BindTargetNearest", Lang::TARGET_NEAREST_HOSTILE, SDLK_t, 0)
 KEY_BINDING(fireLaser, "BindFireLaser", Lang::FIRE_LASER, SDLK_SPACE, 0)
@@ -78,7 +77,7 @@ KEY_BINDING(leftCamera, "BindLeftCamera", Lang::CAMERA_LEFT_VIEW, SDLK_KP_4, SDL
 KEY_BINDING(rightCamera, "BindRightCamera", Lang::CAMERA_RIGHT_VIEW, SDLK_KP_6, SDLK_RIGHT)
 KEY_BINDING(topCamera, "BindTopCamera", Lang::CAMERA_TOP_VIEW, SDLK_KP_9, SDLK_PAGEUP)
 KEY_BINDING(bottomCamera, "BindBottomCamera", Lang::CAMERA_BOTTOM_VIEW, SDLK_KP_3, SDLK_PAGEDOWN)
-KEY_BINDING(cameraMagnifyToggle, "BindCameraMagnifyToggle", "Magnification", SDLK_z)
+KEY_BINDING(cameraMagnifyToggle, "BindCameraMagnifyToggle", "Magnification", SDLK_z, 0)
 
 BINDING_GROUP(Lang::EXTERNAL_VIEW)
 KEY_BINDING(cameraRollLeft, "BindCameraRollLeft", Lang::ROLL_LEFT, SDLK_KP_1, 0)

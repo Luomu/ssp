@@ -119,8 +119,8 @@ private:
 	void MouseWheel(bool up);
 
 	NavTunnelWidget *m_navTunnel;
-	ScopedPtr<HudReticle> m_reticle;
-	ScopedPtr<SpeedLines> m_speedLines;
+	std::unique_ptr<HudReticle> m_reticle;
+	std::unique_ptr<SpeedLines> m_speedLines;
 
 	Gui::ImageButton *m_hyperspaceButton;
 
@@ -152,12 +152,8 @@ private:
 	sigc::connection m_onHyperspaceTargetChangedCon;
 	sigc::connection m_onPlayerChangeTargetCon;
 	sigc::connection m_onChangeFlightControlStateCon;
-<<<<<<< HEAD
-	sigc::connection m_onMouseButtonDown;
 	sigc::connection m_toggleCameraMagnificationCon;
-=======
 	sigc::connection m_onMouseWheelCon;
->>>>>>> cc66458b35c40016191a6ac63a6a6cbe756e996f
 
 	Gui::LabelSet *m_bodyLabels;
 	std::map<Body*,vector3d> m_projectedPos;

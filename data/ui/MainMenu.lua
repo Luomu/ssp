@@ -52,6 +52,8 @@ local doSettingsScreen = function()
 end
 
 local buttonDefs = {
+	--{ t("Start at Tau Ceti"), function () Game.StartGame(SystemPath.New(0,-2,-1,1,6)) setupPlayerWave() end },
+	--{ t("Start at Gliese 1"), function () Game.StartGame(SystemPath.New(0,-2,-2,0,1)) setupPlayerWave() end },
 	{ l.START_AT_EARTH,    function () Game.StartGame(SystemPath.New(0,0,0,0,9))   setupPlayerWave() end },
 	{ l.START_AT_NEW_HOPE, function () Game.StartGame(SystemPath.New(1,-1,-1,0,4)) setupPlayerWave() end },
 	{ l.START_AT_BARNARDS_STAR, function () Game.StartGame(SystemPath.New(-1,0,0,0,1)) setupPlayerWave() end },

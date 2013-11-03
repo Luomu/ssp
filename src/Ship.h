@@ -263,7 +263,7 @@ public:
 	virtual Body *GetCombatTarget() const { return 0; }
 	virtual Body *GetNavTarget() const { return 0; }
 
-	Sensors *GetSensors() const { return m_sensors.Get(); }
+	Sensors *GetSensors() const { return m_sensors.get(); }
 
 	Uint8 GetRelations(Body *other) const; //0=hostile, 50=neutral, 100=ally
 	void SetRelations(Body *other, Uint8 percent);
@@ -348,7 +348,7 @@ private:
 
 	SceneGraph::Animation *m_landingGearAnimation;
 	std::unique_ptr<NavLights> m_navLights;
-	ScopedPtr<Sensors> m_sensors;
+	std::unique_ptr<Sensors> m_sensors;
 
 	bool m_targetInSight;
 

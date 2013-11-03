@@ -134,8 +134,8 @@ Intro *Pi::intro;
 SDLGraphics *Pi::sdl;
 Graphics::RenderTarget *Pi::pRTarget;
 RefCountedPtr<Graphics::Texture> Pi::m_texture;
-ScopedPtr<Graphics::Drawables::TexturedQuad> Pi::m_quad;
-ScopedPtr<Gui::Image> Pi::pLoadingImage;
+std::unique_ptr<Graphics::Drawables::TexturedQuad> Pi::m_quad;
+std::unique_ptr<Gui::Image> Pi::pLoadingImage;
 
 #if WITH_OBJECTVIEWER
 ObjectViewerView *Pi::objectViewerView;
@@ -160,7 +160,7 @@ void Pi::CreateRenderTarget(const Uint16 width, const Uint16 height) {
 		vector2f(width, height),
 		Graphics::LINEAR_CLAMP, false, false, 0);
 	Pi::m_texture.Reset(Pi::renderer->CreateTexture(texDesc));
-	Pi::m_quad.Reset(new Graphics::Drawables::TexturedQuad(Pi::renderer, m_texture.Get(), vector2f(0.0f,0.0f), vector2f(800.0f, 600.0f)));
+	Pi::m_quad.reset(new Graphics::Drawables::TexturedQuad(Pi::renderer, m_texture.Get(), vector2f(0.0f,0.0f), vector2f(800.0f, 600.0f)));
 
 	// Oculus Rift is 1280×800 (640×800 per eye)
 	Graphics::RenderTargetDesc rtDesc(
@@ -518,7 +518,7 @@ void Pi::Init()
 	draw_progress(gauge, label, 1.0f);
 
 	OS::NotifyLoadEnd();
-	Pi::pLoadingImage.Reset();
+	Pi::pLoadingImage.reset();
 
 #if 0
 	// frame test code
