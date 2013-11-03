@@ -41,9 +41,9 @@ public:
 	bool IsNormalSpace() const { return m_state == STATE_NORMAL; }
 	bool IsHyperspace() const { return m_state == STATE_HYPERSPACE; }
 
-	Space *GetSpace() const { return m_space.Get(); }
+	Space *GetSpace() const { return m_space.get(); }
 	double GetTime() const { return m_time; }
-	Player *GetPlayer() const { return m_player.Get(); }
+	Player *GetPlayer() const { return m_player.get(); }
 
 	// physics step
 	void TimeStep(float step);
@@ -79,6 +79,8 @@ public:
 	bool IsPaused() const { return m_timeAccel == TIMEACCEL_PAUSED; }
 
 	float GetTimeAccelRate() const { return s_timeAccelRates[m_timeAccel]; }
+	float GetInvTimeAccelRate() const { return s_timeInvAccelRates[m_timeAccel]; }
+
 	float GetTimeStep() const { return s_timeAccelRates[m_timeAccel]*(1.0f/PHYSICS_HZ); }
 
 	GameLog *log;
@@ -91,10 +93,10 @@ private:
 	void SwitchToHyperspace();
 	void SwitchToNormalSpace();
 
-	ScopedPtr<Space> m_space;
+	std::unique_ptr<Space> m_space;
 	double m_time;
 
-	ScopedPtr<Player> m_player;
+	std::unique_ptr<Player> m_player;
 
 	enum State {
 		STATE_NORMAL,
@@ -115,6 +117,7 @@ private:
 	bool m_forceTimeAccel;
 
 	static const float s_timeAccelRates[];
+	static const float s_timeInvAccelRates[];
 };
 
 #endif

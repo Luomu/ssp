@@ -18,6 +18,9 @@
 #define STDCALL
 #endif
 
+// some people build with an old version of GLEW that doesn't include KHR_debug
+#if (GL_ARB_debug_output && GL_KHR_debug)
+
 namespace Graphics {
 
 	class GLDebug {
@@ -86,7 +89,10 @@ namespace Graphics {
 	public:
 		//register the callback function, if the extension is available
 		static void Enable() {
-			if (!glewIsSupported("GL_KHR_debug")) return;
+			if (!glewIsSupported("GL_KHR_debug")) {
+				printf("GL_KHR_debug is not supported; GLDebug will not work\n");
+				return;
+			}
 
 			glEnable(GL_DEBUG_OUTPUT);
 			glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS_ARB);
@@ -106,5 +112,23 @@ namespace Graphics {
 	};
 
 }
+
+#else
+
+namespace Graphics {
+
+	class GLDebug {
+	public:
+		static void Enable() {
+			printf("GL Debug support was excluded from this build because the GLEW headers were not recent enough\n");
+		}
+
+		static void Disable() {}
+
+	};
+
+}
+
+#endif
 
 #endif

@@ -116,7 +116,7 @@ private:
 	void OnPlayerChangeFlightControlState();
 	void SelectBody(Body *, bool reselectIsDeselect);
 	Body* PickBody(const double screenX, const double screenY) const;
-	void MouseButtonDown(int button, int x, int y);
+	void MouseWheel(bool up);
 
 	NavTunnelWidget *m_navTunnel;
 	ScopedPtr<HudReticle> m_reticle;
@@ -152,16 +152,20 @@ private:
 	sigc::connection m_onHyperspaceTargetChangedCon;
 	sigc::connection m_onPlayerChangeTargetCon;
 	sigc::connection m_onChangeFlightControlStateCon;
+<<<<<<< HEAD
 	sigc::connection m_onMouseButtonDown;
 	sigc::connection m_toggleCameraMagnificationCon;
+=======
+	sigc::connection m_onMouseWheelCon;
+>>>>>>> cc66458b35c40016191a6ac63a6a6cbe756e996f
 
 	Gui::LabelSet *m_bodyLabels;
 	std::map<Body*,vector3d> m_projectedPos;
 
-	ScopedPtr<Camera> m_camera;
-	ScopedPtr<InternalCameraController> m_internalCameraController;
-	ScopedPtr<ExternalCameraController> m_externalCameraController;
-	ScopedPtr<SiderealCameraController> m_siderealCameraController;
+	std::unique_ptr<Camera> m_camera;
+	std::unique_ptr<InternalCameraController> m_internalCameraController;
+	std::unique_ptr<ExternalCameraController> m_externalCameraController;
+	std::unique_ptr<SiderealCameraController> m_siderealCameraController;
 	CameraController *m_activeCameraController; //one of the above
 
 	Indicator m_velIndicator;
@@ -171,7 +175,7 @@ private:
 	Indicator m_targetLeadIndicator;
 	Indicator m_mouseDirIndicator;
 
-	ScopedPtr<Gui::TexturedQuad> m_indicatorMousedir;
+	std::unique_ptr<Gui::TexturedQuad> m_indicatorMousedir;
 	vector2f m_indicatorMousedirSize;
 };
 

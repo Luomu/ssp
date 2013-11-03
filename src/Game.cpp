@@ -25,7 +25,7 @@
 #include "graphics/Renderer.h"
 #include "ui/Context.h"
 
-static const int  s_saveVersion   = 67;
+static const int  s_saveVersion   = 68;
 static const char s_saveStart[]   = "PIONEER";
 static const char s_saveEnd[]     = "END";
 
@@ -37,13 +37,13 @@ Game::Game(const SystemPath &path) :
 	m_requestedTimeAccel(TIMEACCEL_1X),
 	m_forceTimeAccel(false)
 {
-	m_space.Reset(new Space(this, path));
+	m_space.reset(new Space(this, path));
 	SpaceStation *station = static_cast<SpaceStation*>(m_space->FindBodyForPath(&path));
 	assert(station);
 
-	m_player.Reset(new Player("kanara"));
+	m_player.reset(new Player("kanara"));
 
-	m_space->AddBody(m_player.Get());
+	m_space->AddBody(m_player.get());
 
 	m_player->SetFrame(station->GetFrame());
 	m_player->SetDockedWith(station, 0);
@@ -61,13 +61,13 @@ Game::Game(const SystemPath &path, const vector3d &pos) :
 	m_requestedTimeAccel(TIMEACCEL_1X),
 	m_forceTimeAccel(false)
 {
-	m_space.Reset(new Space(this, path));
+	m_space.reset(new Space(this, path));
 	Body *b = m_space->FindBodyForPath(&path);
 	assert(b);
 
-	m_player.Reset(new Player("kanara"));
+	m_player.reset(new Player("kanara"));
 
-	m_space->AddBody(m_player.Get());
+	m_space->AddBody(m_player.get());
 
 	m_player->SetFrame(b->GetFrame());
 
@@ -99,9 +99,9 @@ Game::~Game()
 	// is owned by the space, and the game part that holds all the player
 	// attributes and whatever else
 
-	m_space->RemoveBody(m_player.Get());
-	m_space.Reset();
-	m_player.Reset();
+	m_space->RemoveBody(m_player.get());
+	m_space.reset();
+	m_player.reset();
 }
 
 Game::Game(Serializer::Reader &rd) :
@@ -125,12 +125,12 @@ Game::Game(Serializer::Reader &rd) :
 
 	// space, all the bodies and things
 	section = rd.RdSection("Space");
-	m_space.Reset(new Space(this, section));
+	m_space.reset(new Space(this, section));
 
 	// game state and space transition state
 	section = rd.RdSection("Game");
 
-	m_player.Reset(static_cast<Player*>(m_space->GetBodyByIndex(section.Int32())));
+	m_player.reset(static_cast<Player*>(m_space->GetBodyByIndex(section.Int32())));
 
 	// hyperspace clouds being brought over from the previous system
 	Uint32 nclouds = section.Int32();
@@ -179,12 +179,12 @@ void Game::Serialize(Serializer::Writer &wr)
 	// game state and space transition state
 	section = Serializer::Writer();
 
-	section.Int32(m_space->GetIndexForBody(m_player.Get()));
+	section.Int32(m_space->GetIndexForBody(m_player.get()));
 
 	// hyperspace clouds being brought over from the previous system
 	section.Int32(m_hyperspaceClouds.size());
 	for (std::list<HyperspaceCloud*>::const_iterator i = m_hyperspaceClouds.begin(); i != m_hyperspaceClouds.end(); ++i)
-		(*i)->Serialize(section, m_space.Get());
+		(*i)->Serialize(section, m_space.get());
 
 	section.Double(m_time);
 	section.Int32(Uint32(m_state));
@@ -287,7 +287,7 @@ bool Game::UpdateTimeAccel()
 		else if (!m_forceTimeAccel) {
 			// check we aren't too near to objects for timeaccel //
 			for (Space::BodyIterator i = m_space->BodiesBegin(); i != m_space->BodiesEnd(); ++i) {
-				if ((*i) == m_player) continue;
+				if ((*i) == m_player.get()) continue;
 				if ((*i)->IsType(Object::HYPERSPACECLOUD)) continue;
 
 				vector3d toBody = m_player->GetPosition() - (*i)->GetPositionRelTo(m_player->GetFrame());
@@ -388,14 +388,14 @@ void Game::SwitchToHyperspace()
 	printf(SIZET_FMT " clouds brought over\n", m_hyperspaceClouds.size());
 
 	// remove the player from space
-	m_space->RemoveBody(m_player.Get());
+	m_space->RemoveBody(m_player.get());
 
 	// create hyperspace :)
-	m_space.Reset(new Space(this));
+	m_space.reset(new Space(this));
 
 	// put the player in it
 	m_player->SetFrame(m_space->GetRootFrame());
-	m_space->AddBody(m_player.Get());
+	m_space->AddBody(m_player.get());
 
 	// put player at the origin. kind of unnecessary since it won't be moving
 	// but at least it gives some consistency
@@ -417,15 +417,15 @@ void Game::SwitchToHyperspace()
 void Game::SwitchToNormalSpace()
 {
 	// remove the player from hyperspace
-	m_space->RemoveBody(m_player.Get());
+	m_space->RemoveBody(m_player.get());
 
 	// create a new space for the system
 	const SystemPath &dest = m_player->GetHyperspaceDest();
-	m_space.Reset(new Space(this, dest));
+	m_space.reset(new Space(this, dest));
 
 	// put the player in it
 	m_player->SetFrame(m_space->GetRootFrame());
-	m_space->AddBody(m_player.Get());
+	m_space->AddBody(m_player.get());
 
 	// place it
 	m_player->SetPosition(m_space->GetHyperspaceExitPoint(m_hyperspaceSource));
@@ -541,6 +541,16 @@ const float Game::s_timeAccelRates[] = {
 	100000.0f   // hyperspace
 };
 
+const float Game::s_timeInvAccelRates[] = {
+	0.0f,       // paused
+	1.0f,       // 1x
+	0.1f,      // 10x
+	0.01f,     // 100x
+	0.001f,    // 1000x
+	0.0001f,   // 10000x
+	0.00001f   // hyperspace
+};
+
 void Game::SetTimeAccel(TimeAccel t)
 {
 	// don't want player to spin like mad when hitting time accel
@@ -583,7 +593,7 @@ void Game::CreateViews()
 
 	// XXX views expect Pi::game and Pi::player to exist
 	Pi::game = this;
-	Pi::player = m_player.Get();
+	Pi::player = m_player.get();
 
 	Pi::cpan = new ShipCpanel(Pi::renderer);
 	Pi::sectorView = new SectorView();
@@ -594,6 +604,7 @@ void Game::CreateViews()
 	Pi::spaceStationView = new SpaceStationView();
 	Pi::infoView = new UIView("InfoView");
 	Pi::deathView = new DeathView();
+	Pi::settingsView = new UIView("SettingsInGame");
 
 	// view manager will handle setting this probably
 	Pi::galacticView->SetRenderer(Pi::renderer);
@@ -622,7 +633,7 @@ void Game::LoadViews(Serializer::Reader &rd)
 
 	// XXX views expect Pi::game and Pi::player to exist
 	Pi::game = this;
-	Pi::player = m_player.Get();
+	Pi::player = m_player.get();
 
 	Serializer::Reader section = rd.RdSection("ShipCpanel");
 	Pi::cpan = new ShipCpanel(section, Pi::renderer);
@@ -639,6 +650,7 @@ void Game::LoadViews(Serializer::Reader &rd)
 	Pi::spaceStationView = new SpaceStationView();
 	Pi::infoView = new UIView("InfoView");
 	Pi::deathView = new DeathView();
+	Pi::settingsView = new UIView("SettingsInGame");
 
 #if WITH_OBJECTVIEWER
 	Pi::objectViewerView = new ObjectViewerView();
@@ -667,6 +679,7 @@ void Game::DestroyViews()
 	delete Pi::objectViewerView;
 #endif
 
+	delete Pi::settingsView;
 	delete Pi::deathView;
 	delete Pi::infoView;
 	delete Pi::spaceStationView;
@@ -679,6 +692,7 @@ void Game::DestroyViews()
 	delete log;
 
 	Pi::objectViewerView = 0;
+	Pi::settingsView = 0;
 	Pi::deathView = 0;
 	Pi::infoView = 0;
 	Pi::spaceStationView = 0;

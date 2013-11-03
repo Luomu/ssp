@@ -10,7 +10,6 @@
 #include <cstdio>
 #include <sigc++/sigc++.h>
 #include <SDL.h>
-#include <GL/glew.h>
 #include <SDL_image.h>
 #include <cfloat>
 #include <limits>
@@ -22,7 +21,11 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <algorithm>
+#include <memory>
 #include <deque>
+
+#include "glew/glew.h"
 
 #ifdef _WIN32
 #	include <malloc.h>
@@ -35,16 +38,11 @@
 #	endif
 
 #	ifndef __MINGW32__
-#
 #		define alloca _alloca
 #		define strncasecmp _strnicmp
 #		define strcasecmp _stricmp
 #		define snprintf _snprintf
-
-#		ifndef isfinite
-inline int isfinite(double x) { return _finite(x); }
-#		endif
-#	endif /* __MINGW32__ */
+#	endif
 #endif
 
 #ifdef _MSC_VER // MSVC doesn't support the %z specifier, but has its own %I specifier

@@ -13,6 +13,8 @@
 #include "SpaceStationView.h"
 #include "SystemInfoView.h"
 #include "SystemView.h"
+#include "SystemInfoView.h"
+#include "GalacticView.h"
 #include "UIView.h"
 
 ShipCpanel::ShipCpanel(Graphics::Renderer *r): Gui::Fixed(float(Gui::Screen::GetWidth()), 80)
@@ -207,7 +209,7 @@ void ShipCpanel::InitObject()
 	Add(m_overlay[OVERLAY_TOP_LEFT],     170.0f, 2.0f);
 	Add(m_overlay[OVERLAY_TOP_RIGHT],    500.0f, 2.0f);
 	Add(m_overlay[OVERLAY_BOTTOM_LEFT],  150.0f, 62.0f);
-	Add(m_overlay[OVERLAY_BOTTOM_RIGHT], 580.0f, 62.0f);
+	Add(m_overlay[OVERLAY_BOTTOM_RIGHT], 520.0f, 62.0f);
 
 	m_connOnDockingClearanceExpired =
 		Pi::onDockingClearanceExpired.connect(sigc::mem_fun(this, &ShipCpanel::OnDockingClearanceExpired));
@@ -343,13 +345,13 @@ void ShipCpanel::OnClickTimeaccel(Game::TimeAccel val)
 {
 	Pi::BoinkNoise();
 	if ((Pi::game->GetTimeAccel() == val) && (val == Game::TIMEACCEL_PAUSED)) {
-		if (Pi::GetView() != Pi::gameMenuView)
-			Pi::SetView(Pi::gameMenuView);
+		if (Pi::GetView() != Pi::settingsView)
+			Pi::SetView(Pi::settingsView);
 		else
 			Pi::SetView(Pi::worldView);
 	}
 	else {
-		if (Pi::GetView() == Pi::gameMenuView)
+		if (Pi::GetView() == Pi::settingsView)
 			Pi::SetView(Pi::worldView);
 		Pi::game->RequestTimeAccel(val, Pi::KeyState(SDLK_LCTRL) || Pi::KeyState(SDLK_RCTRL));
 	}
