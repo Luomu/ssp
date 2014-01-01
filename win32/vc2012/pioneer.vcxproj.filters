@@ -832,9 +832,9 @@
     </ClInclude>
     <ClInclude Include="..\..\src\FaceGenManager.h">
       <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\src\OculusRift.h">
       <Filter>src</Filter>
-    </ClInclude>
     </ClInclude>
     <ClInclude Include="..\..\src\EquipSet.h">
       <Filter>src</Filter>
