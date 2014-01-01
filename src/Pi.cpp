@@ -204,16 +204,13 @@ void Pi::DrawRenderTarget(const bool bAllowHMD /*= false*/) {
 
 	//Gui::Screen::EnterOrtho();
 	{
-		glDisable(GL_DEPTH_TEST);
-		glDisable(GL_LIGHTING);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		glMatrixMode(GL_PROJECTION);
-		glPushMatrix();
-		glLoadIdentity();
-		glOrtho(0, 800, 600, 0, -1, 1);
-		glMatrixMode(GL_MODELVIEW);
-		glPushMatrix();
-		glLoadIdentity();
+		Pi::renderer->SetDepthTest(false);
+		Pi::renderer->SetLights(false);
+		Pi::renderer->SetBlendMode(Graphics::BLEND_ALPHA);
+		Pi::renderer->SetMatrixMode(Graphics::MatrixMode::PROJECTION);
+		Pi::renderer->SetOrthographicProjection(0, 800, 600, 0, -1, 1);
+		Pi::renderer->SetMatrixMode(Graphics::MatrixMode::MODELVIEW);
+		Pi::renderer->LoadIdentity();
 	}
 	
 	if( OculusRiftInterface::HasHMD() && bAllowHMD ) {
@@ -225,12 +222,12 @@ void Pi::DrawRenderTarget(const bool bAllowHMD /*= false*/) {
 
 	//Gui::Screen::LeaveOrtho();
 	{
-		glMatrixMode(GL_PROJECTION);
-		glPopMatrix();
-		glMatrixMode(GL_MODELVIEW);
-		glPopMatrix();
-		glEnable(GL_LIGHTING);
-		glEnable(GL_DEPTH_TEST);
+		Pi::renderer->SetMatrixMode(Graphics::MatrixMode::PROJECTION);
+		Pi::renderer->PopMatrix();
+		Pi::renderer->SetMatrixMode(Graphics::MatrixMode::MODELVIEW);
+		Pi::renderer->PopMatrix();
+		Pi::renderer->SetLights(true);
+		Pi::renderer->SetDepthTest(true);
 	}
 
 	Pi::renderer->EndFrame();
