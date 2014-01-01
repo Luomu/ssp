@@ -220,7 +220,7 @@ private:
 		eVPRight,
 		eVP_MAX
 	};
-	static ScopedPtr<Graphics::Drawables::TexturedQuad> m_quads[eVP_MAX];
+	static std::unique_ptr<Graphics::Drawables::TexturedQuad> m_quads[eVP_MAX];
 };
 
 #endif /* _PI_H */

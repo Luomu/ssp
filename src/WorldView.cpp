@@ -244,9 +244,9 @@ void WorldView::InitObject()
 		pCam->SetZoomedInFov(Pi::config->Float("FOVMagnified"));
 		m_cameras.push_back(pCam);
 	}
-	m_internalCameraController.Reset(new InternalCameraController(m_cameras, Pi::player));
-	m_externalCameraController.Reset(new ExternalCameraController(m_cameras, Pi::player));
-	m_siderealCameraController.Reset(new SiderealCameraController(m_cameras, Pi::player));
+	m_internalCameraController.reset(new InternalCameraController(m_cameras, Pi::player));
+	m_externalCameraController.reset(new ExternalCameraController(m_cameras, Pi::player));
+	m_siderealCameraController.reset(new SiderealCameraController(m_cameras, Pi::player));
 	SetCamType(m_camType); //set the active camera
 
 	m_onHyperspaceTargetChangedCon =

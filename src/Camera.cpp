@@ -205,7 +205,6 @@ void Camera::Draw(Renderer *renderer, const Body *excludeBody, const ViewEye eye
 	{
 		m_rendererLights.clear();
 		m_rendererLights.reserve(m_lightSources.size());
-		rendererLights.reserve(m_lightSources.size());
 		for (size_t i = 0; i < m_lightSources.size(); i++)
 			m_rendererLights.push_back(m_lightSources[i].GetLight());
 		renderer->SetLights(m_rendererLights.size(), &m_rendererLights[0]);

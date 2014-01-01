@@ -190,7 +190,7 @@ TexturedQuad::TexturedQuad(Graphics::Renderer *r, Graphics::Texture *texture, co
 TexturedQuad::TexturedQuad(Graphics::Renderer *r, Graphics::Texture *texture, Graphics::Material *material, const vector2f &pos, const vector2f &size)
 	 : m_texture(RefCountedPtr<Graphics::Texture>(texture)), m_material(material)
 {
-	m_vertices.Reset(new VertexArray(ATTRIB_POSITION | ATTRIB_UV0));
+	m_vertices.reset(new VertexArray(ATTRIB_POSITION | ATTRIB_UV0));
 	m_material->texture0 = m_texture.Get();
 
 	// these might need to be reversed

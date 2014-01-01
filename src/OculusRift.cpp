@@ -275,36 +275,36 @@ private:
 };
 
 // static members for the interface class.
-ScopedPtr<OculusRiftImplemetation> OculusRiftInterface::mPimpl;
+std::unique_ptr<OculusRiftImplemetation> OculusRiftInterface::mPimpl;
 #pragma optimize("",off)
 void OculusRiftInterface::Init()
 {
-	mPimpl.Reset(new OculusRiftImplemetation);
+	mPimpl.reset(new OculusRiftImplemetation);
 }
 #pragma optimize("",off)
 void OculusRiftInterface::Uninit()
 {
-	assert(mPimpl.Valid());
+	assert(mPimpl.get());
 	mPimpl->Uninit();
 }
 #pragma optimize("",off)
 void OculusRiftInterface::Update()
 {
-	assert(mPimpl.Valid());
+	assert(mPimpl.get());
 	mPimpl->OnUpdate();
 }
 #pragma optimize("",off)
 //static
 bool OculusRiftInterface::HasHMD()
 {
-	assert(mPimpl.Valid());
+	assert(mPimpl.get());
 	return mPimpl->HasSensor();
 }
 
 //static 
 void OculusRiftInterface::GetYawPitchRoll(float &yaw, float &pitch, float &roll)
 {
-	assert(mPimpl.Valid());
+	assert(mPimpl.get());
 	yaw		= mPimpl->Yaw();
 	pitch	= mPimpl->Pitch();
 	roll	= mPimpl->Roll();
@@ -313,14 +313,14 @@ void OculusRiftInterface::GetYawPitchRoll(float &yaw, float &pitch, float &roll)
 //static
 void OculusRiftInterface::GetDistortionValues(float &XCenterOffset, float &Scale, float &K0, float &K1, float &K2, float &K3)
 {
-	assert(mPimpl.Valid());
+	assert(mPimpl.get());
 	mPimpl->GetDistortionValues(XCenterOffset, Scale, K0, K1, K2, K3);
 }
 
 //static 
 matrix4x4f OculusRiftInterface::GetPerspectiveMatrix(const ViewEye eye)
 {
-	assert(mPimpl.Valid());
+	assert(mPimpl.get());
 	return mPimpl->GetPerspectiveMatrix(eye);
 }
 

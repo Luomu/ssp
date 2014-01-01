@@ -154,7 +154,7 @@ private:
 	Gui::LabelSet *m_bodyLabels;
 	std::map<Body*,vector3d> m_projectedPos;
 
-	std::vector<Camera> m_camera;
+	std::vector<Camera*> m_cameras;
 	std::unique_ptr<InternalCameraController> m_internalCameraController;
 	std::unique_ptr<ExternalCameraController> m_externalCameraController;
 	std::unique_ptr<SiderealCameraController> m_siderealCameraController;

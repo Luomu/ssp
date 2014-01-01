@@ -139,7 +139,7 @@ Intro *Pi::intro;
 SDLGraphics *Pi::sdl;
 Graphics::RenderTarget *Pi::pRTarget;
 RefCountedPtr<Graphics::Texture> Pi::m_texture;
-std::unique_ptr<Graphics::Drawables::TexturedQuad> Pi::m_quad[eVP_MAX];
+std::unique_ptr<Graphics::Drawables::TexturedQuad> Pi::m_quads[eVP_MAX];
 std::unique_ptr<Gui::Image> Pi::pLoadingImage;
 
 #if WITH_OBJECTVIEWER
@@ -174,12 +174,12 @@ void Pi::CreateRenderTarget(const Uint16 width, const Uint16 height) {
 		// create first (left) viewport material and quad
 		Graphics::Material* hmdMat = Pi::renderer->CreateMaterial(desc);
 		hmdMat->specialParameter0 = new OculusRiftInterface::Viewport(0,0,640,800);
-		Pi::m_quads[eVPLeft].Reset(new Graphics::Drawables::TexturedQuad(Pi::renderer, m_texture.Get(), hmdMat, vector2f(0.0f,0.0f), vector2f(400.0f, 600.0f)));
+		Pi::m_quads[eVPLeft].reset(new Graphics::Drawables::TexturedQuad(Pi::renderer, m_texture.Get(), hmdMat, vector2f(0.0f,0.0f), vector2f(400.0f, 600.0f)));
 
 		// create second (right) viewport material and quad
 		hmdMat = Pi::renderer->CreateMaterial(desc);
 		hmdMat->specialParameter0 = new OculusRiftInterface::Viewport(640,0,640,800);
-		Pi::m_quads[eVPRight].Reset(new Graphics::Drawables::TexturedQuad(Pi::renderer, m_texture.Get(), hmdMat, vector2f(400.0f,0.0f), vector2f(400.0f, 600.0f)));
+		Pi::m_quads[eVPRight].reset(new Graphics::Drawables::TexturedQuad(Pi::renderer, m_texture.Get(), hmdMat, vector2f(400.0f,0.0f), vector2f(400.0f, 600.0f)));
 	} 
 
 	// Oculus Rift is 1280×800 (640×800 per eye)

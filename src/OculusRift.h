@@ -46,7 +46,7 @@ public:
 	static matrix4x4f GetPerspectiveMatrix(const ViewEye eye);
 	static float GetYFOVDegrees();
 private:
-	static ScopedPtr<OculusRiftImplemetation> mPimpl;
+	static std::unique_ptr<OculusRiftImplemetation> mPimpl;
 };
 
 #endif // OCULUSRIFT_H
