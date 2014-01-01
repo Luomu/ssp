@@ -138,6 +138,7 @@
     <ClCompile Include="..\..\src\ChatForm.cpp" />
     <ClCompile Include="..\..\src\CityOnPlanet.cpp" />
     <ClCompile Include="..\..\src\Color.cpp" />
+    <ClCompile Include="..\..\src\Colors.cpp" />
     <ClCompile Include="..\..\src\CRC32.cpp" />
     <ClCompile Include="..\..\src\DeathView.cpp" />
     <ClCompile Include="..\..\src\DynamicBody.cpp" />
@@ -155,11 +156,14 @@
     <ClCompile Include="..\..\src\GalacticView.cpp" />
     <ClCompile Include="..\..\src\Game.cpp" />
     <ClCompile Include="..\..\src\GameConfig.cpp" />
+    <ClCompile Include="..\..\src\GameLog.cpp" />
     <ClCompile Include="..\..\src\GeoPatch.cpp" />
     <ClCompile Include="..\..\src\GeoPatchContext.cpp" />
     <ClCompile Include="..\..\src\GeoPatchID.cpp" />
     <ClCompile Include="..\..\src\GeoPatchJobs.cpp" />
     <ClCompile Include="..\..\src\GeoSphere.cpp" />
+    <ClCompile Include="..\..\src\HudReticle.cpp" />
+    <ClCompile Include="..\..\src\HudTrail.cpp" />
     <ClCompile Include="..\..\src\HyperspaceCloud.cpp" />
     <ClCompile Include="..\..\src\IniConfig.cpp" />
     <ClCompile Include="..\..\src\Intro.cpp" />
@@ -235,6 +239,7 @@
     <ClCompile Include="..\..\src\PropertyMap.cpp" />
     <ClCompile Include="..\..\src\SDLWrappers.cpp" />
     <ClCompile Include="..\..\src\SectorView.cpp" />
+    <ClCompile Include="..\..\src\Sensors.cpp" />
     <ClCompile Include="..\..\src\Serializer.cpp" />
     <ClCompile Include="..\..\src\Sfx.cpp" />
     <ClCompile Include="..\..\src\Ship-AI.cpp" />
@@ -285,6 +290,7 @@
     <ClInclude Include="..\..\src\ChatForm.h" />
     <ClInclude Include="..\..\src\CityOnPlanet.h" />
     <ClInclude Include="..\..\src\Color.h" />
+    <ClInclude Include="..\..\src\Colors.h" />
     <ClInclude Include="..\..\src\CRC32.h" />
     <ClInclude Include="..\..\src\DeathView.h" />
     <ClInclude Include="..\..\src\DeleteEmitter.h" />
@@ -306,11 +312,14 @@
     <ClInclude Include="..\..\src\Game.h" />
     <ClInclude Include="..\..\src\GameConfig.h" />
     <ClInclude Include="..\..\src\gameconsts.h" />
+    <ClInclude Include="..\..\src\GameLog.h" />
     <ClInclude Include="..\..\src\GeoPatch.h" />
     <ClInclude Include="..\..\src\GeoPatchContext.h" />
     <ClInclude Include="..\..\src\GeoPatchID.h" />
     <ClInclude Include="..\..\src\GeoPatchJobs.h" />
     <ClInclude Include="..\..\src\GeoSphere.h" />
+    <ClInclude Include="..\..\src\HudReticle.h" />
+    <ClInclude Include="..\..\src\HudTrail.h" />
     <ClInclude Include="..\..\src\HyperspaceCloud.h" />
     <ClInclude Include="..\..\src\IniConfig.h" />
     <ClInclude Include="..\..\src\Intro.h" />
@@ -373,6 +382,7 @@
     <ClInclude Include="..\..\src\RefCounted.h" />
     <ClInclude Include="..\..\src\SDLWrappers.h" />
     <ClInclude Include="..\..\src\SectorView.h" />
+    <ClInclude Include="..\..\src\Sensors.h" />
     <ClInclude Include="..\..\src\Serializer.h" />
     <ClInclude Include="..\..\src\Sfx.h" />
     <ClInclude Include="..\..\src\Ship.h" />

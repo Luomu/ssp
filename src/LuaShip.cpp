@@ -1187,21 +1187,6 @@ static int l_ship_cancel_ai(lua_State *l)
 	return 0;
 }
 
-static int l_ship_get_invulnerable(lua_State *l)
-{
-	Ship *s = LuaObject<Ship>::CheckFromLua(1);
-	lua_pushboolean(l, s->IsInvulnerable());
-	return 1;
-}
-
-static int l_ship_set_invulnerable(lua_State *l)
-{
-	Ship *s = LuaObject<Ship>::CheckFromLua(1);
-	int i = luaL_checkinteger(l, 2);
-	s->SetInvulnerable(i > 0);
-	return 0;
-}
-
 template <> const char *LuaObject<Ship>::s_type = "Ship";
 
 template <> void LuaObject<Ship>::RegisterClass()

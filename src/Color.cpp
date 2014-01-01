@@ -5,24 +5,6 @@
 #include "LuaUtils.h"
 #include <SDL_stdinc.h>
 
-<<<<<<< HEAD
-const Color4f Color::BLACK  = Color(0.0f,0.0f,0.0f,1.0f);
-const Color4f Color::WHITE  = Color(1.0f,1.0f,1.0f,1.0f);
-const Color4f Color::RED    = Color(1.0f,0.0f,0.0f,1.0f);
-const Color4f Color::GREEN  = Color(0.0f,1.0f,0.0f,1.0f);
-const Color4f Color::BLUE   = Color(0.0f,0.0f,1.0f,1.0f);
-const Color4f Color::YELLOW = Color(1.0f,1.0f,0.0f,1.0f);
-const Color4f Color::GRAY   = Color(0.5f,0.5f,0.5f,1.f);
-=======
-const Color4f Color4f::BLACK  = Color4f(0.0f,0.0f,0.0f,1.0f);
-const Color4f Color4f::WHITE  = Color4f(1.0f,1.0f,1.0f,1.0f);
-const Color4f Color4f::RED    = Color4f(1.0f,0.0f,0.0f,1.0f);
-const Color4f Color4f::GREEN  = Color4f(0.0f,1.0f,0.0f,1.0f);
-const Color4f Color4f::BLUE   = Color4f(0.0f,0.0f,1.0f,1.0f);
-const Color4f Color4f::YELLOW = Color4f(1.0f,1.0f,0.0f,1.0f);
-const Color4f Color4f::GRAY   = Color4f(0.5f,0.5f,0.5f,1.f);
->>>>>>> 80f916933a1be9993fd722369458a68e76268c2f
-
 const Color4ub Color::BLACK   = Color(0, 0, 0, 255);
 const Color4ub Color::WHITE   = Color(255, 255, 255, 255);
 const Color4ub Color::RED     = Color(255, 0, 0, 255);

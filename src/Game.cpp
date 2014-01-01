@@ -17,7 +17,6 @@
 #include "ShipCpanel.h"
 #include "Space.h"
 #include "SpaceStation.h"
-#include "SpaceStationView.h"
 #include "SystemInfoView.h"
 #include "SystemView.h"
 #include "SystemInfoView.h"
