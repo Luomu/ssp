@@ -91,6 +91,7 @@ void Planet::InitParams(const SystemBody *sbody)
  */
 void Planet::GetAtmosphericState(double dist, double *outPressure, double *outDensity) const
 {
+	PROFILE_SCOPED()
 #if 0
 	static bool atmosphereTableShown = false;
 	if (!atmosphereTableShown) {
@@ -167,12 +168,13 @@ void Planet::GenerateRings(Graphics::Renderer *renderer)
 	//       (if the texture is generated without mipmaps then a 1xN texture works)
 	const int RING_TEXTURE_WIDTH = 4;
 	const int RING_TEXTURE_LENGTH = 256;
-	ScopedMalloc<Color4ub> buf(malloc(RING_TEXTURE_WIDTH * RING_TEXTURE_LENGTH * 4));
+	std::unique_ptr<Color, FreeDeleter> buf(
+			static_cast<Color*>(malloc(RING_TEXTURE_WIDTH * RING_TEXTURE_LENGTH * 4)));
 
 	const float ringScale = (outer-inner)*sbody->GetRadius() / 1.5e7f;
 
 	Random rng(GetSystemBody()->seed+4609837);
-	Color4f baseCol = sbody->m_rings.baseColor.ToColor4f();
+	Color baseCol = sbody->m_rings.baseColor;
 	double noiseOffset = 2048.0 * rng.Double();
 	for (int i = 0; i < RING_TEXTURE_LENGTH; ++i) {
 		const float alpha = (float(i) / float(RING_TEXTURE_LENGTH)) * ringScale;
@@ -183,13 +185,13 @@ void Planet::GenerateRings(Graphics::Renderer *renderer)
 		const float LOG_SCALE = 1.0f/sqrtf(sqrtf(log1pf(1.0f)));
 		const float v = LOG_SCALE*sqrtf(sqrtf(log1pf(n)));
 
-		Color4ub color;
-		color.r = (v*baseCol.r)*255.0f;
-		color.g = (v*baseCol.g)*255.0f;
-		color.b = (v*baseCol.b)*255.0f;
-		color.a = (((v*0.25f)+0.75f)*baseCol.a)*255.0f;
+		Color color;
+		color.r = v*baseCol.r;
+		color.g = v*baseCol.g;
+		color.b = v*baseCol.b;
+		color.a = ((v*0.25f)+0.75f)*baseCol.a;
 
-		Color4ub *row = buf.Get() + i * RING_TEXTURE_WIDTH;
+		Color *row = buf.get() + i * RING_TEXTURE_WIDTH;
 		for (int j = 0; j < RING_TEXTURE_WIDTH; ++j) {
 			row[j] = color;
 		}
@@ -197,10 +199,10 @@ void Planet::GenerateRings(Graphics::Renderer *renderer)
 
 	// first and last pixel are forced to zero, to give a slightly smoother ring edge
 	{
-		Color4ub* row;
-		row = buf.Get();
+		Color *row;
+		row = buf.get();
 		memset(row, 0, RING_TEXTURE_WIDTH * 4);
-		row = buf.Get() + (RING_TEXTURE_LENGTH - 1) * RING_TEXTURE_WIDTH;
+		row = buf.get() + (RING_TEXTURE_LENGTH - 1) * RING_TEXTURE_WIDTH;
 		memset(row, 0, RING_TEXTURE_WIDTH * 4);
 	}
 
@@ -210,7 +212,7 @@ void Planet::GenerateRings(Graphics::Renderer *renderer)
 
 	m_ringTexture.Reset(renderer->CreateTexture(texDesc));
 	m_ringTexture->Update(
-			static_cast<void*>(buf.Get()), texSize,
+			static_cast<void*>(buf.get()), texSize,
 			Graphics::TEXTURE_RGBA_8888);
 
 	Graphics::MaterialDescriptor desc;
@@ -218,7 +220,7 @@ void Planet::GenerateRings(Graphics::Renderer *renderer)
 	desc.lighting = true;
 	desc.twoSided = true;
 	desc.textures = 1;
-	m_ringMaterial.Reset(renderer->CreateMaterial(desc));
+	m_ringMaterial.reset(renderer->CreateMaterial(desc));
 	m_ringMaterial->texture0 = m_ringTexture.Get();
 }
 
@@ -235,13 +237,14 @@ void Planet::DrawGasGiantRings(Renderer *renderer, const matrix4x4d &modelView)
 
 	renderer->SetTransform(modelView);
 
-	renderer->DrawTriangles(&m_ringVertices, m_ringMaterial.Get(), TRIANGLE_STRIP);
+	renderer->DrawTriangles(&m_ringVertices, m_ringMaterial.get(), TRIANGLE_STRIP);
 
 	renderer->SetBlendMode(BLEND_SOLID);
 }
 
 void Planet::DrawAtmosphere(Renderer *renderer, const matrix4x4d &modelView, const vector3d &camPos)
 {
+	PROFILE_SCOPED()
 	//this is the non-shadered atmosphere rendering
 	Color col;
 	double density;
@@ -288,15 +291,15 @@ void Planet::DrawAtmosphere(Renderer *renderer, const matrix4x4d &modelView, con
 
 	rot = matrix4x4d::RotateZMatrix(angStep);
 
-	if (!m_atmosphereVertices.Valid()) {
-		m_atmosphereVertices.Reset(new Graphics::VertexArray(ATTRIB_POSITION | ATTRIB_DIFFUSE | ATTRIB_NORMAL));
+	if (!m_atmosphereVertices) {
+		m_atmosphereVertices.reset(new Graphics::VertexArray(ATTRIB_POSITION | ATTRIB_DIFFUSE | ATTRIB_NORMAL));
 		Graphics::MaterialDescriptor desc;
 		desc.vertexColors = true;
 		desc.twoSided = true;
-		m_atmosphereMaterial.Reset(renderer->CreateMaterial(desc));
+		m_atmosphereMaterial.reset(renderer->CreateMaterial(desc));
 	}
 
-	VertexArray &vts = *m_atmosphereVertices.Get();
+	VertexArray &vts = *m_atmosphereVertices;
 	vts.Clear();
 
 	for (float ang=0; ang<2*M_PI; ang+=float(angStep)) {
@@ -312,19 +315,18 @@ void Planet::DrawAtmosphere(Renderer *renderer, const matrix4x4d &modelView, con
 		for (int i=0; i<3; i++) _col[i] = _col[i] * col[i];
 		_col[3] = col[3];
 		vts.Add(vector3f(r1.x, r1.y, r1.z), Color(_col[0], _col[1], _col[2], _col[3]), n);
-		vts.Add(vector3f(r2.x, r2.y, r2.z), Color(0.f), n);
+		vts.Add(vector3f(r2.x, r2.y, r2.z), Color(0), n);
 		r1 = rot * r1;
 		r2 = rot * r2;
 	}
 
 	renderer->SetTransform(trans);
 	renderer->SetBlendMode(BLEND_ALPHA_ONE);
-	renderer->DrawTriangles(m_atmosphereVertices.Get(), m_atmosphereMaterial.Get(), TRIANGLE_STRIP);
+	renderer->DrawTriangles(m_atmosphereVertices.get(), m_atmosphereMaterial.get(), TRIANGLE_STRIP);
 	renderer->SetBlendMode(BLEND_SOLID);
 }
 
 void Planet::SubRender(Renderer *r, const matrix4x4d &viewTran, const vector3d &camPos)
 {
 	if (GetSystemBody()->HasRings()) { DrawGasGiantRings(r, viewTran); }
-	if (!AreShadersEnabled()) DrawAtmosphere(r, viewTran, camPos);
 }

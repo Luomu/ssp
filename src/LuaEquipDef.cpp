@@ -28,20 +28,22 @@ void LuaEquipDef::Register()
 
 		lua_newtable(l);
 
-		pi_lua_settable(l, "id",        id);
-		pi_lua_settable(l, "name",      et->name);
-		pi_lua_settable(l, "slot",      EnumStrings::GetString("EquipSlot", et->slot));
-		pi_lua_settable(l, "basePrice", double(et->basePrice)*0.01);
-		pi_lua_settable(l, "mass",      et->mass);
+		pi_lua_settable(l, "id",          id);
+		pi_lua_settable(l, "name",        et->name);
+		pi_lua_settable(l, "slot",        EnumStrings::GetString("EquipSlot", et->slot));
+		pi_lua_settable(l, "basePrice",   double(et->basePrice)*0.01);
+		pi_lua_settable(l, "mass",        et->mass);
+		pi_lua_settable(l, "purchasable", et->purchasable);
 
 		pi_lua_readonly_table_proxy(l, -1);
 		lua_setfield(l, -3, id);
 		lua_pop(l, 1);
 	}
 
-	pi_lua_readonly_table_proxy(l, -1);
-	lua_setglobal(l, "EquipDef");
-	lua_pop(l, 1);
+	lua_getfield(l, LUA_REGISTRYINDEX, "CoreImports");
+	pi_lua_readonly_table_proxy(l, -2);
+	lua_setfield(l, -2, "EquipDef");
+	lua_pop(l, 2);
 
 	LUA_DEBUG_END(l, 0);
 }

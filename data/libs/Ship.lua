@@ -1,3 +1,16 @@
+-- Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+-- Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
+
+local Ship = import_core("Ship")
+local Engine = import("Engine")
+local Event = import("Event")
+local Serializer = import("Serializer")
+local ShipDef = import("ShipDef")
+local Timer = import("Timer")
+local Lang = import("Lang")
+
+local l = Lang.GetResource("ui-core")
+
 -- Temporary mapping while waiting for new-equipment to embed this information.
 local missile_names = {
 	MISSILE_UNGUIDED="missile_unguided",
@@ -10,6 +23,14 @@ local missile_names = {
 --
 -- Class representing a ship. Inherits from <Body>.
 --
+
+-- class method
+function Ship.MakeRandomLabel ()
+	local letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	local a = Engine.rand:Integer(1, #letters)
+	local b = Engine.rand:Integer(1, #letters)
+	return string.format("%s%s-%04d", letters:sub(a,a), letters:sub(b,b), Engine.rand:Integer(10000))
+end
 
 -- This is a protected table (accessors only) in which details of each ship's crew
 -- will be stored.
@@ -114,16 +135,15 @@ end
 --   experimental
 --
 Ship.Refuel = function (self,amount)
-	local t = Translate:GetTranslator()
     local currentFuel = self.fuel
     if currentFuel == 100 then
-		Comms.Message(t('Fuel tank full.'))
+        Comms.Message(l.FUEL_TANK_FULL) -- XXX don't translate in libs
         return 0
     end
-    local ship_stats = self:GetStats()
-    local needed = math.clamp(math.ceil(ship_stats.maxFuelTankMass - ship_stats.fuelMassLeft),0, amount)
+    local fuelTankMass = ShipDef[self.shipId].fuelTankMass
+    local needed = math.clamp(math.ceil(fuelTankMass - self.fuelMassLeft),0, amount)
     local removed = self:RemoveEquip('WATER', needed)
-    self:SetFuelPercent(math.clamp(self.fuel + removed * 100 / ship_stats.maxFuelTankMass, 0, 100))
+    self:SetFuelPercent(math.clamp(self.fuel + removed * 100 / fuelTankMass, 0, 100))
     return removed
 end
 
@@ -165,9 +185,9 @@ Ship.Jettison = function (self,equip)
 		self:SpawnCargo(equip)
 		Event.Queue("onJettison", self, equip)
 	elseif self.flightState == "DOCKED" then
-		Event.Queue("onCargoUnload", self, equip)
-	else -- LANDED
-		Event.Queue("onCargoUnload", self, equip)
+		Event.Queue("onCargoUnload", self:GetDockedWith(), equip)
+	elseif self.flightState == "LANDED" then
+		Event.Queue("onCargoUnload", self.frameBody, equip)
 	end
 end
 
@@ -218,7 +238,7 @@ Ship.Enroll = function (self,newCrewMember)
 		error("Ship:Enroll: newCrewMember must be a Character object")
 	end
 	if not CrewRoster[self] then CrewRoster[self] = {} end
-	if #CrewRoster[self] < ShipType.GetShipType(self.shipId).maxCrew
+	if #CrewRoster[self] < ShipDef[self.shipId].maxCrew
 	and isNotAlreadyEnrolled(newCrewMember)
 	then
 		newCrewMember:CheckOut() -- Don't want other scripts using our crew for missions etc
@@ -298,7 +318,7 @@ end
 --
 Ship.GenerateCrew = function (self)
 	if CrewRoster[self] then return end -- Bottle out if there's ever been a crew
-	for i = 1, ShipType.GetShipType(self.shipId).maxCrew do
+	for i = 1, ShipDef[self.shipId].maxCrew do
 		local newCrew = Character.New()
 		newCrew:RollNew(true)
 		self:Enroll(newCrew)
@@ -356,8 +376,8 @@ end
 --
 Ship.HasCorrectCrew = function (self)
 	return (CrewRoster[self] and (
-		#CrewRoster[self] >= ShipType.GetShipType(self.shipId).minCrew and
-		#CrewRoster[self] <= ShipType.GetShipType(self.shipId).maxCrew
+		#CrewRoster[self] >= ShipDef[self.shipId].minCrew and
+		#CrewRoster[self] <= ShipDef[self.shipId].maxCrew
 	))
 end
 
@@ -414,3 +434,5 @@ Event.Register("onEnterSystem", onEnterSystem)
 Event.Register("onShipDestroyed", onShipDestroyed)
 Event.Register("onGameStart", onGameStart)
 Serializer:Register("ShipClass", serialize, unserialize)
+
+return Ship

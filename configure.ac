@@ -65,6 +65,8 @@ dnl ###########################################################################
 dnl Flags and options
 dnl ###########################################################################
 
+STD_CXXFLAGS=
+
 EXTRA_CFLAGS=
 EXTRA_CXXFLAGS=
 EXTRA_CPPFLAGS=
@@ -108,6 +110,17 @@ AC_DEFUN([PIONEER_WARN_CPPFLAG], [_PIONEER_COMPILER_FLAG([CPP], [WARN], [CPP], [
 AC_DEFUN([PIONEER_WARN_C_CXX_FLAG],
 	[_PIONEER_COMPILER_FLAG([C], [WARN], [C], [$1], [$CC/$CXX], [WARN_CXXFLAGS="$WARN_CXXFLAGS $1"])])
 
+dnl Early check for C++11
+dnl     -std=c++11 defines __STRICT_ANSI__, which causes MinGW some problems so use gnu++11 on it instead
+case "$host" in
+  i686-pc-mingw32|x86_64-pc-mingw64)
+	_PIONEER_COMPILER_FLAG([C++], [STD], [CXX], [-std=gnu++11], [$CXX], [], [AC_MSG_ERROR([No compiler support for C++11. Unable to build])])
+	;;
+  *)
+	_PIONEER_COMPILER_FLAG([C++], [STD], [CXX], [-std=c++11], [$CXX], [], [AC_MSG_ERROR([No compiler support for C++11. Unable to build])])
+esac
+
+
 dnl Always add -Wall, where supported
 PIONEER_WARN_C_CXX_FLAG([-Wall])
 
@@ -119,6 +132,8 @@ AC_SUBST([OPTIMISE])
 dnl Debug stuff
 AC_ARG_ENABLE([debug], AS_HELP_STRING([--enable-debug], [Enable debugging code (stack checks, debug tools features, etc)]), [EXTRA_CPPFLAGS="$EXTRA_CPPFLAGS -DDEBUG"])
 AC_ARG_ENABLE([ldb], AS_HELP_STRING([--enable-ldb], [Enable ldb support.]), [EXTRA_CPPFLAGS="$EXTRA_CPPFLAGS -DENABLE_LDB" ; EXTRA_LIBS="$EXTRA_LIBS -lldbcore"])
+AC_ARG_ENABLE([profiler], AS_HELP_STRING([--enable-profiler], [Enable internal profiler]), [EXTRA_CPPFLAGS="$EXTRA_CPPFLAGS -DPIONEER_PROFILER"])
+
 AC_ARG_WITH([fno-inline],  AS_HELP_STRING([--with-fno-inline], [Compile without inlining. Helps debugging segaults that occur in STL code]), [PIONEER_C_CXX_FLAG([-fno-inline])])
 AC_ARG_WITH([gprof],       AS_HELP_STRING([--with-gprof], [Compile with gprof profiler]), [PIONEER_C_CXX_FLAG([-pg])])
 
@@ -146,6 +161,8 @@ AC_ARG_WITH([version], AS_HELP_STRING([--with-version], [Game version]), [PIONEE
 AC_ARG_WITH([extra-version], AS_HELP_STRING([--with-extra-version], [Additional version info]), [PIONEER_EXTRAVERSION=$withval])
 
 EXTRA_CPPFLAGS="$EXTRA_CPPFLAGS -DPIONEER_VERSION=\\\"$PIONEER_VERSION\\\" -DPIONEER_EXTRAVERSION=\\\"$PIONEER_EXTRAVERSION\\\""
+
+EXTRA_CPPFLAGS="$EXTRA_CPPFLAGS -DGLEW_STATIC"
 
 
 dnl Compiler warning options
@@ -181,6 +198,13 @@ if test "x$with_extra_warnings" != xno; then
   ; do
     PIONEER_WARN_CXXFLAG([$warn_opt])
   done
+fi
+
+dnl Add some useful args for clang under ccache
+dnl http://petereisentraut.blogspot.com.au/2011/05/ccache-and-clang.html
+if test "x$CCACHE" != x; then
+    PIONEER_C_CXX_FLAG([-Qunused-arguments])
+    PIONEER_C_CXX_FLAG([-fcolor-diagnostics])
 fi
 
 dnl Data files directory
@@ -227,7 +251,7 @@ dnl Check for sigc++
 PKG_CHECK_MODULES([SIGC], [sigc++-2.0])
 
 dnl Check for SDL
-PKG_CHECK_MODULES([SDL], [sdl SDL_image])
+PKG_CHECK_MODULES([SDL2], [sdl2 SDL2_image])
 
 dnl Check for Freetype
 PKG_CHECK_MODULES([FREETYPE], [freetype2])
@@ -297,14 +321,8 @@ dnl Check for OpenGL libs
 if test "x$MXE_CROSS" = "xyes" ; then
 	AC_SUBST([GL_CFLAGS], [])
 	AC_SUBST([GL_LIBS], [-lopengl32])
-	AC_SUBST([GLU_CFLAGS], [])
-	AC_SUBST([GLU_LIBS], [-lglu32])
-	AC_SUBST([GLEW_CFLAGS], [-DGLEW_BUILD])
-	AC_SUBST([GLEW_LIBS], [-lglew32s])
 else
 	PIONEER_CHECK_LIB([GL],   [gl],   [GL],   [glBegin])
-	PIONEER_CHECK_LIB([GLU],  [glu],  [GLU],  [gluSphere])
-	PIONEER_CHECK_LIB([GLEW], [glew], [GLEW], [glewInit])
 fi
 
 dnl ###########################################################################
@@ -352,6 +370,8 @@ if test "x$CCACHE" != x; then
     CXX="$CCACHE $CXX"
 fi
 
+AC_SUBST([STD_CXXFLAGS])
+
 AC_SUBST([EXTRA_CFLAGS])
 AC_SUBST([EXTRA_CXXFLAGS])
 AC_SUBST([EXTRA_CPPFLAGS])
@@ -380,8 +400,11 @@ AC_CONFIG_FILES([
 	contrib/lua/Makefile
 	contrib/miniz/Makefile
 	contrib/jenkins/Makefile
+	contrib/json/Makefile
 	contrib/PicoDDS/Makefile
 	contrib/vcacheopt/Makefile
+	contrib/glew/Makefile
+	contrib/profiler/Makefile
 	osx/Makefile
 	win32/Makefile])
 AC_OUTPUT

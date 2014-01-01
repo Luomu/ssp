@@ -22,7 +22,6 @@
 #include <assimp/material.h>
 
 namespace {
-
 	class AssimpFileReadStream : public Assimp::IOStream
 	{
 	public:
@@ -113,11 +112,9 @@ namespace {
 	private:
 		FileSystem::FileSource &m_fs;
 	};
-
 } // anonymous namespace
 
 namespace SceneGraph {
-
 Loader::Loader(Graphics::Renderer *r, bool logWarnings)
 : m_renderer(r)
 , m_model(0)
@@ -149,7 +146,7 @@ Model *Loader::LoadModel(const std::string &shortname, const std::string &basepa
 		const std::string &fpath = info.GetPath();
 
 		//check it's the expected type
-		if (info.IsFile() && ends_with(fpath, ".model")) {
+		if (info.IsFile() && ends_with_ci(fpath, ".model")) {
 			//check it's the wanted name & load it
 			const std::string name = info.GetName();
 
@@ -174,7 +171,6 @@ Model *Loader::LoadModel(const std::string &shortname, const std::string &basepa
 				return CreateModel(modelDefinition);
 			}
 		}
-
 	}
 	throw (LoadingError("File not found"));
 }
@@ -228,7 +224,7 @@ Model *Loader::CreateModel(ModelDefinition &def)
 		//the node must be marked transparent when using this material
 		//and should not be mixed with opaque materials
 		if ((*it).opacity < 100)
-			mat->diffuse.a = float((*it).opacity) / 100.f;
+			mat->diffuse.a = (float((*it).opacity) / 100.f) * 255;
 
 		if (!diffTex.empty())
 			mat->texture0 = Graphics::TextureBuilder::Model(diffTex).GetOrCreateTexture(m_renderer, "model");
@@ -327,6 +323,9 @@ Model *Loader::CreateModel(ModelDefinition &def)
 	// If no collision mesh is defined, a simple bounding box will be generated
 	m_model->CreateCollisionMesh();
 
+	// Do an initial animation update to get all the animation transforms correct
+	m_model->UpdateAnimations();
+
 	//find usable pattern textures from the model directory
 	if (patternsUsed) {
 		FindPatterns(model->m_patterns);
@@ -339,10 +338,10 @@ Model *Loader::CreateModel(ModelDefinition &def)
 		}
 
 		//set up some noticeable default colors
-		std::vector<Color4ub> colors;
-		colors.push_back(Color4ub::RED);
-		colors.push_back(Color4ub::GREEN);
-		colors.push_back(Color4ub::BLUE);
+		std::vector<Color> colors;
+		colors.push_back(Color::RED);
+		colors.push_back(Color::GREEN);
+		colors.push_back(Color::BLUE);
 		model->SetColors(colors);
 		model->SetPattern(0);
 	}
@@ -356,7 +355,7 @@ void Loader::FindPatterns(PatternContainer &output)
 		const FileSystem::FileInfo &info = files.Current();
 		if (info.IsFile()) {
 			const std::string &name = info.GetName();
-			if (ends_with(name, ".png") && starts_with(name, "pattern"))
+			if (ends_with_ci(name, ".png") && starts_with(name, "pattern"))
 				output.push_back(Pattern(name, m_curPath, m_renderer));
 		}
 	}
@@ -517,7 +516,7 @@ void Loader::ConvertAiMeshes(std::vector<RefCountedPtr<StaticGeometry> > &geoms,
 
 		//turn on alpha blending and mark entire node as transparent
 		//(all importers split by material so far)
-		if (mat->diffuse.a < 0.99f) {
+		if (mat->diffuse.a < 255) {
 			geom->SetNodeMask(NODE_TRANSPARENT);
 			geom->m_blendMode = Graphics::BLEND_ALPHA;
 		}
@@ -733,13 +732,13 @@ void Loader::CreateLabel(Group *parent, const matrix4x4f &m)
 	parent->AddChild(trans);
 }
 
-void Loader::CreateThruster(const std::string &name, const matrix4x4f &m, const matrix4x4f& accum)
+void Loader::CreateThruster(const std::string &name, const matrix4x4f &m)
 {
 	if (!m_mostDetailedLod) return AddLog("Thruster outside highest LOD, ignored");
 
 	const bool linear = starts_with(name, "thruster_linear");
 
-	matrix4x4f transform = accum * m;
+	matrix4x4f transform = m;
 
 	MatrixTransform *trans = new MatrixTransform(m_renderer, transform);
 
@@ -757,14 +756,14 @@ void Loader::CreateThruster(const std::string &name, const matrix4x4f &m, const 
 	m_thrustersRoot->AddChild(trans);
 }
 
-void Loader::CreateNavlight(const std::string &name, const matrix4x4f &m, const matrix4x4f& accum)
+void Loader::CreateNavlight(const std::string &name, const matrix4x4f &m)
 {
 	if (!m_mostDetailedLod) return AddLog("Navlight outside highest LOD, ignored");
 
 	//Create a MT, lights are attached by client
 	//we only really need the final position, so this is
 	//a waste of transform
-	const matrix4x4f lightPos = matrix4x4f::Translation(accum * m.GetTranslate());
+	const matrix4x4f lightPos = matrix4x4f::Translation(m.GetTranslate());
 	MatrixTransform *lightPoint = new MatrixTransform(m_renderer, lightPos);
 	lightPoint->SetNodeMask(0x0); //don't render
 	lightPoint->SetName(name);
@@ -782,15 +781,13 @@ void Loader::ConvertNodes(aiNode *node, Group *_parent, std::vector<RefCountedPt
 	//lights, and possibly other special nodes should be leaf nodes (without meshes)
 	if (node->mNumChildren == 0 && node->mNumMeshes == 0) {
 		if (starts_with(nodename, "navlight_")) {
-			CreateNavlight(nodename, m, accum);
+			CreateNavlight(nodename, accum*m);
 		} else if (starts_with(nodename, "thruster_")) {
-			CreateThruster(nodename, m, accum);
+			CreateThruster(nodename, accum*m);
 		} else if (starts_with(nodename, "label_")) {
 			CreateLabel(parent, m);
 		} else if (starts_with(nodename, "tag_")) {
-			vector3f tagpos = accum * m.GetTranslate();
-			MatrixTransform *tagMt = new MatrixTransform(m_renderer, matrix4x4f::Translation(tagpos));
-			m_model->AddTag(nodename, tagMt);
+			m_model->AddTag(nodename, new MatrixTransform(m_renderer, accum*m));
 		} else if (starts_with(nodename, "docking_")) {
 			m_model->AddTag(nodename, new MatrixTransform(m_renderer, m));
 		} else if (starts_with(nodename, "leaving_")) {
@@ -813,6 +810,7 @@ void Loader::ConvertNodes(aiNode *node, Group *_parent, std::vector<RefCountedPt
 		RefCountedPtr<Graphics::Surface> surf = geoms.at(node->mMeshes[0])->GetMesh(0)->GetSurface(0);
 		RefCountedPtr<CollisionGeometry> cgeom(new CollisionGeometry(m_renderer, surf.Get(), collflag));
 		cgeom->SetName(nodename + "_cgeom");
+		cgeom->SetDynamic(starts_with(nodename, "collision_d"));
 		parent->AddChild(cgeom.Get());
 		return;
 	}
@@ -909,14 +907,18 @@ void Loader::LoadCollision(const std::string &filename)
 
 unsigned int Loader::GetGeomFlagForNodeName(const std::string &nodename)
 {
-	if (nodename.length() >= 14) {
-		const std::string pad = nodename.substr(13);
-		const int padID = atoi(pad.c_str())-1;
-		if(padID<240) {
-			return 0x10 + padID;
+	//special names after collision_
+	if (nodename.length() > 10) {
+		//landing pads
+		if (nodename.length() >= 14 && nodename.substr(10,3) == "pad") {
+			const std::string pad = nodename.substr(13);
+			const int padID = atoi(pad.c_str())-1;
+			if(padID<240) {
+				return 0x10 + padID;
+			}
 		}
 	}
+	//anything else is static collision
 	return 0x0;
 }
-
 }

@@ -12,6 +12,7 @@ struct EnumTable { const char *name; const EnumItem *first; };
 
 extern const struct EnumItem ENUM_EquipSlot[];
 extern const struct EnumItem ENUM_EquipType[];
+extern const struct EnumItem ENUM_DetailLevel[];
 extern const struct EnumItem ENUM_FileSystemRoot[];
 extern const struct EnumItem ENUM_PolitCrime[];
 extern const struct EnumItem ENUM_PolitEcon[];
@@ -34,10 +35,13 @@ extern const struct EnumItem ENUM_UIKeyboardAction[];
 extern const struct EnumItem ENUM_UIMouseButtonAction[];
 extern const struct EnumItem ENUM_UIMouseButtonType[];
 extern const struct EnumItem ENUM_UIMouseWheelDirection[];
+extern const struct EnumItem ENUM_UIJoystickHatDirection[];
+extern const struct EnumItem ENUM_UIJoystickButtonAction[];
 extern const struct EnumItem ENUM_UIExpandDirection[];
 extern const struct EnumItem ENUM_UIGradientDirection[];
 extern const struct EnumItem ENUM_UIMarginDirection[];
 extern const struct EnumItem ENUM_UINumberLabelFormat[];
+extern const struct EnumItem ENUM_UITableRowAlignDirection[];
 extern const struct EnumItem ENUM_UISizeControl[];
 extern const struct EnumItem ENUM_UIFont[];
 

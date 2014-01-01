@@ -8,6 +8,15 @@
 #include "lua/lua.hpp"
 #include "utils.h"
 
+namespace FileSystem { class FileData; }
+
+inline void pi_lua_settable(lua_State *l, const char *key, bool value)
+{
+	lua_pushstring(l, key);
+	lua_pushboolean(l, value);
+	lua_rawset(l, -3);
+}
+
 inline void pi_lua_settable(lua_State *l, const char *key, int value)
 {
 	lua_pushstring(l, key);
@@ -57,12 +66,17 @@ void pi_lua_readonly_table_proxy(lua_State *l, int index);
 // pushes the underlying (read-write) table pointed to by the proxy at <index>
 void pi_lua_readonly_table_original(lua_State *l, int index);
 
+bool pi_lua_import(lua_State *l, const std::string &importName);
+
 int  pi_lua_panic(lua_State *l) __attribute((noreturn));
 void pi_lua_protected_call(lua_State* state, int nargs, int nresults);
+int pi_lua_loadfile(lua_State *l, const FileSystem::FileData &code);
 void pi_lua_dofile(lua_State *l, const std::string &path);
 void pi_lua_dofile_recursive(lua_State *l, const std::string &basepath);
 
 void pi_lua_warn(lua_State *l, const char *format, ...) __attribute((format(printf,2,3)));
+
+bool pi_lua_split_table_path(lua_State *l, const std::string &path);
 
 #ifdef DEBUG
 #include <stdlib.h> // for abort()

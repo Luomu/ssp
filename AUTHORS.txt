@@ -11,6 +11,7 @@ The Pioneer Developers are:
 * Alessandro Giachi
 * Andrew Cook
 * Andrew Copland
+* Antti Salonen
 * Asier Basagoiti
 * Benamucki
 * Benjamin Hodgetts
@@ -43,10 +44,12 @@ The Pioneer Developers are:
 * Lars Westerhoff
 * Lee Reilly
 * Leonardo Manna
+* Luca Ganzerla
 * Maksim Kulikov aka sapog662
 * Marcel Tulloh
 * Marcus de Roos
 * Michele Botticelli
+* Miha Vitorovič
 * Nic
 * Oleg Ovcharenko
 * Paul Mahol
@@ -56,6 +59,7 @@ The Pioneer Developers are:
 * Phil Howlett
 * Piotr Gredka
 * Radek Valášek aka vaLin
+* Rémi Boutemy
 * Robert Norris
 * Robert Pallier
 * Roland Mas
@@ -70,6 +74,7 @@ The Pioneer Developers are:
 * Thierry Dupré
 * Tim Jones
 * Tom Morton
+* Torham2234
 * Ulf Pettersson
 * Uncle Bob
 * Vincent Teerling
@@ -92,6 +97,12 @@ Pioneer includes the following third-party software:
   Copyright (C) 1994-2012 Lua.org, PUC-Rio
   Licensed under the MIT licence (see contrib/lua/lua.h)
 
+  GLEW: The OpenGL Extension Wrangler
+  Copyright (C) 2002-2008, Milan Ikits <milan ikits[]ieee org>
+  Copyright (C) 2002-2008, Marcelo E. Magallon <mmagallo[]debian org>
+  Copyright (C) 2002, Lev Povalahev
+  Licensed under the Modified BSD licence (see licenses/GLEW.txt)
+
   miniz by Rich Geldreich, April 2012
   Public domain (see contrib/miniz/miniz.h)
 
@@ -109,6 +120,14 @@ Pioneer includes the following third-party software:
          Copyright (C) 2006, 2007 Michael P. Jung
   GTL and PicoDDS are licensed under the zlib License
     (see contrib/PicoDDS/PicoDDS.h)
+
+  jsoncpp
+  Copyright (c) 2007-2010 Baptiste Lepilleur
+  Licensed under the MIT licence (see contrib/json/json.h)
+
+  High Performance C++ Profiler
+  https://code.google.com/p/high-performance-cplusplus-profiler/
+  Licensed under the MIT license
 
   Titillium Text font
   Copyright (C) 2007-2009 Academia di Belle Arte di Urbino - Campivisivi

@@ -149,6 +149,35 @@
  */
 
 /*
+ * Attribute: effectiveExhaustVelocity
+ *
+ * Ship thruster efficiency as the effective exhaust velocity in m/s.
+ * See http://en.wikipedia.org/wiki/Specific_impulse for an explanation of this value.
+ *
+ * Availability:
+ *
+ *   November 2013
+ *
+ * Status:
+ *
+ *   experimental
+ */
+
+/*
+ * Attribute: thrusterFuelUse
+ *
+ * Ship thruster efficiency as a percentage-of-tank-used per second of thrust.
+ *
+ * Availability:
+ *
+ *   November 2013
+ *
+ * Status:
+ *
+ *   experimental
+ */
+
+/*
  * Attribute: equipSlotCapacity
  *
  * Table keyed on <Constants.EquipSlot>, containing maximum number of items
@@ -178,15 +207,20 @@ void LuaShipDef::Register()
 
 		pi_lua_settable(l, "id",                (*i).first.c_str());
 		pi_lua_settable(l, "name",              st.name.c_str());
+		pi_lua_settable(l, "shipClass",         st.shipClass.c_str());
+		pi_lua_settable(l, "manufacturer",      st.manufacturer.c_str());
 		pi_lua_settable(l, "modelName",         st.modelName.c_str());
 		pi_lua_settable(l, "tag",               EnumStrings::GetString("ShipTypeTag", st.tag));
 		pi_lua_settable(l, "angularThrust",     st.angThrust);
 		pi_lua_settable(l, "capacity",          st.capacity);
 		pi_lua_settable(l, "hullMass",          st.hullMass);
+		pi_lua_settable(l, "fuelTankMass",      st.fuelTankMass);
 		pi_lua_settable(l, "basePrice",         double(st.baseprice)*0.01);
 		pi_lua_settable(l, "minCrew",           st.minCrew);
 		pi_lua_settable(l, "maxCrew",           st.maxCrew);
 		pi_lua_settable(l, "defaultHyperdrive", EnumStrings::GetString("EquipType", st.hyperdrive));
+		pi_lua_settable(l, "effectiveExhaustVelocity", st.effectiveExhaustVelocity);
+		pi_lua_settable(l, "thrusterFuelUse",   st.GetFuelUseRate());
 
 		lua_newtable(l);
 		for (int t = ShipType::THRUSTER_REVERSE; t < ShipType::THRUSTER_MAX; t++)
@@ -207,9 +241,10 @@ void LuaShipDef::Register()
 		lua_pop(l, 1);
 	}
 
-	pi_lua_readonly_table_proxy(l, -1);
-	lua_setglobal(l, "ShipDef");
-	lua_pop(l, 1);
+	lua_getfield(l, LUA_REGISTRYINDEX, "CoreImports");
+	pi_lua_readonly_table_proxy(l, -2);
+	lua_setfield(l, -2, "ShipDef");
+	lua_pop(l, 2);
 
 	LUA_DEBUG_END(l, 0);
 }

@@ -19,15 +19,32 @@ namespace RawEvents {
 	sigc::signal<void, SDL_JoyHatEvent *> onJoyHatMotion;
 }
 
+static Sint32 lastMouseX, lastMouseY;
 void HandleSDLEvent(SDL_Event *event)
 {
+	PROFILE_SCOPED()
 	switch (event->type) {
 		case SDL_MOUSEBUTTONDOWN:
+			lastMouseX = event->button.x;
+			lastMouseY = event->button.y;
 			Screen::OnClick(&event->button);
 			break;
 		case SDL_MOUSEBUTTONUP:
+			lastMouseX = event->button.x;
+			lastMouseY = event->button.y;
 			Screen::OnClick(&event->button);
 			break;
+		case SDL_MOUSEWHEEL: {
+			// synthesizing an SDL1.2-style button event for mouse wheels
+			SDL_MouseButtonEvent ev;
+            ev.type = SDL_MOUSEBUTTONDOWN;
+			ev.button = event->wheel.y > 0 ? MouseButtonEvent::BUTTON_WHEELUP : MouseButtonEvent::BUTTON_WHEELDOWN;
+			ev.state = SDL_PRESSED;
+			ev.x = lastMouseX;
+			ev.y = lastMouseY;
+			Screen::OnClick(&ev);
+			break;
+		 }
 		case SDL_KEYDOWN:
 			Screen::OnKeyDown(&event->key.keysym);
 			RawEvents::onKeyDown.emit(&event->key);
@@ -36,7 +53,12 @@ void HandleSDLEvent(SDL_Event *event)
 			Screen::OnKeyUp(&event->key.keysym);
 			RawEvents::onKeyUp.emit(&event->key);
 			break;
+		case SDL_TEXTINPUT:
+			Screen::OnTextInput(&event->text);
+			break;
 		case SDL_MOUSEMOTION:
+			lastMouseX = event->motion.x;
+			lastMouseY = event->motion.y;
 			Screen::OnMouseMotion(&event->motion);
 			break;
 		case SDL_JOYAXISMOTION:
@@ -72,6 +94,7 @@ sigc::connection AddTimer(Uint32 ms, sigc::slot<void> slot)
 
 void Draw()
 {
+	PROFILE_SCOPED()
 	Uint32 t = SDL_GetTicks();
 	// also abused like an update() function...
 	for (std::list<TimerSignal*>::iterator i = g_timeSignals.begin(); i != g_timeSignals.end();) {
@@ -90,7 +113,6 @@ void Draw()
 
 void Init(Graphics::Renderer *renderer, int screen_width, int screen_height, int ui_width, int ui_height)
 {
-	SDL_EnableUNICODE(1);
 	Screen::Init(renderer, screen_width, screen_height, ui_width, ui_height);
 }
 
@@ -104,10 +126,15 @@ void Uninit()
 
 void MainLoopIteration()
 {
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
+	PROFILE_SCOPED()
+
+	Graphics::Renderer *r = Gui::Screen::GetRenderer();
+
+	r->SetMatrixMode(Graphics::MatrixMode::PROJECTION);
+	r->LoadIdentity();
+	r->SetMatrixMode(Graphics::MatrixMode::MODELVIEW);
+	r->LoadIdentity();
+
 	glClearColor(0,0,0,0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	// handle events
@@ -121,16 +148,16 @@ void MainLoopIteration()
 	}
 
 	SDL_ShowCursor(1);
-	SDL_WM_GrabInput(SDL_GRAB_OFF);
+	r->GetWindow()->SetGrab(false);
 	Gui::Draw();
-	SDL_GL_SwapBuffers();
+	r->GetWindow()->SwapBuffers();
 }
 
 namespace Theme {
 	namespace Colors {
-		const Color bg(.25f, .37f, .63f);
-		const Color bgShadow(.08f, .12f, .21f);
-		const Color tableHeading(.7f, .7f, 1.0f);
+		const Color bg(64, 94, 161);
+		const Color bgShadow(20, 31, 54);
+		const Color tableHeading(178, 178, 255);
 	}
 	static const float BORDER_WIDTH = 2.0;
 
@@ -199,11 +226,11 @@ namespace Theme {
 			4,5,6,7 };
 		glEnableClientState(GL_VERTEX_ARRAY);
 		glVertexPointer(2, GL_FLOAT, 0, vertices);
-		glColor3fv(Colors::bgShadow);
+		glColor3ub(Colors::bgShadow.r, Colors::bgShadow.g, Colors::bgShadow.b);
 		glDrawElements(GL_QUADS, 8, GL_UNSIGNED_BYTE, indices);
-		glColor3f(.6f,.6f,.6f);
+		glColor3ub(153,153,153);
 		glDrawElements(GL_QUADS, 8, GL_UNSIGNED_BYTE, indices+8);
-		glColor3fv(Colors::bg);
+		glColor3ub(Colors::bg.r, Colors::bg.g, Colors::bg.b);
 		glDrawElements(GL_QUADS, 4, GL_UNSIGNED_BYTE, indices+16);
 		glDisableClientState(GL_VERTEX_ARRAY);
 	}
@@ -224,11 +251,11 @@ namespace Theme {
 			4,5,6,7 };
 		glEnableClientState(GL_VERTEX_ARRAY);
 		glVertexPointer(2, GL_FLOAT, 0, vertices);
-		glColor3f(.6f,.6f,.6f);
+		glColor3ub(153,153,153);
 		glDrawElements(GL_QUADS, 8, GL_UNSIGNED_BYTE, indices);
-		glColor3fv(Colors::bgShadow);
+		glColor3ub(Colors::bgShadow.r, Colors::bgShadow.g, Colors::bgShadow.b);
 		glDrawElements(GL_QUADS, 8, GL_UNSIGNED_BYTE, indices+8);
-		glColor3fv(Colors::bg);
+		glColor3ub(Colors::bg.r, Colors::bg.g, Colors::bg.b);
 		glDrawElements(GL_QUADS, 4, GL_UNSIGNED_BYTE, indices+16);
 		glDisableClientState(GL_VERTEX_ARRAY);
 	}

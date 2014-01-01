@@ -3,16 +3,15 @@
 
 #include "Colors.h"
 #include "GalacticView.h"
-#include "GameMenuView.h"
 #include "Lang.h"
 #include "Pi.h"
 #include "Player.h"
 #include "SectorView.h"
 #include "ShipCpanel.h"
-#include "SpaceStation.h"
-#include "SpaceStationView.h"
 #include "SystemInfoView.h"
 #include "SystemView.h"
+#include "SystemInfoView.h"
+#include "GalacticView.h"
 #include "UIView.h"
 
 ShipCpanel::ShipCpanel(Graphics::Renderer *r): Gui::Fixed(float(Gui::Screen::GetWidth()), 80)
@@ -139,7 +138,7 @@ void ShipCpanel::InitObject()
 	comms_button->SetRenderDimensions(30, 22);
 	Add(comms_button, 98, 56);
 
-	m_clock = (new Gui::Label(""))->Color(1.0f,0.7f,0.0f);
+	m_clock = (new Gui::Label(""))->Color(255,178,0);
 	Add(m_clock, 4, 18);
 
 	m_rightButtonGroup = new Gui::RadioGroup();
@@ -207,7 +206,7 @@ void ShipCpanel::InitObject()
 	Add(m_overlay[OVERLAY_TOP_LEFT],     170.0f, 2.0f);
 	Add(m_overlay[OVERLAY_TOP_RIGHT],    500.0f, 2.0f);
 	Add(m_overlay[OVERLAY_BOTTOM_LEFT],  150.0f, 62.0f);
-	Add(m_overlay[OVERLAY_BOTTOM_RIGHT], 580.0f, 62.0f);
+	Add(m_overlay[OVERLAY_BOTTOM_RIGHT], 520.0f, 62.0f);
 
 	m_connOnDockingClearanceExpired =
 		Pi::onDockingClearanceExpired.connect(sigc::mem_fun(this, &ShipCpanel::OnDockingClearanceExpired));
@@ -265,6 +264,7 @@ void ShipCpanel::OnDockingClearanceExpired(const SpaceStation *s)
 
 void ShipCpanel::Update()
 {
+	PROFILE_SCOPED()
 	int timeAccel = Pi::game->GetTimeAccel();
 	int requested = Pi::game->GetRequestedTimeAccel();
 
@@ -343,13 +343,13 @@ void ShipCpanel::OnClickTimeaccel(Game::TimeAccel val)
 {
 	Pi::BoinkNoise();
 	if ((Pi::game->GetTimeAccel() == val) && (val == Game::TIMEACCEL_PAUSED)) {
-		if (Pi::GetView() != Pi::gameMenuView)
-			Pi::SetView(Pi::gameMenuView);
+		if (Pi::GetView() != Pi::settingsView)
+			Pi::SetView(Pi::settingsView);
 		else
 			Pi::SetView(Pi::worldView);
 	}
 	else {
-		if (Pi::GetView() == Pi::gameMenuView)
+		if (Pi::GetView() == Pi::settingsView)
 			Pi::SetView(Pi::worldView);
 		Pi::game->RequestTimeAccel(val, Pi::KeyState(SDLK_LCTRL) || Pi::KeyState(SDLK_RCTRL));
 	}
@@ -398,6 +398,7 @@ void ShipCpanel::SetAlertState(Ship::AlertState as)
 
 void ShipCpanel::TimeStepUpdate(float step)
 {
+	PROFILE_SCOPED()
 	m_scanner->TimeStepUpdate(step);
 }
 

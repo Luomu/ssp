@@ -1,11 +1,20 @@
 -- Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
 -- Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
+local Engine = import("Engine")
+local Lang = import("Lang")
+local Game = import("Game")
+local Ship = import("Ship")
+local Player = import("Player")
+local SystemPath = import("SystemPath")
+local ErrorScreen = import("ErrorScreen")
+
 local ui = Engine.ui
-local t = Translate:GetTranslator()
+local l = Lang.GetResource("ui-core");
 
 local setupPlayerWave = function ()
 	Game.player:SetShipType("wave")
+	Game.player:SetLabel(Ship.MakeRandomLabel())
 	Game.player:AddEquip("PULSECANNON_1MW")
 	Game.player:AddEquip("ATMOSPHERIC_SHIELDING")
 	Game.player:AddEquip("AUTOPILOT")
@@ -15,26 +24,45 @@ local setupPlayerWave = function ()
 	Game.player:SetMoney(100)
 end
 
+local loadGame = function (path)
+	local ok, err = pcall(Game.LoadGame, path)
+	if not ok then
+		ErrorScreen.ShowError(l.COULD_NOT_LOAD_GAME .. err)
+	end
+end
+
 local doLoadDialog = function ()
-	ui:SetInnerWidget(
+	ui:NewLayer(
 		ui.templates.FileDialog({
-			title       = t("Select game to load..."),
+			title       = l.LOAD,
+			helpText    = l.SELECT_GAME_TO_LOAD,
 			path        = "savefiles",
-			selectLabel = t("Load game"),
-			onSelect    = function (filename) Game.LoadGame(filename) end,
-			onCancel    = function () ui:SetInnerWidget(ui.templates.MainMenu()) end
+			selectLabel = l.LOAD_GAME,
+			onSelect    = loadGame,
+			onCancel    = function () ui:DropLayer() end
+		})
+	)
+end
+
+local doSettingsScreen = function()
+	ui.layer:SetInnerWidget(
+		ui.templates.Settings({
+			closeButtons = {
+				{ text = l.RETURN_TO_MENU, onClick = function () ui.layer:SetInnerWidget(ui.templates.MainMenu()) end }
+			}
 		})
 	)
 end
 
 local buttonDefs = {
-	{ t("Start at Tau Ceti"), function () Game.StartGame(SystemPath.New(0,-2,-1,1,6)) setupPlayerWave() end },
-	{ t("Start at Gliese 1"), function () Game.StartGame(SystemPath.New(0,-2,-2,0,1)) setupPlayerWave() end },
-	{ t("Start at Earth"),    function () Game.StartGame(SystemPath.New(0,0,0,0,9))   setupPlayerWave() end },
-	{ t("Start at New Hope"), function () Game.StartGame(SystemPath.New(1,-1,-1,0,4)) setupPlayerWave() end },
-	{ t("Load game"),         doLoadDialog },
-	{ t("Options"),           function () Engine.SettingsView() end },
-	{ t("Quit"),              function () Engine.Quit() end },
+	--{ t("Start at Tau Ceti"), function () Game.StartGame(SystemPath.New(0,-2,-1,1,6)) setupPlayerWave() end },
+	--{ t("Start at Gliese 1"), function () Game.StartGame(SystemPath.New(0,-2,-2,0,1)) setupPlayerWave() end },
+	{ l.START_AT_EARTH,    function () Game.StartGame(SystemPath.New(0,0,0,0,9))   setupPlayerWave() end },
+	{ l.START_AT_NEW_HOPE, function () Game.StartGame(SystemPath.New(1,-1,-1,0,4)) setupPlayerWave() end },
+	{ l.START_AT_BARNARDS_STAR, function () Game.StartGame(SystemPath.New(-1,0,0,0,1)) setupPlayerWave() end },
+	{ l.LOAD_GAME,         doLoadDialog },
+	{ l.OPTIONS,           doSettingsScreen },
+	{ l.QUIT,              function () Engine.Quit() end },
 }
 
 

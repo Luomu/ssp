@@ -11,6 +11,7 @@
 #include "galaxy/SystemPath.h"
 #include "HudTrail.h"
 #include "NavLights.h"
+#include "Planet.h"
 #include "scenegraph/ModelSkin.h"
 #include "scenegraph/SceneGraph.h"
 #include "Sensors.h"
@@ -27,7 +28,6 @@ class Missile;
 namespace Graphics { class Renderer; }
 
 struct shipstats_t {
-	int max_capacity;
 	int used_capacity;
 	int used_cargo;
 	int free_capacity;
@@ -37,9 +37,7 @@ struct shipstats_t {
 	float hyperspace_range_max;
 	float shield_mass;
 	float shield_mass_left;
-	float fuel_tank_mass; //thruster, not hyperspace fuel
 	float fuel_tank_mass_left;
-	float fuel_use; // percentage (ie, 0--100) of tank used per second at full thrust
 };
 
 class SerializableEquipSet: public EquipSet {
@@ -67,6 +65,9 @@ public:
 	/** Use GetDockedWith() to determine if docked */
 	SpaceStation *GetDockedWith() const { return m_dockedWith; }
 	int GetDockingPort() const { return m_dockedWithPort; }
+
+	virtual void SetLandedOn(Planet *p, float latitude, float longitude);
+
 	virtual void Render(Graphics::Renderer *r, const Camera *camera, const vector3d &viewCoords, const matrix4x4d &viewTransform);
 
 	void SetThrusterState(int axis, double level) {
@@ -216,12 +217,11 @@ public:
 	void SetSkin(const SceneGraph::ModelSkin &skin);
 
 	void SetLabel(const std::string &label);
-	static std::string MakeRandomLabel(); // XXX doesn't really belong here
 
 	float GetPercentShields() const;
 	float GetPercentHull() const;
 	void SetPercentHull(float);
-	float GetGunTemperature(int idx) const { return m_gunTemperature[idx]; }
+	float GetGunTemperature(int idx) const { return m_gun[idx].temperature; }
 	virtual Uint8 GetIntegrity() const;
 
 	enum FuelState { // <enum scope='Ship' name=ShipFuelStatus prefix=FUEL_ public>
@@ -237,8 +237,7 @@ public:
 	double GetFuelReserve() const { return m_reserveFuel; }
 	void SetFuelReserve(const double f) { m_reserveFuel = Clamp(f, 0.0, 1.0); }
 
-	// percentage (ie, 0--100) of tank used per second at full thrust
-	double GetFuelUseRate() const;
+	// available delta-V given the ship's current fuel state
 	double GetSpeedReachedWithFuel() const;
 
 	void EnterSystem();
@@ -260,7 +259,7 @@ public:
 	virtual Body *GetCombatTarget() const { return 0; }
 	virtual Body *GetNavTarget() const { return 0; }
 
-	Sensors *GetSensors() const { return m_sensors.Get(); }
+	Sensors *GetSensors() const { return m_sensors.get(); }
 
 	Uint8 GetRelations(Body *other) const; //0=hostile, 50=neutral, 100=ally
 	void SetRelations(Body *other, Uint8 percent);
@@ -279,9 +278,16 @@ protected:
 
 	SpaceStation *m_dockedWith;
 	int m_dockedWithPort;
-	Uint32 m_gunState[ShipType::GUNMOUNT_MAX];
-	float m_gunRecharge[ShipType::GUNMOUNT_MAX];
-	float m_gunTemperature[ShipType::GUNMOUNT_MAX];
+
+	struct Gun {
+		vector3f pos;
+		vector3f dir;
+		Uint32 state;
+		float recharge;
+		float temperature;
+	};
+	Gun m_gun[ShipType::GUNMOUNT_MAX];
+
 	float m_ecmRecharge;
 
 	ShipController *m_controller;
@@ -298,6 +304,7 @@ private:
     void SetShipId(const ShipType::Id &shipId);
 	void OnEquipmentChange(Equip::Type e);
 	void EnterHyperspace();
+	void InitGun(const char *tag, int num);
 
 	bool m_invulnerable;
 
@@ -336,8 +343,8 @@ private:
 	int m_dockedWithIndex; // deserialisation
 
 	SceneGraph::Animation *m_landingGearAnimation;
-	ScopedPtr<NavLights> m_navLights;
-	ScopedPtr<Sensors> m_sensors;
+	std::unique_ptr<NavLights> m_navLights;
+	std::unique_ptr<Sensors> m_sensors;
 
 	bool m_targetInSight;
 

@@ -10,7 +10,7 @@ namespace Drawables {
 
 Disk::Disk(Graphics::Renderer *r, const Color &c, float rad)
 {
-	m_vertices.Reset(new VertexArray(ATTRIB_POSITION));
+	m_vertices.reset(new VertexArray(ATTRIB_POSITION));
 	m_material.Reset(r->CreateMaterial(MaterialDescriptor()));
 	m_material->diffuse = c;
 
@@ -23,12 +23,26 @@ Disk::Disk(Graphics::Renderer *r, const Color &c, float rad)
 	}
 }
 
-void Disk::Draw(Renderer *r)
+Disk::Disk(RefCountedPtr<Material> material, const int numEdges/*=72*/, const float radius/*=1.0f*/) : m_material(material)
 {
-	r->DrawTriangles(m_vertices.Get(), m_material.Get(), TRIANGLE_FAN);
+	m_vertices.reset(new VertexArray(ATTRIB_POSITION));
+
+	m_vertices->Add(vector3f(0.f, 0.f, 0.f));
+	const float edgeStep = 360.0f / float(numEdges);
+	for (int i = numEdges; i >= 0; i--) {
+		m_vertices->Add(vector3f(
+			0.f+sinf(DEG2RAD(i*edgeStep))*radius,
+			0.f+cosf(DEG2RAD(i*edgeStep))*radius,
+			0.f));
+	}
 }
 
-void Disk::SetColor(const Color4f &c)
+void Disk::Draw(Renderer *r)
+{
+	r->DrawTriangles(m_vertices.get(), m_material.Get(), TRIANGLE_FAN);
+}
+
+void Disk::SetColor(const Color &c)
 {
 	m_material->diffuse = c;
 }
@@ -37,8 +51,8 @@ Line3D::Line3D()
 {
 	m_points[0] = vector3f(0.f);
 	m_points[1] = vector3f(0.f);
-	m_colors[0] = Color(0.f);
-	m_colors[1] = Color(1.f);
+	m_colors[0] = Color(0);
+	m_colors[1] = Color(255);
 	m_width     = 2.f; // XXX bug in Radeon drivers will cause crash in glLineWidth if width >= 3
 }
 
@@ -90,7 +104,7 @@ Sphere3D::Sphere3D(RefCountedPtr<Material> mat, int subdivs, float scale)
 	scale = fabs(scale);
 	matrix4x4f trans = matrix4x4f::Identity();
 	trans.Scale(scale, scale, scale);
-	m_surface.Reset(new Surface(TRIANGLES, new VertexArray(ATTRIB_POSITION | ATTRIB_NORMAL | ATTRIB_UV0), mat));
+	m_surface.reset(new Surface(TRIANGLES, new VertexArray(ATTRIB_POSITION | ATTRIB_NORMAL | ATTRIB_UV0), mat));
 
 	//initial vertices
 	int i;
@@ -114,7 +128,7 @@ Sphere3D::Sphere3D(RefCountedPtr<Material> mat, int subdivs, float scale)
 
 void Sphere3D::Draw(Renderer *r)
 {
-	r->DrawSurface(m_surface.Get());
+	r->DrawSurface(m_surface.get());
 }
 
 int Sphere3D::AddVertex(const vector3f &v, const vector3f &n)
@@ -157,10 +171,10 @@ void Sphere3D::Subdivide(const matrix4x4f &trans, const vector3f &v1, const vect
 // a textured quad with reversed winding
 TexturedQuad::TexturedQuad(Graphics::Renderer *r, Graphics::Texture *texture, const vector2f &pos, const vector2f &size) : m_texture(RefCountedPtr<Graphics::Texture>(texture)) 
 {
-	m_vertices.Reset(new VertexArray(ATTRIB_POSITION | ATTRIB_UV0));
+	m_vertices.reset(new VertexArray(ATTRIB_POSITION | ATTRIB_UV0));
 	Graphics::MaterialDescriptor desc;
 	desc.textures = 1;
-	m_material.Reset(r->CreateMaterial(desc));
+	m_material.reset(r->CreateMaterial(desc));
 	m_material->texture0 = m_texture.Get();
 
 	// these might need to be reversed

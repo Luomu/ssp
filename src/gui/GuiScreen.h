@@ -23,15 +23,16 @@ namespace Gui {
 		static void RemoveBaseWidget(Widget *w);
 		static void OnMouseMotion(SDL_MouseMotionEvent *e);
 		static void OnClick(SDL_MouseButtonEvent *e);
-		static void OnKeyDown(const SDL_keysym *sym);
-		static void OnKeyUp(const SDL_keysym *sym);
+		static void OnKeyDown(const SDL_Keysym *sym);
+		static void OnKeyUp(const SDL_Keysym *sym);
+		static void OnTextInput(const SDL_TextInputEvent *e);
 		static void EnterOrtho();
 		static void LeaveOrtho();
 		static int GetWidth() { return width; }
 		static int GetHeight() { return height; }
 		// gluProject but fixes UI/screen size mismatch
 		static bool Project(const vector3d &in, vector3d &out);
-		friend void Widget::SetShortcut(SDLKey key, SDLMod mod);
+		friend void Widget::SetShortcut(SDL_Keycode key, SDL_Keymod mod);
 		friend Widget::~Widget();
 		static bool IsBaseWidget(const Widget *);
 		static void GetCoords2Pixels(float scale[2]) {
@@ -79,8 +80,8 @@ namespace Gui {
 		static Gui::Fixed *baseContainer;
 		static Gui::Widget *focusedWidget;
 		static void OnDeleteFocusedWidget();
-		static GLdouble modelMatrix[16];
-		static GLdouble projMatrix[16];
+		static matrix4x4f modelMatrix;
+		static matrix4x4f projMatrix;
 		static GLint viewport[4];
 
 		static FontCache s_fontCache;

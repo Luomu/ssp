@@ -22,10 +22,10 @@
 #include "graphics/VertexArray.h"
 #include "graphics/TextureBuilder.h"
 
-ScopedPtr<Graphics::VertexArray> Projectile::s_sideVerts;
-ScopedPtr<Graphics::VertexArray> Projectile::s_glowVerts;
-ScopedPtr<Graphics::Material> Projectile::s_sideMat;
-ScopedPtr<Graphics::Material> Projectile::s_glowMat;
+std::unique_ptr<Graphics::VertexArray> Projectile::s_sideVerts;
+std::unique_ptr<Graphics::VertexArray> Projectile::s_glowVerts;
+std::unique_ptr<Graphics::Material> Projectile::s_sideMat;
+std::unique_ptr<Graphics::Material> Projectile::s_glowMat;
 
 void Projectile::BuildModel()
 {
@@ -33,8 +33,8 @@ void Projectile::BuildModel()
 	Graphics::MaterialDescriptor desc;
 	desc.textures = 1;
 	desc.twoSided = true;
-	s_sideMat.Reset(Pi::renderer->CreateMaterial(desc));
-	s_glowMat.Reset(Pi::renderer->CreateMaterial(desc));
+	s_sideMat.reset(Pi::renderer->CreateMaterial(desc));
+	s_glowMat.reset(Pi::renderer->CreateMaterial(desc));
 	s_sideMat->texture0 = Graphics::TextureBuilder::Billboard("textures/projectile_l.png").GetOrCreateTexture(Pi::renderer, "billboard");
 	s_glowMat->texture0 = Graphics::TextureBuilder::Billboard("textures/projectile_w.png").GetOrCreateTexture(Pi::renderer, "billboard");
 
@@ -55,8 +55,8 @@ void Projectile::BuildModel()
 	const vector2f botLeft(0.f, 0.f);
 	const vector2f botRight(1.f, 0.f);
 
-	s_sideVerts.Reset(new Graphics::VertexArray(Graphics::ATTRIB_POSITION | Graphics::ATTRIB_UV0));
-	s_glowVerts.Reset(new Graphics::VertexArray(Graphics::ATTRIB_POSITION | Graphics::ATTRIB_UV0));
+	s_sideVerts.reset(new Graphics::VertexArray(Graphics::ATTRIB_POSITION | Graphics::ATTRIB_UV0));
+	s_glowVerts.reset(new Graphics::VertexArray(Graphics::ATTRIB_POSITION | Graphics::ATTRIB_UV0));
 
 	//add four intersecting planes to create a volumetric effect
 	for (int i=0; i < 4; i++) {
@@ -94,10 +94,10 @@ void Projectile::BuildModel()
 
 void Projectile::FreeModel()
 {
-	s_sideMat.Reset();
-	s_glowMat.Reset();
-	s_sideVerts.Reset();
-	s_glowVerts.Reset();
+	s_sideMat.reset();
+	s_glowMat.reset();
+	s_sideVerts.reset();
+	s_glowVerts.reset();
 }
 
 Projectile::Projectile(): Body()
@@ -280,21 +280,21 @@ void Projectile::Render(Graphics::Renderer *renderer, const Camera *camera, cons
 	const float base_alpha = sqrt(1.0f - m_age/Equip::lasers[m_type].lifespan);
 	// fade out side quads when viewing nearly edge on
 	vector3f view_dir = vector3f(viewCoords).Normalized();
-	color.a = base_alpha * (1.f - powf(fabs(dir.Dot(view_dir)), length));
+	color.a = (base_alpha * (1.f - powf(fabs(dir.Dot(view_dir)), length))) * 255;
 
-	if (color.a > 0.01f) {
+	if (color.a > 3) {
 		s_sideMat->diffuse = color;
-		renderer->DrawTriangles(s_sideVerts.Get(), s_sideMat.Get());
+		renderer->DrawTriangles(s_sideVerts.get(), s_sideMat.get());
 	}
 
 	// fade out glow quads when viewing nearly edge on
 	// these and the side quads fade at different rates
 	// so that they aren't both at the same alpha as that looks strange
-	color.a = base_alpha * powf(fabs(dir.Dot(view_dir)), width);
+	color.a = (base_alpha * powf(fabs(dir.Dot(view_dir)), width)) * 255;
 
-	if (color.a > 0.01f) {
+	if (color.a > 3) {
 		s_glowMat->diffuse = color;
-		renderer->DrawTriangles(s_glowVerts.Get(), s_glowMat.Get());
+		renderer->DrawTriangles(s_glowVerts.get(), s_glowMat.get());
 	}
 
 	renderer->SetBlendMode(Graphics::BLEND_SOLID);

@@ -14,10 +14,10 @@ ShipSpinnerWidget::ShipSpinnerWidget(SceneGraph::Model *model, const SceneGraph:
 	m_height(height),
 	m_skin(skin)
 {
-	m_model.Reset(model->MakeInstance());
-	m_skin.Apply(m_model.Get());
+	m_model.reset(model->MakeInstance());
+	m_skin.Apply(m_model.get());
 
-	Color lc(1.f);
+	Color lc(255);
 	m_light.SetDiffuse(lc);
 	m_light.SetSpecular(lc);
 	m_light.SetPosition(vector3f(1.f, 1.f, 0.f));

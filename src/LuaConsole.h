@@ -26,10 +26,11 @@ public:
 
 	static void Register();
 private:
-	bool OnFilterKeys(const SDL_keysym*);
-	void OnKeyPressed(const SDL_keysym*);
+	void OnKeyPressed(const SDL_Keysym*);
+	void OnTextChanged();
 	void UpdateCompletion(const std::string & statement);
 	void ExecOrContinue();
+	void RunAutoexec();
 
 	std::deque<std::string> m_statementHistory;
 	std::string m_stashedStatement;

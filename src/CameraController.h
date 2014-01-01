@@ -24,6 +24,8 @@ public:
 	CameraController(std::vector<Camera*> &cameras, const Ship *ship);
 	virtual ~CameraController() {}
 
+	virtual void Reset();
+
 	virtual Type GetType() const = 0;
 	virtual const char *GetName() const { return ""; }
 	virtual void Save(Serializer::Writer &wr) { }
@@ -65,6 +67,7 @@ public:
 	};
 
 	InternalCameraController(std::vector<Camera*> &cameras, const Ship *ship);
+	virtual void Reset();
 
 	Type GetType() const { return INTERNAL; }
 	const char *GetName() const { return m_name; }
@@ -85,12 +88,20 @@ private:
 	bool m_magnify;
 	float m_fov;
 	float m_fovTo;
+
+	vector3d m_frontPos;  matrix3x3d m_frontOrient;
+	vector3d m_rearPos;   matrix3x3d m_rearOrient;
+	vector3d m_leftPos;   matrix3x3d m_leftOrient;
+	vector3d m_rightPos;  matrix3x3d m_rightOrient;
+	vector3d m_topPos;    matrix3x3d m_topOrient;
+	vector3d m_bottomPos; matrix3x3d m_bottomOrient;
 };
 
 class MoveableCameraController : public CameraController {
 public:
 	MoveableCameraController(std::vector<Camera*> &cameras, const Ship *ship) :
 		CameraController(cameras, ship) {}
+	virtual void Reset() { }
 
 	virtual void RollLeft(float frameTime) { }
 	virtual void RollRight(float frameTime) { }
@@ -105,7 +116,6 @@ public:
 	/// Animated zoom trigger (on each event), primarily designed for mouse wheel.
 	///\param amount The zoom delta to add or substract (>0: zoom out, <0: zoom in), indirectly controling the zoom animation speed.
 	virtual void ZoomEvent(float amount) { }
-	virtual void Reset() { }
 };
 
 // Zoomable, rotatable orbit camera

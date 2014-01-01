@@ -2,21 +2,21 @@ include $(top_srcdir)/Makefile.common
 
 AM_CFLAGS += $(WARN_CFLAGS)
 AM_CPPFLAGS += $(WARN_CPPFLAGS)
-AM_CXXFLAGS += $(WARN_CXXFLAGS)
+AM_CXXFLAGS += $(STD_CXXFLAGS) $(WARN_CXXFLAGS)
 
 INCLUDES = -I$(srcdir)/.. -isystem $(top_srcdir)/contrib
 
 noinst_LIBRARIES = libgraphics.a
 noinst_HEADERS = \
 	Graphics.h \
+	WindowSDL.h \
 	Renderer.h \
 	RendererGL2.h \
-	RendererLegacy.h \
 	RenderTarget.h \
+	GLDebug.h \
 	Frustum.h \
 	Light.h \
 	Material.h \
-	MaterialLegacy.h \
 	StaticMesh.h \
 	Surface.h \
 	VertexArray.h \
@@ -26,6 +26,7 @@ noinst_HEADERS = \
 	Drawables.h \
 	gl2/GL2Material.h \
 	gl2/GL2RenderTarget.h \
+	gl2/FresnelColourMaterial.h \
 	gl2/GeoSphereMaterial.h \
 	gl2/MultiMaterial.h \
 	gl2/Program.h \
@@ -35,13 +36,12 @@ noinst_HEADERS = \
 
 libgraphics_a_SOURCES = \
 	Graphics.cpp \
+	WindowSDL.cpp \
 	Renderer.cpp \
 	RendererGL2.cpp \
-	RendererLegacy.cpp \
 	Frustum.cpp \
 	Light.cpp \
 	Material.cpp \
-	MaterialLegacy.cpp \
 	StaticMesh.cpp \
 	VertexArray.cpp \
 	TextureGL.cpp \
@@ -49,6 +49,7 @@ libgraphics_a_SOURCES = \
 	Drawables.cpp \
 	gl2/GL2Material.cpp \
 	gl2/GL2RenderTarget.cpp \
+	gl2/FresnelColourMaterial.cpp \
 	gl2/GeoSphereMaterial.cpp \
 	gl2/MultiMaterial.cpp \
 	gl2/Program.cpp \

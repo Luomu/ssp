@@ -32,7 +32,7 @@ Image::Image(const char *filename, float renderWidth, float renderHeight):
 void Image::InitTexture(const char* filename)
 {
 	Graphics::TextureBuilder b = Graphics::TextureBuilder::UI(filename);
-	m_quad.Reset(new TexturedQuad(b.GetOrCreateTexture(Gui::Screen::GetRenderer(), "ui")));
+	m_quad.reset(new TexturedQuad(b.GetOrCreateTexture(Gui::Screen::GetRenderer(), "ui")));
 }
 
 void Image::GetSizeRequested(float size[2])
@@ -49,6 +49,7 @@ void Image::SetRenderDimensions(const float wide, const float high)
 
 void Image::Draw()
 {
+	PROFILE_SCOPED()
 	float allocSize[2];
 	GetSize(allocSize);
 

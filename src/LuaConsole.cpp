@@ -11,6 +11,8 @@
 #include "text/TextureFont.h"
 #include "text/TextSupport.h"
 #include "KeyBindings.h"
+#include "FileSystem.h"
+#include "LuaUtils.h"
 #include <sstream>
 #include <stack>
 #include <algorithm>
@@ -31,7 +33,7 @@ LuaConsole::LuaConsole(int displayedOutputLines):
 	m_historyPosition = -1;
 
 	SetTransparency(false);
-	SetBgColor(0.6f, 0.1f, 0.0f, 0.6f);
+	SetBgColor(Color(160,32,0,160));
 
 	Gui::Screen::PushFont("ConsoleFont");
 	m_entryField = new Gui::TextEntry();
@@ -42,10 +44,73 @@ LuaConsole::LuaConsole(int displayedOutputLines):
 
 	// XXX HACK: bypassing TextEntry::Show, because it grabs focus
 	m_entryField->Gui::Widget::Show();
-	m_entryField->onFilterKeys.connect(sigc::mem_fun(this, &LuaConsole::OnFilterKeys));
 	m_entryField->onKeyPress.connect(sigc::mem_fun(this, &LuaConsole::OnKeyPressed));
+	m_entryField->onValueChanged.connect(sigc::mem_fun(this, &LuaConsole::OnTextChanged));
 
 	PackEnd(m_entryField);
+
+	// prepare the global table
+	lua_State *l = Lua::manager->GetLuaState();
+
+	LUA_DEBUG_START(l);
+
+	lua_newtable(l);
+	lua_newtable(l);
+	lua_pushliteral(l, "__index");
+	lua_getglobal(l, "_G");
+	lua_rawset(l, -3);
+	lua_setmetatable(l, -2);
+	lua_setfield(l, LUA_REGISTRYINDEX, "ConsoleGlobal");
+
+	LUA_DEBUG_END(l, 0);
+
+	RunAutoexec();
+}
+
+static int capture_traceback(lua_State *L) {
+	lua_pushstring(L, "\n");
+	luaL_traceback(L, L, nullptr, 0);
+	lua_concat(L, 3);
+	return 1;
+}
+
+void LuaConsole::RunAutoexec() {
+	lua_State *L = Lua::manager->GetLuaState();
+	LUA_DEBUG_START(L);
+
+	RefCountedPtr<FileSystem::FileData> code = FileSystem::userFiles.ReadFile("console.lua");
+	if (!code)
+		return;
+
+	int ret = pi_lua_loadfile(L, *code);
+	if (ret != LUA_OK) {
+		if (ret == LUA_ERRSYNTAX) {
+			const char *msg = lua_tostring(L, -1);
+			fprintf(stderr, "console.lua: %s\n", msg);
+			lua_pop(L, 1);
+		}
+		AddOutput("Failed to run console.lua");
+		return;
+	}
+
+	// set the chunk's _ENV (globals) var
+	lua_getfield(L, LUA_REGISTRYINDEX, "ConsoleGlobal");
+	lua_setupvalue(L, -2, 1);
+
+	lua_pushcfunction(L, &capture_traceback);
+	lua_insert(L, -2);
+
+	ret = lua_pcall(L, 0, 0, -2);
+	if (ret != LUA_OK) {
+		const char *msg = lua_tostring(L, -1);
+		fprintf(stderr, "console.lua:\n%s\n", msg);
+		AddOutput("Failed to run console.lua");
+		lua_pop(L, 1);
+	}
+
+	// pop capture_traceback function
+	lua_pop(L, 1);
+	LUA_DEBUG_END(L, 0);
 }
 
 LuaConsole::~LuaConsole() {}
@@ -54,11 +119,7 @@ bool LuaConsole::IsActive() const {
 	return IsVisible() && m_entryField->IsFocused();
 }
 
-bool LuaConsole::OnFilterKeys(const SDL_keysym *sym) {
-	return !KeyBindings::toggleLuaConsole.binding.Matches(sym);
-}
-
-void LuaConsole::OnKeyPressed(const SDL_keysym *sym) {
+void LuaConsole::OnKeyPressed(const SDL_Keysym *sym) {
 	// XXX totally horrible doing this on every key press
 	ResizeRequest();
 
@@ -119,14 +180,15 @@ void LuaConsole::OnKeyPressed(const SDL_keysym *sym) {
 			m_entryField->SetText(m_precompletionStatement + m_completionList[m_currentCompletion]);
 			ResizeRequest();
 		}
-	} else if (!m_completionList.empty() && (sym->sym < SDLK_NUMLOCK || sym->sym > SDLK_COMPOSE)) {
-		m_completionList.clear();
 	}
 
-
-	if (((sym->unicode == '\n') || (sym->unicode == '\r')) && ((sym->mod & KMOD_CTRL) == 0)) {
+	if (sym->sym == SDLK_RETURN && !(sym->mod & KMOD_CTRL)) {
 		ExecOrContinue();
 	}
+}
+
+void LuaConsole::OnTextChanged() {
+	m_completionList.clear();
 }
 
 void LuaConsole::UpdateCompletion(const std::string & statement) {
@@ -167,7 +229,7 @@ void LuaConsole::UpdateCompletion(const std::string & statement) {
 
 	lua_State * l = Lua::manager->GetLuaState();
 	int stackheight = lua_gettop(l);
-	lua_rawgeti(l, LUA_REGISTRYINDEX, LUA_RIDX_GLOBALS);
+	lua_getfield(l, LUA_REGISTRYINDEX, "ConsoleGlobal");
 	// Loading the tables in which to do the name lookup
 	while (chunks.size() > 1) {
 		if (!lua_istable(l, -1) && !lua_isuserdata(l, -1))
@@ -256,6 +318,10 @@ void LuaConsole::ExecOrContinue() {
 		AddOutput("memory allocation failure");
 		return;
 	}
+
+	// set the global table
+	lua_getfield(L, LUA_REGISTRYINDEX, "ConsoleGlobal");
+	lua_setupvalue(L, -2, 1);
 
 	std::istringstream stmt_stream(stmt);
 	std::string string_buffer;

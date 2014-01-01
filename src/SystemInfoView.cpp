@@ -55,15 +55,18 @@ void SystemInfoView::OnBodyViewed(SystemBody *b)
 	outer->Add(col2, 300, 0);
 
 #define _add_label_and_value(label, value) { \
-	Gui::Label *l = (new Gui::Label(label))->Color(1.0f,1.0f,0.0f); \
+	Gui::Label *l = (new Gui::Label(label))->Color(255,255,0); \
 	col1->PackEnd(l); \
-	l = (new Gui::Label(value))->Color(1.0f,1.0f,0.0f); \
+	l = (new Gui::Label(value))->Color(255,255,0); \
 	col2->PackEnd(l); \
 }
 
+	bool multiple = (b->GetSuperType() == SystemBody::SUPERTYPE_STAR &&
+					 b->parent && b->parent->type == SystemBody::TYPE_GRAVPOINT && b->parent->parent);
 	{
-		Gui::Label *l = new Gui::Label(b->name + ": " + b->GetAstroDescription());
-		l->Color(1,1,0);
+		Gui::Label *l = new Gui::Label(b->name + ": " + b->GetAstroDescription() +
+			(multiple ? (std::string(" (")+b->parent->name + ")") : ""));
+		l->Color(255,255,0);
 		m_infoBox->PackStart(l);
 	}
 
@@ -71,7 +74,8 @@ void SystemInfoView::OnBodyViewed(SystemBody *b)
 		formatarg("units", std::string(b->GetSuperType() == SystemBody::SUPERTYPE_STAR ? Lang::SOLAR : Lang::EARTH))));
 
 	_add_label_and_value(Lang::RADIUS, stringf(Lang::N_WHATEVER_RADII, formatarg("radius", b->radius.ToDouble()),
-		formatarg("units", std::string(b->GetSuperType() == SystemBody::SUPERTYPE_STAR ? Lang::SOLAR : Lang::EARTH))));
+		formatarg("units", std::string(b->GetSuperType() == SystemBody::SUPERTYPE_STAR ? Lang::SOLAR : Lang::EARTH)),
+		formatarg("radkm", b->GetRadius() / 1000.0)));
 
 	if (b->GetSuperType() == SystemBody::SUPERTYPE_STAR) {
 		_add_label_and_value(Lang::EQUATORIAL_RADIUS_TO_POLAR_RADIUS_RATIO, stringf("%0{f.3}", b->aspectRatio.ToDouble()));
@@ -89,10 +93,18 @@ void SystemInfoView::OnBodyViewed(SystemBody *b)
 		} else {
 			data = stringf(Lang::N_DAYS, formatarg("days", b->orbit.Period() / (60*60*24)));
 		}
+		if (multiple) {
+			float pdays = float(b->parent->orbit.Period()) /float(60*60*24);
+			data += " (" + (pdays > 1000 ? stringf(Lang::N_YEARS, formatarg("years", pdays/365))
+										 : stringf(Lang::N_DAYS, formatarg("days", b->parent->orbit.Period() / (60*60*24)))) + ")";
+		}
 		_add_label_and_value(Lang::ORBITAL_PERIOD, data);
-		_add_label_and_value(Lang::PERIAPSIS_DISTANCE, format_distance(b->orbMin.ToDouble()*AU, 3));
-		_add_label_and_value(Lang::APOAPSIS_DISTANCE, format_distance(b->orbMax.ToDouble()*AU, 3));
-		_add_label_and_value(Lang::ECCENTRICITY, stringf("%0{f.2}", b->orbit.GetEccentricity()));
+		_add_label_and_value(Lang::PERIAPSIS_DISTANCE, format_distance(b->orbMin.ToDouble()*AU, 3) +
+			(multiple ? (std::string(" (") + format_distance(b->parent->orbMin.ToDouble()*AU, 3)+ ")") : ""));
+		_add_label_and_value(Lang::APOAPSIS_DISTANCE, format_distance(b->orbMax.ToDouble()*AU, 3) +
+			(multiple ? (std::string(" (") + format_distance(b->parent->orbMax.ToDouble()*AU, 3)+ ")") : ""));
+		_add_label_and_value(Lang::ECCENTRICITY, stringf("%0{f.2}", b->orbit.GetEccentricity()) +
+			(multiple ? (std::string(" (") + stringf("%0{f.2}", b->parent->orbit.GetEccentricity()) + ")") : ""));
 		if (b->type != SystemBody::TYPE_STARPORT_ORBITAL) {
 			_add_label_and_value(Lang::AXIAL_TILT, stringf(Lang::N_DEGREES, formatarg("angle", b->axialTilt.ToDouble() * (180.0/M_PI))));
 			if (b->rotationPeriod != 0) {
@@ -266,7 +278,7 @@ void SystemInfoView::SystemChanged(const SystemPath &path)
 		std::string _info =
 			Lang::UNEXPLORED_SYSTEM_STAR_INFO_ONLY;
 
-		Gui::Label *l = (new Gui::Label(_info))->Color(1.0f,1.0f,0.0f);
+		Gui::Label *l = (new Gui::Label(_info))->Color(255,255,0);
 		m_sbodyInfoTab->Add(l, 35, 300);
 
 		ShowAll();
@@ -326,7 +338,7 @@ void SystemInfoView::SystemChanged(const SystemPath &path)
 		Gui::VScrollPortal *portal = new Gui::VScrollPortal(730);
 		scroll->SetAdjustment(&portal->vscrollAdjust);
 
-		Gui::Label *l = (new Gui::Label(_info))->Color(1.0f,1.0f,0.0f);
+		Gui::Label *l = (new Gui::Label(_info))->Color(255,255,0);
 		m_infoBox->PackStart(l);
 		portal->Add(m_infoBox);
 		scrollBox->PackStart(scroll);
@@ -353,11 +365,11 @@ void SystemInfoView::SystemChanged(const SystemPath &path)
 		m_econMajExport = new Gui::Label("");
 		m_econMinExport = new Gui::Label("");
 		m_econIllegal = new Gui::Label("");
-		m_econMajImport->Color(1,1,0);
-		m_econMinImport->Color(1,1,0);
-		m_econMajExport->Color(1,1,0);
-		m_econMinExport->Color(1,1,0);
-		m_econIllegal->Color(1,1,0);
+		m_econMajImport->Color(255,255,0);
+		m_econMinImport->Color(255,255,0);
+		m_econMajExport->Color(255,255,0);
+		m_econMinExport->Color(255,255,0);
+		m_econIllegal->Color(255,255,0);
 		f->Add(m_econMajImport, 0, 0);
 		f->Add(m_econMinImport, 150, 0);
 		f->Add(m_econMajExport, 300, 0);
@@ -376,18 +388,18 @@ void SystemInfoView::SystemChanged(const SystemPath &path)
 
 		const float YSEP = Gui::Screen::GetFontHeight() * 1.2f;
 
-		col1->Add((new Gui::Label(Lang::SYSTEM_TYPE))->Color(1,1,0), 0, 0);
+		col1->Add((new Gui::Label(Lang::SYSTEM_TYPE))->Color(255,255,0), 0, 0);
 		col2->Add(new Gui::Label(m_system->GetShortDescription()), 0, 0);
 
-		col1->Add((new Gui::Label(Lang::GOVERNMENT_TYPE))->Color(1,1,0), 0, 2*YSEP);
+		col1->Add((new Gui::Label(Lang::GOVERNMENT_TYPE))->Color(255,255,0), 0, 2*YSEP);
 		col2->Add(new Gui::Label(m_system->GetSysPolit().GetGovernmentDesc()), 0, 2*YSEP);
 
-		col1->Add((new Gui::Label(Lang::ECONOMY_TYPE))->Color(1,1,0), 0, 3*YSEP);
+		col1->Add((new Gui::Label(Lang::ECONOMY_TYPE))->Color(255,255,0), 0, 3*YSEP);
 		col2->Add(new Gui::Label(m_system->GetSysPolit().GetEconomicDesc()), 0, 3*YSEP);
 
-		col1->Add((new Gui::Label(Lang::ALLEGIANCE))->Color(1,1,0), 0, 4*YSEP);
+		col1->Add((new Gui::Label(Lang::ALLEGIANCE))->Color(255,255,0), 0, 4*YSEP);
 		col2->Add(new Gui::Label(m_system->GetFaction()->name.c_str()), 0, 4*YSEP);
-		col1->Add((new Gui::Label(Lang::POPULATION))->Color(1,1,0), 0, 5*YSEP);
+		col1->Add((new Gui::Label(Lang::POPULATION))->Color(255,255,0), 0, 5*YSEP);
 		std::string popmsg;
 		fixed pop = m_system->GetTotalPop();
 		if (pop >= fixed(1,1)) { popmsg = stringf(Lang::OVER_N_BILLION, formatarg("population", pop.ToInt32())); }
@@ -396,10 +408,10 @@ void SystemInfoView::SystemChanged(const SystemPath &path)
 		else { popmsg = Lang::NO_REGISTERED_INHABITANTS; }
 		col2->Add(new Gui::Label(popmsg), 0, 5*YSEP);
 
-		col1->Add((new Gui::Label(Lang::SECTOR_COORDINATES))->Color(1,1,0), 0, 6*YSEP);
+		col1->Add((new Gui::Label(Lang::SECTOR_COORDINATES))->Color(255,255,0), 0, 6*YSEP);
 		col2->Add(new Gui::Label(stringf("%0{d}, %1{d}, %2{d}", path.sectorX, path.sectorY, path.sectorZ)), 0, 6*YSEP);
 
-		col1->Add((new Gui::Label(Lang::SYSTEM_NUMBER))->Color(1,1,0), 0, 7*YSEP);
+		col1->Add((new Gui::Label(Lang::SYSTEM_NUMBER))->Color(255,255,0), 0, 7*YSEP);
 		col2->Add(new Gui::Label(stringf("%0", path.systemIndex)), 0, 7*YSEP);
 	}
 
@@ -410,6 +422,7 @@ void SystemInfoView::SystemChanged(const SystemPath &path)
 
 void SystemInfoView::Draw3D(const ViewEye eye /*= ViewEye_Centre*/)
 {
+	PROFILE_SCOPED()
 	m_renderer->SetTransform(matrix4x4f::Identity());
 	m_renderer->ClearScreen();
 }
@@ -463,14 +476,14 @@ void SystemInfoView::BodyIcon::Draw()
 	float size[2];
 	GetSize(size);
 	if (HasStarport()) {
-	    Color portColor = Color(0.25f, 0.5f, 0.5f, 1.f);
+	    Color portColor = Color(64, 128, 128, 255);
 	    // The -0.1f offset seems to be the best compromise to make the circles closed (e.g. around Mars), symmetric, fitting with selection
 	    // and not overlapping to much with asteroids
 	    Graphics::Drawables::Circle circle = Graphics::Drawables::Circle(size[0]*0.5f, size[0]*0.5f-0.1f, size[1]*0.5f, 0.f, portColor);
 	    circle.Draw(m_renderer);
 	}
 	if (GetSelected()) {
-	    Color selectColor = Color(0.f, 1.f, 0.f, 1.f);
+	    Color selectColor = Color(0, 255, 0, 255);
 	    const vector2f vts[] = {
 		    vector2f(0.f, 0.f),
 		    vector2f(size[0], 0.f),

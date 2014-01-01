@@ -21,6 +21,7 @@ Widget::Widget()
 
 bool Widget::IsVisible() const
 {
+	PROFILE_SCOPED()
 	if (!m_visible) return false;
 	Container *parent = m_parent;
 	while ((parent) && (parent->m_parent)) {
@@ -63,7 +64,7 @@ bool Widget::IsFocused()
 	return Screen::IsFocused(this);
 }
 
-void Widget::SetShortcut(SDLKey key, SDLMod mod)
+void Widget::SetShortcut(SDL_Keycode key, SDL_Keymod mod)
 {
 	assert(m_shortcut.sym == 0); // because AddShortcutWidget will add more than once. fix this otherwise on destruct we leave bad pointers in the Screen shortcut widgets list
 	m_shortcut.sym = key;
@@ -71,7 +72,7 @@ void Widget::SetShortcut(SDLKey key, SDLMod mod)
 	Screen::AddShortcutWidget(this);
 }
 
-void Widget::OnPreShortcut(const SDL_keysym *sym)
+void Widget::OnPreShortcut(const SDL_Keysym *sym)
 {
 	int mod = sym->mod & 0xfff; // filters out numlock, capslock, which fuck things up
 	if ((sym->sym == m_shortcut.sym) && (mod == m_shortcut.mod)) {

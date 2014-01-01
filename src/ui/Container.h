@@ -35,7 +35,7 @@ public:
 
 	virtual bool IsContainer() const { return true; }
 
-	Widget *GetWidgetAtAbsolute(const Point &pos) { return GetWidgetAt(pos - GetAbsolutePosition()); }
+	// widget at pos relative to this widget
 	virtual Widget *GetWidgetAt(const Point &pos);
 
 	virtual void Disable();
@@ -52,11 +52,6 @@ protected:
 	virtual void RemoveWidget(Widget *);
 	void RemoveAllWidgets();
 
-	// calculate layout contribution based on preferred size and flags
-	static Point CalcLayoutContribution(Widget *w);
-	// calculate size based on available space, preferred size and flags
-	static Point CalcSize(Widget *w, const Point &avail);
-
 	void SetWidgetDimensions(Widget *widget, const Point &position, const Point &size);
 
 private:
@@ -66,6 +61,7 @@ private:
 	friend class EventDispatcher;
 	void CollectShortcuts(std::map<KeySym,Widget*> &shortcuts);
 
+	virtual void NotifyVisible(bool visible);
 
 	void EnableChildren();
 	void DisableChildren();

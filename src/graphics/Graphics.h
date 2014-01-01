@@ -19,12 +19,14 @@ namespace Graphics {
 	// requested video settings
 	struct Settings {
 		bool fullscreen;
-		bool shaders;
 		bool useTextureCompression;
+		bool enableDebugMessages;
 		int vsync;
 		int requestedSamples;
 		int height;
 		int width;
+		const char *iconFile;
+		const char *title;
 	};
 
 	//for querying available modes
@@ -36,11 +38,8 @@ namespace Graphics {
 		int height;
 	};
 
-	extern bool shadersAvailable;
-	extern bool shadersEnabled;
 	extern Material *vtxColorMaterial;
 
-	extern Settings settings;
 	int GetScreenWidth();
 	int GetScreenHeight();
 
@@ -51,7 +50,6 @@ namespace Graphics {
 	// does SDL video init, constructs appropriate Renderer
 	Renderer* Init(Settings);
 	void Uninit();
-	bool AreShadersEnabled();
 	std::vector<VideoMode> GetAvailableVideoModes();
 }
 

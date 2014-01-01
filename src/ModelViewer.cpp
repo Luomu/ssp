@@ -18,12 +18,14 @@
 //default options
 ModelViewer::Options::Options()
 : attachGuns(false)
+, showTags(false)
 , showDockingLocators(false)
 , showCollMesh(false)
 , showGrid(false)
 , showLandingPad(false)
 , showUI(true)
 , wireframe(false)
+, mouselookEnabled(false)
 , gridInterval(10.f)
 , lightPreset(0)
 {
@@ -42,8 +44,8 @@ namespace {
 	}
 
 	//extract color from RGB sliders
-	Color4ub get_slider_color(UI::Slider *r, UI::Slider *g, UI::Slider *b) {
-		return Color4ub(r->GetValue() * 255.f, g->GetValue() * 255.f, b->GetValue() * 255.f);
+	Color get_slider_color(UI::Slider *r, UI::Slider *g, UI::Slider *b) {
+		return Color(r->GetValue() * 255.f, g->GetValue() * 255.f, b->GetValue() * 255.f);
 	}
 
 	float get_thrust(const UI::Slider *s) {
@@ -65,7 +67,7 @@ namespace {
 			const std::string &fpath = info.GetPath();
 
 			//check it's the expected type
-			if (info.IsFile() && ends_with(fpath, ".png")) {
+			if (info.IsFile() && ends_with_ci(fpath, ".png")) {
 				list.push_back(info.GetName().substr(0, info.GetName().size()-4));
 			}
 		}
@@ -90,14 +92,13 @@ ModelViewer::ModelViewer(Graphics::Renderer *r, LuaManager *lm)
 , m_model(0)
 , m_modelName("")
 {
-	m_ui.Reset(new UI::Context(lm, r, Graphics::GetScreenWidth(), Graphics::GetScreenHeight(), "English"));
+	m_ui.Reset(new UI::Context(lm, r, Graphics::GetScreenWidth(), Graphics::GetScreenHeight(), "en"));
 
 	m_log = m_ui->MultiLineText("");
 	m_log->SetFont(UI::Widget::FONT_SMALLEST);
 	m_logScroller.Reset(m_ui->Scroller());
 	m_logScroller->SetInnerWidget(m_log);
 
-	std::fill(m_keyStates, m_keyStates + COUNTOF(m_keyStates), false);
 	std::fill(m_mouseButton, m_mouseButton + COUNTOF(m_mouseButton), false);
 	std::fill(m_mouseMotion, m_mouseMotion + 2, 0);
 
@@ -114,7 +115,7 @@ ModelViewer::~ModelViewer()
 
 void ModelViewer::Run(const std::string &modelName)
 {
-	ScopedPtr<GameConfig> config(new GameConfig);
+	std::unique_ptr<GameConfig> config(new GameConfig);
 
 	Graphics::Renderer *renderer;
 	ModelViewer *viewer;
@@ -128,22 +129,17 @@ void ModelViewer::Run(const std::string &modelName)
 
 	ModManager::Init();
 
-	// needed for the UI
-	SDL_EnableUNICODE(1);
-
 	//video
 	Graphics::Settings videoSettings = {};
 	videoSettings.width = config->Int("ScrWidth");
 	videoSettings.height = config->Int("ScrHeight");
 	videoSettings.fullscreen = (config->Int("StartFullscreen") != 0);
-	videoSettings.shaders = (config->Int("DisableShaders") == 0);
 	videoSettings.requestedSamples = config->Int("AntiAliasingMode");
 	videoSettings.vsync = (config->Int("VSync") != 0);
 	videoSettings.useTextureCompression = (config->Int("UseTextureCompression") != 0);
+	videoSettings.iconFile = OS::GetIconFilename();
+	videoSettings.title = "Model viewer";
 	renderer = Graphics::Init(videoSettings);
-
-	OS::LoadWindowIcon();
-	SDL_WM_SetCaption("Model viewer","Model viewer");
 
 	NavLights::Init(renderer);
 
@@ -210,11 +206,11 @@ bool ModelViewer::OnToggleGrid(UI::Widget *)
 
 bool ModelViewer::OnToggleGuns(UI::CheckBox *w)
 {
-	if (!m_gunModel.Valid()) {
+	if (!m_gunModel) {
 		CreateTestResources();
 	}
 
-	if (!m_gunModel.Valid()) {
+	if (!m_gunModel) {
 		AddLog("test_gun.model not available");
 		return false;
 	}
@@ -227,8 +223,8 @@ bool ModelViewer::OnToggleGuns(UI::CheckBox *w)
 		return false;
 	}
 	if (m_options.attachGuns) {
-		tagL->AddChild(new SceneGraph::ModelNode(m_gunModel.Get()));
-		tagR->AddChild(new SceneGraph::ModelNode(m_gunModel.Get()));
+		tagL->AddChild(new SceneGraph::ModelNode(m_gunModel.get()));
+		tagR->AddChild(new SceneGraph::ModelNode(m_gunModel.get()));
 	} else { //detach
 		//we know there's nothing else
 		tagL->RemoveChildAt(0);
@@ -244,7 +240,7 @@ void ModelViewer::AddLog(const std::string &line)
 	printf("%s\n", line.c_str());
 }
 
-void ModelViewer::ChangeCameraPreset(SDLKey key, SDLMod mod)
+void ModelViewer::ChangeCameraPreset(SDL_Keycode key, SDL_Keymod mod)
 {
 	if (!m_model) return;
 
@@ -258,36 +254,50 @@ void ModelViewer::ChangeCameraPreset(SDLKey key, SDLMod mod)
 
 	switch (key)
 	{
-	case SDLK_KP7: case SDLK_u:
+	case SDLK_KP_7: case SDLK_u:
 		m_rotX = invert ? -90.f : 90.f;
 		m_rotY = 0.f;
 		AddLog(invert ? "Bottom view" : "Top view");
 		break;
-	case SDLK_KP3: case SDLK_PERIOD:
+	case SDLK_KP_3: case SDLK_PERIOD:
 		m_rotX = 0.f;
 		m_rotY = invert ? -90.f : 90.f;
 		AddLog(invert ? "Right view" : "Left view");
 		break;
-	case SDLK_KP1: case SDLK_m:
+	case SDLK_KP_1: case SDLK_m:
 		m_rotX = 0.f;
 		m_rotY = invert ? 0.f : 180.f;
 		AddLog(invert ? "Rear view" : "Front view");
 		break;
-	case SDLK_KP4: case SDLK_j:
+	case SDLK_KP_4: case SDLK_j:
 		m_rotY += 15.f;
 		break;
-	case SDLK_KP6: case SDLK_l:
+	case SDLK_KP_6: case SDLK_l:
 		m_rotY -= 15.f;
 		break;
-	case SDLK_KP2: case SDLK_COMMA:
+	case SDLK_KP_2: case SDLK_COMMA:
 		m_rotX += 15.f;
 		break;
-	case SDLK_KP8: case SDLK_i:
+	case SDLK_KP_8: case SDLK_i:
 		m_rotX -= 15.f;
 		break;
 	default:
 		break;
 		//no others yet
+	}
+}
+
+void ModelViewer::ToggleViewControlMode()
+{
+	m_options.mouselookEnabled = !m_options.mouselookEnabled;
+	m_renderer->GetWindow()->SetGrab(m_options.mouselookEnabled);
+
+	if (m_options.mouselookEnabled) {
+		m_viewRot = matrix3x3f::RotateY(DEG2RAD(m_rotY)) * matrix3x3f::RotateX(DEG2RAD(Clamp(m_rotX, -90.0f, 90.0f)));
+		m_viewPos = zoom_distance(m_baseDistance, m_zoom) * m_viewRot.VectorZ();
+	} else {
+		// XXX re-initialise the turntable style view position from the current mouselook view
+		ResetCamera();
 	}
 }
 
@@ -299,8 +309,13 @@ void ModelViewer::ClearLog()
 void ModelViewer::ClearModel()
 {
 	delete m_model; m_model = 0;
-	m_gunModel.Reset();
-	m_scaleModel.Reset();
+	m_gunModel.reset();
+	m_scaleModel.reset();
+
+	m_options.mouselookEnabled = false;
+	m_renderer->GetWindow()->SetGrab(false);
+	m_viewPos = vector3f(0.0f, 0.0f, 10.0f);
+	ResetCamera();
 }
 
 void ModelViewer::CreateTestResources()
@@ -310,10 +325,10 @@ void ModelViewer::CreateTestResources()
 	SceneGraph::Loader loader(m_renderer);
 	try {
 		SceneGraph::Model *m = loader.LoadModel("test_gun");
-		m_gunModel.Reset(m);
+		m_gunModel.reset(m);
 
 		m = loader.LoadModel("scale");
-		m_scaleModel.Reset(m);
+		m_scaleModel.reset(m);
 	} catch (SceneGraph::LoadingError &) {
 		AddLog("Could not load test_gun model");
 	}
@@ -328,8 +343,8 @@ void ModelViewer::DrawBackground()
 
 	static Graphics::VertexArray va(Graphics::ATTRIB_POSITION | Graphics::ATTRIB_DIFFUSE);
 	va.Clear();
-	const Color4f top = Color::BLACK;
-	const Color4f bottom = Color4f(0.3f);
+	const Color top = Color::BLACK;
+	const Color bottom = Color(77);
 	va.Add(vector3f(0.f, 0.f, 0.f), bottom);
 	va.Add(vector3f(1.f, 0.f, 0.f), bottom);
 	va.Add(vector3f(1.f, 1.f, 0.f), top);
@@ -341,120 +356,68 @@ void ModelViewer::DrawBackground()
 	m_renderer->DrawTriangles(&va, Graphics::vtxColorMaterial);
 }
 
+void AddAxisIndicators(const SceneGraph::Model::TVecMT &mts, std::vector<Graphics::Drawables::Line3D> &lines)
+{
+	for (SceneGraph::Model::TVecMT::const_iterator i = mts.begin(); i != mts.end(); ++i) {
+		const matrix4x4f &trans = (*i)->GetTransform();
+		const vector3f pos = trans.GetTranslate();
+		const matrix3x3f &orient = trans.GetOrient();
+		const vector3f x = orient.VectorX().Normalized();
+		const vector3f y = orient.VectorY().Normalized();
+		const vector3f z = orient.VectorZ().Normalized();
+
+		Graphics::Drawables::Line3D lineX;
+		lineX.SetStart(pos);
+		lineX.SetEnd(pos+x);
+		lineX.SetColor(Color::RED);
+
+		Graphics::Drawables::Line3D lineY;
+		lineY.SetStart(pos);
+		lineY.SetEnd(pos+y);
+		lineY.SetColor(Color::GREEN);
+
+		Graphics::Drawables::Line3D lineZ;
+		lineZ.SetStart(pos);
+		lineZ.SetEnd(pos+z);
+		lineZ.SetColor(Color::BLUE);
+
+		lines.push_back(lineX);
+		lines.push_back(lineY);
+		lines.push_back(lineZ);
+	}
+}
+
 void ModelViewer::DrawDockingLocators()
 {
-	using namespace Graphics::Drawables;
+	for(std::vector<Graphics::Drawables::Line3D>::iterator i = m_dockingPoints.begin(); i != m_dockingPoints.end(); ++i)
+		(*i).Draw(m_renderer);
+}
 
-	static std::vector<Line3D> sLines;
-	if (sLines.empty())
-	{
-		sLines.clear();
-
-		SceneGraph::Model::TVecMT approach_mts;
-		SceneGraph::Model::TVecMT docking_mts;
-		SceneGraph::Model::TVecMT leaving_mts;
-		m_model->FindTagsByStartOfName("approach_", approach_mts);
-		m_model->FindTagsByStartOfName("docking_", docking_mts);
-		m_model->FindTagsByStartOfName("leaving_", leaving_mts);
-
-		for(SceneGraph::Model::TVecMT::const_iterator iter = docking_mts.begin(), itEnd=docking_mts.end(); iter!=itEnd; ++iter) {
-			const vector3f pos = (*iter)->GetTransform().GetTranslate();
-			const vector3f xAxis = (*iter)->GetTransform().GetOrient().VectorX() * 100.0f;
-			const vector3f yAxis = (*iter)->GetTransform().GetOrient().VectorY() * 100.0f;
-			const vector3f zAxis = (*iter)->GetTransform().GetOrient().VectorZ() * 100.0f;
-			Line3D lineX;
-			lineX.SetStart( pos );
-			lineX.SetEnd( pos + xAxis );
-			lineX.SetColor( Color::RED );
-
-			Line3D lineY;
-			lineY.SetStart( pos );
-			lineY.SetEnd( pos + yAxis );
-			lineY.SetColor( Color::GREEN );
-
-			Line3D lineZ;
-			lineZ.SetStart( pos );
-			lineZ.SetEnd( pos + zAxis );
-			lineZ.SetColor( Color::BLUE );
-
-			sLines.push_back(lineX);
-			sLines.push_back(lineY);
-			sLines.push_back(lineZ);
-		}
-
-		for(SceneGraph::Model::TVecMT::const_iterator iter = leaving_mts.begin(), itEnd=leaving_mts.end(); iter!=itEnd; ++iter) {
-			const vector3f pos = (*iter)->GetTransform().GetTranslate();
-			const vector3f xAxis = (*iter)->GetTransform().GetOrient().VectorX() * 100.0f;
-			const vector3f yAxis = (*iter)->GetTransform().GetOrient().VectorY() * 100.0f;
-			const vector3f zAxis = (*iter)->GetTransform().GetOrient().VectorZ() * 100.0f;
-			Line3D lineX;
-			lineX.SetStart( pos );
-			lineX.SetEnd( pos + xAxis );
-			lineX.SetColor( Color::RED );
-
-			Line3D lineY;
-			lineY.SetStart( pos );
-			lineY.SetEnd( pos + yAxis );
-			lineY.SetColor( Color::GREEN );
-
-			Line3D lineZ;
-			lineZ.SetStart( pos );
-			lineZ.SetEnd( pos + zAxis );
-			lineZ.SetColor( Color::BLUE );
-
-			sLines.push_back(lineX);
-			sLines.push_back(lineY);
-			sLines.push_back(lineZ);
-		}
-
-		for(SceneGraph::Model::TVecMT::const_iterator iter = approach_mts.begin(), itEnd=approach_mts.end(); iter!=itEnd; ++iter) {
-			const vector3f pos = (*iter)->GetTransform().GetTranslate();
-			const vector3f xAxis = (*iter)->GetTransform().GetOrient().VectorX() * 100.0f;
-			const vector3f yAxis = (*iter)->GetTransform().GetOrient().VectorY() * 100.0f;
-			const vector3f zAxis = (*iter)->GetTransform().GetOrient().VectorZ() * 100.0f;
-			Line3D lineX;
-			lineX.SetStart( pos );
-			lineX.SetEnd( pos + xAxis );
-			lineX.SetColor( Color::RED );
-
-			Line3D lineY;
-			lineY.SetStart( pos );
-			lineY.SetEnd( pos + yAxis );
-			lineY.SetColor( Color::GREEN );
-
-			Line3D lineZ;
-			lineZ.SetStart( pos );
-			lineZ.SetEnd( pos + zAxis );
-			lineZ.SetColor( Color::BLUE );
-
-			sLines.push_back(lineX);
-			sLines.push_back(lineY);
-			sLines.push_back(lineZ);
-		}
-	}
-
-	for(std::vector<Line3D>::iterator lineIter = sLines.begin(), lineEnd = sLines.end(); lineIter!=lineEnd; ++lineIter)
-	{
-		(*lineIter).Draw(m_renderer);
-	}
+void ModelViewer::DrawTags()
+{
+	for(std::vector<Graphics::Drawables::Line3D>::iterator i = m_tagPoints.begin(); i != m_tagPoints.end(); ++i)
+		(*i).Draw(m_renderer);
 }
 
 // Draw collision mesh as a wireframe overlay
 void ModelViewer::DrawCollisionMesh()
 {
 	RefCountedPtr<CollMesh> mesh = m_model->GetCollisionMesh();
-	if (!mesh.Valid()) return;
+	if (!mesh) return;
 
-	const std::vector<vector3f> &vertices = mesh->m_vertices;
-	const std::vector<int> &indices = mesh->m_indices;
-	Graphics::VertexArray va(Graphics::ATTRIB_POSITION | Graphics::ATTRIB_DIFFUSE, indices.size() * 3);
+	const vector3f *vertices = reinterpret_cast<const vector3f*>(mesh->GetGeomTree()->GetVertices());
+	const Uint16 *indices = mesh->GetGeomTree()->GetIndices();
+	const unsigned int *triFlags = mesh->GetGeomTree()->GetTriFlags();
+	const unsigned int numIndices = mesh->GetGeomTree()->GetNumTris() * 3;
+
+	Graphics::VertexArray va(Graphics::ATTRIB_POSITION | Graphics::ATTRIB_DIFFUSE, numIndices * 3);
 	int trindex = -1;
-	for(unsigned int i=0; i<indices.size(); i++) {
+	for(unsigned int i = 0; i < numIndices; i++) {
 		if (i % 3 == 0)
 			trindex++;
-		unsigned int flag = mesh->m_flags[trindex];
+		const unsigned int flag = triFlags[trindex];
 		//show special geomflags in red
-		va.Add(vertices.at(indices.at(i)), flag > 0 ? Color::RED : Color::WHITE);
+		va.Add(vertices[indices[i]], flag > 0 ? Color::RED : Color::WHITE);
 	}
 
 	//might want to add some offset
@@ -495,7 +458,7 @@ void ModelViewer::DrawGrid(const matrix4x4f &trans, float radius)
 	}
 
 	m_renderer->SetTransform(trans);
-	m_renderer->DrawLines(points.size(), &points[0], Color(0.5f));//Color(0.0f,0.2f,0.0f,1.0f));
+	m_renderer->DrawLines(points.size(), &points[0], Color(128));//Color(0.0f,0.2f,0.0f,1.0f));
 
 	//industry-standard red/green/blue XYZ axis indiactor
 	const int numAxVerts = 6;
@@ -513,14 +476,14 @@ void ModelViewer::DrawGrid(const matrix4x4f &trans, float radius)
 		vector3f(0.f, 0.f, radius),
 	};
 	const Color col[numAxVerts] = {
-		Color(1.f, 0.f, 0.f),
-		Color(1.f, 0.f, 0.f),
+		Color(255, 0, 0),
+		Color(255, 0, 0),
 
-		Color(0.f, 0.f, 1.f),
-		Color(0.f, 0.f, 1.f),
+		Color(0, 0, 255),
+		Color(0, 0, 255),
 
-		Color(0.f, 1.f, 0.f),
-		Color(0.f, 1.f, 0.f)
+		Color(0, 255, 0),
+		Color(0, 255, 0)
 	};
 
 	m_renderer->SetDepthTest(true);
@@ -537,12 +500,16 @@ void ModelViewer::DrawModel()
 	m_renderer->SetTransform(matrix4x4f::Identity());
 	UpdateLights();
 
-	m_rotX = Clamp(m_rotX, -90.0f, 90.0f);
-	matrix4x4f rot = matrix4x4f::Identity();
-	rot.RotateY(DEG2RAD(m_rotY));
-	rot.RotateX(DEG2RAD(m_rotX));
-
-	const matrix4x4f mv = matrix4x4f::Translation(0.0f, 0.0f, -zoom_distance(m_baseDistance, m_zoom)) * rot.InverseOf();
+	matrix4x4f mv;
+	if (m_options.mouselookEnabled) {
+		mv = m_viewRot.Transpose() * matrix4x4f::Translation(-m_viewPos);
+	} else {
+		m_rotX = Clamp(m_rotX, -90.0f, 90.0f);
+		matrix4x4f rot = matrix4x4f::Identity();
+		rot.RotateX(DEG2RAD(-m_rotX));
+		rot.RotateY(DEG2RAD(-m_rotY));
+		mv = matrix4x4f::Translation(0.0f, 0.0f, -zoom_distance(m_baseDistance, m_zoom)) * rot;
+	}
 
 	if (m_options.showGrid)
 		DrawGrid(mv, m_model->GetDrawClipRadius());
@@ -555,7 +522,7 @@ void ModelViewer::DrawModel()
 		m_renderer->SetWireFrameMode(true);
 	m_model->Render(mv);
 	if (m_options.showLandingPad) {
-		if (!m_scaleModel.Valid()) CreateTestResources();
+		if (!m_scaleModel) CreateTestResources();
 		const float landingPadOffset = m_model->GetCollisionMesh()->GetAabb().min.y;
 		m_scaleModel->Render(mv * matrix4x4f::Translation(0.f, landingPadOffset, 0.f));
 	}
@@ -570,6 +537,11 @@ void ModelViewer::DrawModel()
 	if (m_options.showDockingLocators) {
 		m_renderer->SetTransform(mv);
 		DrawDockingLocators();
+	}
+
+	if (m_options.showTags) {
+		m_renderer->SetTransform(mv);
+		DrawTags();
 	}
 }
 
@@ -654,7 +626,7 @@ void ModelViewer::OnModelColorsChanged(float)
 {
 	if (!m_model) return;
 	//don't care about the float. Fetch values from all sliders.
-	std::vector<Color4ub> colors;
+	std::vector<Color> colors;
 	colors.push_back(get_slider_color(colorSliders[0], colorSliders[1], colorSliders[2]));
 	colors.push_back(get_slider_color(colorSliders[3], colorSliders[4], colorSliders[5]));
 	colors.push_back(get_slider_color(colorSliders[6], colorSliders[7], colorSliders[8]));
@@ -717,14 +689,14 @@ void ModelViewer::PollEvents()
 			m_mouseMotion[1] += event.motion.yrel;
 			break;
 		case SDL_MOUSEBUTTONDOWN:
-			switch (event.button.button) {
-				case SDL_BUTTON_WHEELUP:   m_mouseWheelUp = true; break;
-				case SDL_BUTTON_WHEELDOWN: m_mouseWheelDown = true; break;
-				default: m_mouseButton[event.button.button] = true ; break;
-			}
+			m_mouseButton[event.button.button] = true;
 			break;
 		case SDL_MOUSEBUTTONUP:
 			m_mouseButton[event.button.button] = false;
+			break;
+		case SDL_MOUSEWHEEL:
+			if (event.wheel.y > 0) m_mouseWheelUp = true;
+			if (event.wheel.y < 0) m_mouseWheelDown = true;
 			break;
 		case SDL_KEYDOWN:
 			switch (event.key.keysym.sym)
@@ -744,7 +716,10 @@ void ModelViewer::PollEvents()
 			case SDLK_TAB:
 				m_options.showUI = !m_options.showUI;
 				break;
-			case SDLK_PRINT:
+			case SDLK_t:
+				m_options.showTags = !m_options.showTags;
+				break;
+			case SDLK_PRINTSCREEN:
 				m_screenshotQueued = true;
 				break;
 			case SDLK_g:
@@ -753,18 +728,21 @@ void ModelViewer::PollEvents()
 			case SDLK_z:
 				m_options.wireframe = !m_options.wireframe;
 				break;
+			case SDLK_f:
+				ToggleViewControlMode();
+				break;
 			case SDLK_F11:
 				if (event.key.keysym.mod & KMOD_SHIFT)
 					m_renderer->ReloadShaders();
 				break;
-			case SDLK_KP1: case SDLK_m:
-			case SDLK_KP2: case SDLK_COMMA:
-			case SDLK_KP3: case SDLK_PERIOD:
-			case SDLK_KP4: case SDLK_j:
-			case SDLK_KP6: case SDLK_l:
-			case SDLK_KP7: case SDLK_u:
-			case SDLK_KP8: case SDLK_i:
-				ChangeCameraPreset(event.key.keysym.sym, event.key.keysym.mod);
+			case SDLK_KP_1: case SDLK_m:
+			case SDLK_KP_2: case SDLK_COMMA:
+			case SDLK_KP_3: case SDLK_PERIOD:
+			case SDLK_KP_4: case SDLK_j:
+			case SDLK_KP_6: case SDLK_l:
+			case SDLK_KP_7: case SDLK_u:
+			case SDLK_KP_8: case SDLK_i:
+				ChangeCameraPreset(event.key.keysym.sym, SDL_Keymod(event.key.keysym.mod));
 				break;
 			case SDLK_p: //landing pad test
 				m_options.showLandingPad = !m_options.showLandingPad;
@@ -830,7 +808,7 @@ void ModelViewer::SetModel(const std::string &filename, bool resetCamera /* true
 
 		//set decal textures, max 4 supported.
 		//Identical texture at the moment
-		OnDecalChanged(0, "01_Badge");
+		OnDecalChanged(0, "pioneer");
 
 		//dump warnings
 		for (std::vector<std::string>::const_iterator it = loader.GetLogMessages().begin();
@@ -844,9 +822,24 @@ void ModelViewer::SetModel(const std::string &filename, bool resetCamera /* true
 		AddLog(d.GetModelStatistics());
 
 		//note: stations won't demonstrate full docking light logic in MV
-		m_navLights.Reset(new NavLights(m_model));
+		m_navLights.reset(new NavLights(m_model));
 		m_navLights->SetEnabled(true);
 
+		{
+			SceneGraph::Model::TVecMT mts;
+
+			m_dockingPoints.clear();
+			m_model->FindTagsByStartOfName("approach_", mts);
+			AddAxisIndicators(mts, m_dockingPoints);
+			m_model->FindTagsByStartOfName("docking_", mts);
+			AddAxisIndicators(mts, m_dockingPoints);
+			m_model->FindTagsByStartOfName("leaving_", mts);
+			AddAxisIndicators(mts, m_dockingPoints);
+
+			m_tagPoints.clear();
+			m_model->FindTagsByStartOfName("tag_", mts);
+			AddAxisIndicators(mts, m_tagPoints);
+		}
 	} catch (SceneGraph::LoadingError &err) {
 		// report the error and show model picker.
 		m_model = 0;
@@ -869,7 +862,7 @@ static void collect_models(std::vector<std::string> &list)
 		const std::string &fpath = info.GetPath();
 
 		//check it's the expected type
-		if (info.IsFile() && ends_with(fpath, ".model")) {
+		if (info.IsFile() && ends_with_ci(fpath, ".model")) {
 			list.push_back(info.GetName().substr(0, info.GetName().size()-6));
 		}
 	}
@@ -904,7 +897,7 @@ void ModelViewer::SetupFilePicker()
 		);
 
 	m_logScroller->Layout(); //issues without this
-	c->SetInnerWidget(c->Grid(2,1)
+	c->GetTopLayer()->SetInnerWidget(c->Grid(2,1)
 		->SetRow(0, UI::WidgetSet(fp, m_logScroller.Get()))
 	);
 
@@ -954,7 +947,7 @@ void ModelViewer::SetupUI()
 		bottomBox
 	));
 
-	c->SetInnerWidget(c->Margin(spacing)->SetInnerWidget(outerBox));
+	c->GetTopLayer()->SetInnerWidget(c->Margin(spacing)->SetInnerWidget(outerBox));
 
 	//model name + reload button: visible even if loading failed
 	mainBox->PackEnd(nameLabel = c->Label(m_modelName));
@@ -1028,6 +1021,8 @@ void ModelViewer::SetupUI()
 		for (std::vector<std::string>::const_iterator it = decals.begin(); it != decals.end(); ++it) {
 			decalSelector->AddOption(*it);
 		}
+		if (decals.size() > 0)
+			decalSelector->SetSelectedOption("pioneer");
 	}
 
 	//light dropdown
@@ -1040,6 +1035,7 @@ void ModelViewer::SetupUI()
 			->AddOption("3  Backlight")
 			//->AddOption("4  Nuts")
 	);
+	lightSelector->SetSelectedOption("1  Front white");
 	m_options.lightPreset = 0;
 
 	add_pair(c, mainBox, gunsCheck = c->CheckBox(), "Attach guns");
@@ -1119,6 +1115,8 @@ void ModelViewer::UpdateAnimList()
 		for(unsigned int i=0; i<anims.size(); i++) {
 			animSelector->AddOption(anims[i]->GetName());
 		}
+		if (anims.size())
+			animSelector->SetSelectedOption(anims[0]->GetName());
 	}
 	animSelector->Layout();
 	OnAnimChanged(0, animSelector->GetSelectedOption());
@@ -1128,36 +1126,67 @@ void ModelViewer::UpdateCamera()
 {
 	static const float BASE_ZOOM_RATE = 1.0f / 12.0f;
 	float zoomRate = (BASE_ZOOM_RATE * 8.0f) * m_frameTime;
-	float moveRate = 25.f * m_frameTime;
+	float rotateRate = 25.f * m_frameTime;
+	float moveRate = 10.0f * m_frameTime;
+
 	if (m_keyStates[SDLK_LSHIFT]) {
 		zoomRate *= 8.0f;
-		moveRate = 100.f * m_frameTime;
+		moveRate *= 4.0f;
+		rotateRate *= 4.0f;
 	}
 	else if (m_keyStates[SDLK_RSHIFT]) {
 		zoomRate *= 3.0f;
-		moveRate = 50.f * m_frameTime;
+		moveRate *= 2.0f;
+		rotateRate *= 2.0f;
 	}
 
-	//zoom
-	if (m_keyStates[SDLK_EQUALS] || m_keyStates[SDLK_KP_PLUS]) m_zoom -= zoomRate;
-	if (m_keyStates[SDLK_MINUS] || m_keyStates[SDLK_KP_MINUS]) m_zoom += zoomRate;
+	if (m_options.mouselookEnabled) {
+		const float degrees_per_pixel = 0.2f;
+		if (!m_mouseButton[SDL_BUTTON_RIGHT]) {
+			// yaw and pitch
+			const float rot_y = degrees_per_pixel*m_mouseMotion[0];
+			const float rot_x = degrees_per_pixel*m_mouseMotion[1];
+			const matrix3x3f rot =
+				matrix3x3f::RotateX(DEG2RAD(rot_x)) *
+				matrix3x3f::RotateY(DEG2RAD(rot_y));
 
-	//zoom with mouse wheel
-	if (m_mouseWheelUp) m_zoom -= BASE_ZOOM_RATE;
-	if (m_mouseWheelDown) m_zoom += BASE_ZOOM_RATE;
+			m_viewRot = m_viewRot * rot;
+		} else {
+			// roll
+			m_viewRot = m_viewRot * matrix3x3f::RotateZ(DEG2RAD(degrees_per_pixel * m_mouseMotion[0]));
+		}
 
-	m_zoom = Clamp(m_zoom, -10.0f, 10.0f); // distance range: [baseDistance * 1/1024, baseDistance * 1024]
+		vector3f motion(0.0f);
+		if (m_keyStates[SDLK_w]) motion.z -= moveRate;
+		if (m_keyStates[SDLK_s]) motion.z += moveRate;
+		if (m_keyStates[SDLK_a]) motion.x -= moveRate;
+		if (m_keyStates[SDLK_d]) motion.x += moveRate;
+		if (m_keyStates[SDLK_q]) motion.y -= moveRate;
+		if (m_keyStates[SDLK_e]) motion.y += moveRate;
 
-	//rotate
-	if (m_keyStates[SDLK_UP]) m_rotX += moveRate;
-	if (m_keyStates[SDLK_DOWN]) m_rotX -= moveRate;
-	if (m_keyStates[SDLK_LEFT]) m_rotY += moveRate;
-	if (m_keyStates[SDLK_RIGHT]) m_rotY -= moveRate;
+		m_viewPos += m_viewRot * motion;
+	} else {
+		//zoom
+		if (m_keyStates[SDLK_EQUALS] || m_keyStates[SDLK_KP_PLUS]) m_zoom -= zoomRate;
+		if (m_keyStates[SDLK_MINUS] || m_keyStates[SDLK_KP_MINUS]) m_zoom += zoomRate;
 
-	//mouse rotate when right button held
-	if (m_mouseButton[SDL_BUTTON_RIGHT]) {
-		m_rotY += 0.2f*m_mouseMotion[0];
-		m_rotX += 0.2f*m_mouseMotion[1];
+		//zoom with mouse wheel
+		if (m_mouseWheelUp) m_zoom -= BASE_ZOOM_RATE;
+		if (m_mouseWheelDown) m_zoom += BASE_ZOOM_RATE;
+
+		m_zoom = Clamp(m_zoom, -10.0f, 10.0f); // distance range: [baseDistance * 1/1024, baseDistance * 1024]
+
+		//rotate
+		if (m_keyStates[SDLK_UP]) m_rotX += rotateRate;
+		if (m_keyStates[SDLK_DOWN]) m_rotX -= rotateRate;
+		if (m_keyStates[SDLK_LEFT]) m_rotY += rotateRate;
+		if (m_keyStates[SDLK_RIGHT]) m_rotY -= rotateRate;
+
+		//mouse rotate when right button held
+		if (m_mouseButton[SDL_BUTTON_RIGHT]) {
+			m_rotY += 0.2f*m_mouseMotion[0];
+			m_rotX += 0.2f*m_mouseMotion[1];
+		}
 	}
 }
 
@@ -1169,25 +1198,25 @@ void ModelViewer::UpdateLights()
 	switch(m_options.lightPreset) {
 	case 0:
 		//Front white
-		lights.push_back(Light(Light::LIGHT_DIRECTIONAL, az_el_to_dir(90,0), Color(1.0f, 1.0f, 1.0f), Color(1.f)));
-		lights.push_back(Light(Light::LIGHT_DIRECTIONAL, az_el_to_dir(0,-90), Color(0.05, 0.05f, 0.1f), Color(1.f)));
+		lights.push_back(Light(Light::LIGHT_DIRECTIONAL, az_el_to_dir(90,0), Color(255), Color(255)));
+		lights.push_back(Light(Light::LIGHT_DIRECTIONAL, az_el_to_dir(0,-90), Color(13, 13, 26), Color(255)));
 		break;
 	case 1:
 		//Two-point
-		lights.push_back(Light(Light::LIGHT_DIRECTIONAL, az_el_to_dir(120,0), Color(0.9f, 0.8f, 0.8f), Color(1.f)));
-		lights.push_back(Light(Light::LIGHT_DIRECTIONAL, az_el_to_dir(-30,-90), Color(0.7f, 0.5f, 0.0f), Color(1.f)));
+		lights.push_back(Light(Light::LIGHT_DIRECTIONAL, az_el_to_dir(120,0), Color(230, 204, 204), Color(255)));
+		lights.push_back(Light(Light::LIGHT_DIRECTIONAL, az_el_to_dir(-30,-90), Color(178, 128, 0), Color(255)));
 		break;
 	case 2:
 		//Backlight
-		lights.push_back(Light(Light::LIGHT_DIRECTIONAL, az_el_to_dir(-75,20), Color(1.f), Color(1.f)));
-		lights.push_back(Light(Light::LIGHT_DIRECTIONAL, az_el_to_dir(0,-90), Color(0.05, 0.05f, 0.1f), Color(1.f)));
+		lights.push_back(Light(Light::LIGHT_DIRECTIONAL, az_el_to_dir(-75,20), Color(255), Color(255)));
+		lights.push_back(Light(Light::LIGHT_DIRECTIONAL, az_el_to_dir(0,-90), Color(13, 13, 26), Color(255)));
 		break;
 	case 3:
 		//4 lights
-		lights.push_back(Light(Light::LIGHT_DIRECTIONAL, az_el_to_dir(0, 90), Color::YELLOW, Color(1.f)));
-		lights.push_back(Light(Light::LIGHT_DIRECTIONAL, az_el_to_dir(0, -90), Color::GREEN, Color(1.f)));
-		lights.push_back(Light(Light::LIGHT_DIRECTIONAL, az_el_to_dir(0, 45), Color::BLUE, Color(1.f)));
-		lights.push_back(Light(Light::LIGHT_DIRECTIONAL, az_el_to_dir(0, -45), Color::WHITE, Color(1.f)));
+		lights.push_back(Light(Light::LIGHT_DIRECTIONAL, az_el_to_dir(0, 90), Color::YELLOW, Color(255)));
+		lights.push_back(Light(Light::LIGHT_DIRECTIONAL, az_el_to_dir(0, -90), Color::GREEN, Color(255)));
+		lights.push_back(Light(Light::LIGHT_DIRECTIONAL, az_el_to_dir(0, 45), Color::BLUE, Color(255)));
+		lights.push_back(Light(Light::LIGHT_DIRECTIONAL, az_el_to_dir(0, -45), Color::WHITE, Color(255)));
 		break;
 	};
 
@@ -1203,6 +1232,8 @@ void ModelViewer::UpdatePatternList()
 		for(unsigned int i=0; i<pats.size(); i++) {
 			patternSelector->AddOption(pats[i].name);
 		}
+		if (pats.size() > 0)
+			patternSelector->SetSelectedOption(pats[0].name);
 	}
 
 	m_ui->Layout();

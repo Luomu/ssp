@@ -19,7 +19,7 @@ DeathView::DeathView(): View()
 	Pi::renderer->GetNearFarRange(znear, zfar);
 
 	const float fovY = Pi::config->Float("FOVVertical");
-	m_cam.Reset(new Camera(Graphics::GetScreenWidth(), Graphics::GetScreenHeight(), fovY, znear, zfar));
+	m_cam.reset(new Camera(Graphics::GetScreenWidth(), Graphics::GetScreenHeight(), fovY, znear, zfar));
 }
 
 DeathView::~DeathView() {}
@@ -48,5 +48,6 @@ void DeathView::Update(const ViewEye eye /*= ViewEye_Centre*/)
 
 void DeathView::Draw3D(const ViewEye eye /*= ViewEye_Centre*/)
 {
+	PROFILE_SCOPED()
 	m_cam->Draw(m_renderer, nullptr, eye);
 }

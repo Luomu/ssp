@@ -13,12 +13,14 @@ void UIView::Update(const ViewEye eye /*= ViewEye_Centre*/)
 
 void UIView::Draw3D(const ViewEye eye /*= ViewEye_Centre*/)
 {
+	PROFILE_SCOPED()
 	Pi::ui->Draw();
 }
 
 void UIView::OnSwitchTo()
 {
-	Pi::ui->SetInnerWidget(
+	Pi::ui->DropAllLayers();
+	Pi::ui->GetTopLayer()->SetInnerWidget(
 		Pi::ui->VBox()
 			->PackEnd(Pi::ui->CallTemplate(m_templateName))
 			->PackEnd(new GameUI::Panel(Pi::ui.Get()))
@@ -27,6 +29,6 @@ void UIView::OnSwitchTo()
 
 void UIView::OnSwitchFrom()
 {
-	Pi::ui->RemoveInnerWidget();
+	Pi::ui->DropAllLayers();
 	Pi::ui->Layout(); // UI does important things on layout, like updating keyboard shortcuts
 }

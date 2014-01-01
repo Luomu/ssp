@@ -20,6 +20,7 @@
 #include "HyperspaceCloud.h"
 #include "graphics/Graphics.h"
 #include "WorldView.h"
+#include "galaxy/SectorCache.h"
 #include "SectorView.h"
 #include "Lang.h"
 #include "Game.h"
@@ -67,7 +68,7 @@ Space::Space(Game *game)
 	, m_processingFinalizationQueue(false)
 #endif
 {
-	m_rootFrame.Reset(new Frame(0, Lang::SYSTEM));
+	m_rootFrame.reset(new Frame(0, Lang::SYSTEM));
 	m_rootFrame->SetRadius(FLT_MAX);
 }
 
@@ -88,10 +89,10 @@ Space::Space(Game *game, const SystemPath &path)
 	CityOnPlanet::SetCityModelPatterns(m_starSystem->GetPath());
 
 	// XXX set radius in constructor
-	m_rootFrame.Reset(new Frame(0, Lang::SYSTEM));
+	m_rootFrame.reset(new Frame(0, Lang::SYSTEM));
 	m_rootFrame->SetRadius(FLT_MAX);
 
-	GenBody(m_starSystem->rootBody.Get(), m_rootFrame.Get());
+	GenBody(m_starSystem->rootBody.Get(), m_rootFrame.get());
 	m_rootFrame->UpdateOrbitRails(m_game->GetTime(), m_game->GetTimeStep());
 
 	//DebugDumpFrames();
@@ -115,7 +116,7 @@ Space::Space(Game *game, Serializer::Reader &rd)
 	CityOnPlanet::SetCityModelPatterns(m_starSystem->GetPath());
 
 	Serializer::Reader section = rd.RdSection("Frames");
-	m_rootFrame.Reset(Frame::Unserialize(section, this, 0));
+	m_rootFrame.reset(Frame::Unserialize(section, this, 0));
 	RebuildFrameIndex();
 
 	Uint32 nbodies = rd.Int32();
@@ -123,7 +124,7 @@ Space::Space(Game *game, Serializer::Reader &rd)
 		m_bodies.push_back(Body::Unserialize(rd, this));
 	RebuildBodyIndex();
 
-	Frame::PostUnserializeFixup(m_rootFrame.Get(), this);
+	Frame::PostUnserializeFixup(m_rootFrame.get(), this);
 	for (BodyIterator i = m_bodies.begin(); i != m_bodies.end(); ++i)
 		(*i)->PostLoadFixup(this);
 }
@@ -145,7 +146,7 @@ void Space::Serialize(Serializer::Writer &wr)
 	StarSystem::Serialize(wr, m_starSystem.Get());
 
 	Serializer::Writer section;
-	Frame::Serialize(section, m_rootFrame.Get(), this);
+	Frame::Serialize(section, m_rootFrame.get(), this);
 	wr.WrSection("Frames", section.GetData());
 
 	wr.Int32(m_bodies.size());
@@ -223,7 +224,7 @@ void Space::RebuildFrameIndex()
 	m_frameIndex.push_back(0);
 
 	if (m_rootFrame)
-		AddFrameToIndex(m_rootFrame.Get());
+		AddFrameToIndex(m_rootFrame.get());
 
 	m_frameIndexValid = true;
 }
@@ -297,11 +298,11 @@ vector3d Space::GetHyperspaceExitPoint(const SystemPath &source) const
 
 	const SystemPath &dest = m_starSystem->GetPath();
 
-	Sector source_sec(source.sectorX, source.sectorY, source.sectorZ);
-	Sector dest_sec(dest.sectorX, dest.sectorY, dest.sectorZ);
+	const Sector* source_sec = Sector::cache.GetCached(source);
+	const Sector* dest_sec = Sector::cache.GetCached(dest);
 
-	Sector::System source_sys = source_sec.m_systems[source.systemIndex];
-	Sector::System dest_sys = dest_sec.m_systems[dest.systemIndex];
+	Sector::System source_sys = source_sec->m_systems[source.systemIndex];
+	Sector::System dest_sys = dest_sec->m_systems[dest.systemIndex];
 
 	const vector3d sourcePos = vector3d(source_sys.p) + vector3d(source.sectorX, source.sectorY, source.sectorZ);
 	const vector3d destPos = vector3d(dest_sys.p) + vector3d(dest.sectorX, dest.sectorY, dest.sectorZ);
@@ -367,7 +368,7 @@ static Frame *find_frame_with_sbody(Frame *f, const SystemBody *b)
 
 Frame *Space::GetFrameWithSystemBody(const SystemBody *b) const
 {
-	return find_frame_with_sbody(m_rootFrame.Get(), b);
+	return find_frame_with_sbody(m_rootFrame.get(), b);
 }
 
 static void RelocateStarportIfUnderwaterOrBuried(SystemBody *sbody, Frame *frame, Planet *planet, vector3d &pos, matrix3x3d &rot)
@@ -730,7 +731,7 @@ static void CollideWithTerrain(Body *body)
 
 	const Aabb &aabb = dynBody->GetAabb();
 	double altitude = body->GetPosition().Length() + aabb.min.y;
-	if (altitude >= terrain->GetMaxFeatureRadius()) return;
+	if (altitude >= (terrain->GetMaxFeatureRadius()*2.0)) return;
 
 	double terrHeight = terrain->GetTerrainHeight(body->GetPosition().Normalized());
 	if (altitude >= terrHeight) return;
@@ -753,10 +754,11 @@ void Space::CollideFrame(Frame *f)
 
 void Space::TimeStep(float step)
 {
+	PROFILE_SCOPED()
 	m_frameIndexValid = m_bodyIndexValid = m_sbodyIndexValid = false;
 
 	// XXX does not need to be done this often
-	CollideFrame(m_rootFrame.Get());
+	CollideFrame(m_rootFrame.get());
 	for (BodyIterator i = m_bodies.begin(); i != m_bodies.end(); ++i)
 		CollideWithTerrain(*i);
 
@@ -838,5 +840,5 @@ void Space::DebugDumpFrames()
 	memset(space, ' ', sizeof(space));
 
 	printf("Frame structure for '%s':\n", m_starSystem->GetName().c_str());
-	DebugDumpFrame(m_rootFrame.Get(), 2);
+	DebugDumpFrame(m_rootFrame.get(), 2);
 }

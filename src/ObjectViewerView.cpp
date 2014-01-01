@@ -87,10 +87,11 @@ ObjectViewerView::ObjectViewerView(): View()
 
 void ObjectViewerView::Draw3D(const ViewEye eye /*= ViewEye_Centre*/)
 {
+	PROFILE_SCOPED()
 	m_renderer->ClearScreen();
 	float znear, zfar;
 	m_renderer->GetNearFarRange(znear, zfar);
-	m_renderer->SetPerspectiveProjection(75.f, Pi::GetScrAspect(), znear, zfar);
+	m_renderer->SetPerspectiveProjection(75.f, m_renderer->GetDisplayAspect(), znear, zfar);
 	m_renderer->SetTransform(matrix4x4f::Identity());
 
 	Graphics::Light light;

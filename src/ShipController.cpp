@@ -164,15 +164,17 @@ void PlayerShipController::PollControls(const float timeStep, const bool force_r
 	static bool stickySpeedKey = false;
 
 	CheckControlsLock();
+	if (m_controlsLocked) return;
 
-	m_ship->ClearThrusterState();
-	m_ship->SetGunState(0,0);
-	m_ship->SetGunState(1,0);
-
-	vector3d wantAngVel(0.0);
-
-	if (!m_controlsLocked)
+	// if flying
 	{
+		m_ship->ClearThrusterState();
+		m_ship->SetGunState(0,0);
+		m_ship->SetGunState(1,0);
+
+		vector3d wantAngVel(0.0);
+		double angThrustSoftness = 10.0;
+
 		const float linearThrustPower = (KeyBindings::thrustLowPower.IsActive() ? m_lowThrustPower : 1.0f);
 
 		// have to use this function. SDL mouse position event is bugged in windows
@@ -251,30 +253,36 @@ void PlayerShipController::PollControls(const float timeStep, const bool force_r
 		if (KeyBindings::rollLeft.IsActive())  wantAngVel.z += m_turnSensitivity;
 		if (KeyBindings::rollRight.IsActive()) wantAngVel.z -= m_turnSensitivity;
 
+		if (KeyBindings::thrustLowPower.IsActive())
+			angThrustSoftness = 50.0;
+
 		vector3d changeVec;
 		changeVec.x = KeyBindings::pitchAxis.GetValue();
 		changeVec.y = KeyBindings::yawAxis.GetValue();
 		changeVec.z = KeyBindings::rollAxis.GetValue();
 
-		// Deadzone
-		if(changeVec.LengthSqr() < m_joystickDeadzone)
-			changeVec = vector3d(0.0);
-
-		changeVec *= 2.0;
+		// Deadzone more accurate
+		for (int axis=0; axis<3; axis++) {
+				if (fabs(changeVec[axis]) < m_joystickDeadzone)
+					changeVec[axis]=0.0;
+				else
+					changeVec[axis] = changeVec[axis] * 2.0;
+		}
+		
 		wantAngVel += changeVec;
+
+		if (wantAngVel.Length() >= 0.001 || force_rotation_damping || m_rotationDamping) {
+			if (Pi::game->GetTimeAccel()!=Game::TIMEACCEL_1X) {
+				for (int axis=0; axis<3; axis++)
+					wantAngVel[axis] = wantAngVel[axis] * Pi::game->GetInvTimeAccelRate();
+			}
+
+			m_ship->AIModelCoordsMatchAngVel(wantAngVel, angThrustSoftness);
+		}
+
+		if (m_mouseActive) m_ship->AIFaceDirection(m_mouseDir);
+
 	}
-
-	const double invTimeAccelRate = 1.0 / Pi::game->GetTimeAccelRate();
-	if (wantAngVel.LengthSqr() >= 0.001) {// || force_rotation_damping || m_rotationDamping) {
-		for (int axis=0; axis<3; axis++)
-			wantAngVel[axis] = Clamp(wantAngVel[axis], -invTimeAccelRate, invTimeAccelRate);
-
-		m_ship->AIModelCoordsMatchAngVel(wantAngVel, TURN_SOFTNESS);
-	}
-	else
-		m_ship->AIMatchAngVelObjSpace(wantAngVel);
-
-	if (m_mouseActive && !m_controlsLocked) m_ship->AIFaceDirection(m_mouseDir);
 }
 
 bool PlayerShipController::IsAnyAngularThrusterKeyDown()
@@ -308,7 +316,16 @@ void PlayerShipController::SetFlightControlState(FlightControlState s)
 		m_ship->AIClearInstructions();
 		//set desired velocity to current actual
 		if (m_flightControlState == CONTROL_FIXSPEED) {
-			m_setSpeed = m_setSpeedTarget ? m_ship->GetVelocityRelTo(m_setSpeedTarget).Length() : m_ship->GetVelocity().Length();
+			// Speed is set to the projection of the velocity onto the target.
+
+			vector3d shipVel = m_setSpeedTarget ?
+				// Ship's velocity with respect to the target, in current frame's coordinates
+				-m_setSpeedTarget->GetVelocityRelTo(m_ship) :
+				// Ship's velocity with respect to current frame
+				m_ship->GetVelocity();
+
+			// A change from Manual to Set Speed never sets a negative speed.
+			m_setSpeed = std::max(shipVel.Dot(-m_ship->GetOrient().VectorZ()), 0.0);
 		}
 		//XXX global stuff
 		Pi::onPlayerChangeFlightControlState.emit();

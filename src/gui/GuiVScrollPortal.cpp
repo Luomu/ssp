@@ -90,8 +90,8 @@ float VScrollPortal::GetScrollPixels()
 
 bool VScrollPortal::OnMouseDown(MouseButtonEvent *e)
 {
-	if (e->button == SDL_BUTTON_WHEELUP || e->button == SDL_BUTTON_WHEELDOWN) {
-		float change = e->button == SDL_BUTTON_WHEELUP ? -0.1 : 0.1;
+	if (e->button == MouseButtonEvent::BUTTON_WHEELUP || e->button == MouseButtonEvent::BUTTON_WHEELDOWN) {
+		float change = e->button == MouseButtonEvent::BUTTON_WHEELUP ? -0.1 : 0.1;
 		float pos = vscrollAdjust.GetValue();
 		vscrollAdjust.SetValue(Clamp(pos+change, 0.0f, 1.0f));
 		return false;
@@ -113,6 +113,7 @@ bool VScrollPortal::OnMouseMotion(MouseMotionEvent *e)
 
 void VScrollPortal::Draw()
 {
+	PROFILE_SCOPED()
 	SetScissor(true);
 
 	float size[2];
@@ -126,11 +127,12 @@ void VScrollPortal::Draw()
 	float scale[2];
 	Screen::GetCoords2Pixels(scale);
 
-	glPushMatrix();
+	Graphics::Renderer *r = Gui::Screen::GetRenderer();
+	Graphics::Renderer::MatrixTicket ticket(r, Graphics::MatrixMode::MODELVIEW);
+
 	// scroll to whole pixel locations whatever the resolution
-	glTranslatef(0, floor((-m_scrollY*toScroll)/scale[1])*scale[1], 0);
+	r->Translate(0, floor((-m_scrollY*toScroll)/scale[1])*scale[1], 0);
 	Container::Draw();
-	glPopMatrix();
 
 	SetScissor(false);
 }
