@@ -20,12 +20,13 @@
 #include "SpaceStationView.h"
 #include "SystemInfoView.h"
 #include "SystemView.h"
+#include "SystemInfoView.h"
 #include "UIView.h"
 #include "WorldView.h"
 #include "graphics/Renderer.h"
 #include "ui/Context.h"
 
-static const int  s_saveVersion   = 68;
+static const int  s_saveVersion   = 69;
 static const char s_saveStart[]   = "PIONEER";
 static const char s_saveEnd[]     = "END";
 
@@ -226,6 +227,7 @@ void Game::Serialize(Serializer::Writer &wr)
 
 void Game::TimeStep(float step)
 {
+	PROFILE_SCOPED()
 	m_time += step;			// otherwise planets lag time accel changes by a frame
 
 	m_space->TimeStep(step);
@@ -255,6 +257,7 @@ void Game::TimeStep(float step)
 
 bool Game::UpdateTimeAccel()
 {
+	PROFILE_SCOPED()
 	// don't modify the timeaccel if the game is paused
 	if (m_requestedTimeAccel == Game::TIMEACCEL_PAUSED) {
 		SetTimeAccel(Game::TIMEACCEL_PAUSED);
@@ -347,6 +350,7 @@ double Game::GetHyperspaceArrivalProbability() const
 
 void Game::SwitchToHyperspace()
 {
+	PROFILE_SCOPED()
 	// remember where we came from so we can properly place the player on exit
 	m_hyperspaceSource = m_space->GetStarSystem()->GetPath();
 
@@ -416,6 +420,7 @@ void Game::SwitchToHyperspace()
 
 void Game::SwitchToNormalSpace()
 {
+	PROFILE_SCOPED()
 	// remove the player from hyperspace
 	m_space->RemoveBody(m_player.get());
 
@@ -601,7 +606,7 @@ void Game::CreateViews()
 	Pi::galacticView = new GalacticView();
 	Pi::systemView = new SystemView();
 	Pi::systemInfoView = new SystemInfoView();
-	Pi::spaceStationView = new SpaceStationView();
+	Pi::spaceStationView = new UIView("StationView");
 	Pi::infoView = new UIView("InfoView");
 	Pi::deathView = new DeathView();
 	Pi::settingsView = new UIView("SettingsInGame");
@@ -647,7 +652,7 @@ void Game::LoadViews(Serializer::Reader &rd)
 	Pi::galacticView = new GalacticView();
 	Pi::systemView = new SystemView();
 	Pi::systemInfoView = new SystemInfoView();
-	Pi::spaceStationView = new SpaceStationView();
+	Pi::spaceStationView = new UIView("StationView");
 	Pi::infoView = new UIView("InfoView");
 	Pi::deathView = new DeathView();
 	Pi::settingsView = new UIView("SettingsInGame");

@@ -21,7 +21,7 @@ local setFaceInfo = function (face, character)
 				ui:Gradient({r=0.1,g=0.1,b=0.1,a=0.8}, {r=0.0,g=0.0,b=0.1,a=0.0}, "HORIZONTAL"):SetInnerWidget(
 					ui:Margin(20):SetInnerWidget(ui:VBox():PackEnd({
 						ui:Label(character.name):SetFont("HEADING_NORMAL"),
-						ui:Label(character.title):SetFont("HEADING_SMALL"),
+						ui:Label(character.title or ''):SetFont("HEADING_SMALL"),
 					}))
 				)
 			)
@@ -36,8 +36,8 @@ function InfoFace.New (character)
 
 	local faceFlags = {
 		character.female and "FEMALE" or "MALE",
-		character.armor and "ARMOUR",
 	}
+	if character.armour then table.insert(faceFlags, "ARMOUR") end
 
 	local self = {
 		widget = Face.New(ui, faceFlags, character.seed)

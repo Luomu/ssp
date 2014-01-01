@@ -1,30 +1,30 @@
 {
-    "WELCOME_TO": {
-        "message": "Welcome to ",
-        "description": ""
-    },
-    "GOODS_TRADER_2": {
-        "message": "{name}'s Warehouse",
-        "description": ""
-    },
-    "GOODS_TRADER_3": {
-        "message": "{name}'s Goods Exchange",
-        "description": ""
-    },
-    "GOODS_TRADER_0": {
-        "message": "Honest {name}'s Goods Emporium",
-        "description": ""
-    },
-    "GOODS_TRADER_1": {
-        "message": "{name}'s Trading House",
-        "description": ""
-    },
-    "GOODS_TRADER_4": {
-        "message": "{name} Holdings",
-        "description": ""
-    },
-    "GOODS_TRADER_5": {
-        "message": "{name} & Sons",
-        "description": ""
-    }
+   "GOODS_TRADER_0" : {
+      "description" : "",
+      "message" : "au centre commercial {name}"
+   },
+   "GOODS_TRADER_1" : {
+      "description" : "",
+      "message" : "à la chambre de commerce {name}"
+   },
+   "GOODS_TRADER_2" : {
+      "description" : "",
+      "message" : "à l'entrepôt {name}"
+   },
+   "GOODS_TRADER_3" : {
+      "description" : "",
+      "message" : "au marché {name}"
+   },
+   "GOODS_TRADER_4" : {
+      "description" : "",
+      "message" : "à la Holding {name}"
+   },
+   "GOODS_TRADER_5" : {
+      "description" : "",
+      "message" : "chez {name} & Fils"
+   },
+   "WELCOME_TO" : {
+      "description" : "",
+      "message" : "Bienvenue"
+   }
 }

@@ -8,8 +8,6 @@
 #include "Player.h"
 #include "SectorView.h"
 #include "ShipCpanel.h"
-#include "SpaceStation.h"
-#include "SpaceStationView.h"
 #include "SystemInfoView.h"
 #include "SystemView.h"
 #include "SystemInfoView.h"
@@ -140,7 +138,7 @@ void ShipCpanel::InitObject()
 	comms_button->SetRenderDimensions(30, 22);
 	Add(comms_button, 98, 56);
 
-	m_clock = (new Gui::Label(""))->Color(1.0f,0.7f,0.0f);
+	m_clock = (new Gui::Label(""))->Color(255,178,0);
 	Add(m_clock, 4, 18);
 
 	m_rightButtonGroup = new Gui::RadioGroup();
@@ -266,6 +264,7 @@ void ShipCpanel::OnDockingClearanceExpired(const SpaceStation *s)
 
 void ShipCpanel::Update()
 {
+	PROFILE_SCOPED()
 	int timeAccel = Pi::game->GetTimeAccel();
 	int requested = Pi::game->GetRequestedTimeAccel();
 
@@ -399,6 +398,7 @@ void ShipCpanel::SetAlertState(Ship::AlertState as)
 
 void ShipCpanel::TimeStepUpdate(float step)
 {
+	PROFILE_SCOPED()
 	m_scanner->TimeStepUpdate(step);
 }
 

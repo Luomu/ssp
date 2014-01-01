@@ -64,6 +64,8 @@
 #include "SmartPtr.h"
 #include "RefCounted.h"
 
+#include "profiler/Profiler.h"
+
 #ifdef NDEBUG
 #define	PiVerify(x) ((void)(x))
 #else

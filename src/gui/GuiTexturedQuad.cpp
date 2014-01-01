@@ -12,7 +12,10 @@ namespace Gui {
 
 void TexturedQuad::Draw(Graphics::Renderer *renderer, const vector2f &pos, const vector2f &size, const vector2f &texPos, const vector2f &texSize, const Color &tint)
 {
-    Graphics::VertexArray va(ATTRIB_POSITION | ATTRIB_UV0);
+	PROFILE_SCOPED()
+	if(!m_va.get()) {
+		PROFILE_SCOPED_RAW("!m_va.get()")
+		m_va.reset(new Graphics::VertexArray(ATTRIB_POSITION | ATTRIB_UV0));
 
 	// reverse winding
 	va.Add(vector3f(pos.x,        pos.y,        0.0f), vector2f(texPos.x,           texPos.y));
@@ -22,13 +25,14 @@ void TexturedQuad::Draw(Graphics::Renderer *renderer, const vector2f &pos, const
 
 	// Create material on first use. Bit of a hack.
 	if (!m_material) {
+		PROFILE_SCOPED_RAW("!material")
 		Graphics::MaterialDescriptor desc;
 		desc.textures = 1;
 		m_material.reset(renderer->CreateMaterial(desc));
 		m_material->texture0 = m_texture.Get();
 	}
 	m_material->diffuse = tint;
-	renderer->DrawTriangles(&va, m_material.get(), TRIANGLE_STRIP);
+	renderer->DrawTriangles(m_va.get(), m_material.get(), TRIANGLE_STRIP);
 }
 
 }

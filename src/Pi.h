@@ -26,7 +26,6 @@ class SectorView;
 class Ship;
 class ShipCpanel;
 class SpaceStation;
-class SpaceStationView;
 class StarSystem;
 class SystemInfoView;
 class SystemView;
@@ -80,6 +79,8 @@ public:
     static bool IsMouseYInvert() { return mouseYInvert; }
 	static bool IsNavTunnelDisplayed() { return navTunnelDisplayed; }
 	static void SetNavTunnelDisplayed(bool state) { navTunnelDisplayed = state; }
+	static bool AreSpeedLinesDisplayed() { return speedLinesDisplayed; }
+	static void SetSpeedLinesDisplayed(bool state) { speedLinesDisplayed = state; }
 	static int MouseButtonState(int button) { return mouseButton[button]; }
 	/// Get the default speed modifier to apply to movement (scrolling, zooming...), depending on the "shift" keys.
 	/// This is a default value only, centralized here to promote uniform user expericience.
@@ -129,6 +130,12 @@ public:
 #if WITH_DEVKEYS
 	static bool showDebugInfo;
 #endif
+#if PIONEER_PROFILER
+	static std::string profilerPath;
+	static bool doProfileSlow;
+	static bool doProfileOne;
+#endif
+
 	static Player *player;
 	static SectorView *sectorView;
 	static GalacticView *galacticView;
@@ -137,7 +144,7 @@ public:
 	static SystemView *systemView;
 	static WorldView *worldView;
 	static DeathView *deathView;
-	static SpaceStationView *spaceStationView;
+	static UIView *spaceStationView;
 	static UIView *infoView;
 	static LuaConsole *luaConsole;
 	static ShipCpanel *cpan;
@@ -201,6 +208,7 @@ private:
 	static Sound::MusicPlayer musicPlayer;
 
 	static bool navTunnelDisplayed;
+	static bool speedLinesDisplayed;
 
 	static Gui::Fixed *menu;
 
