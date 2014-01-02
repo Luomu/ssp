@@ -47,7 +47,7 @@ void HudTrail::Render(Graphics::Renderer *r)
 			tvts.push_back(-vector3f(curpos - m_trailPoints[i]));
 			alpha -= decrement;
 			colors.push_back(tcolor);
-			colors.back().a = alpha;
+			colors.back().a = alpha * 255;
 		}
 
 		r->SetTransform(m_transform);

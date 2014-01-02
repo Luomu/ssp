@@ -231,14 +231,12 @@ bool RendererGL2::SetTransform(const matrix4x4d &m)
 	matrix4x4f mf;
 	matrix4x4dtof(m, mf);
 	return SetTransform(mf);
-	return true;
 }
 
 bool RendererGL2::SetTransform(const matrix4x4f &m)
 {
 	PROFILE_SCOPED()
 	//same as above
-	m_modelViewStack.top() = m;
 	SetMatrixMode(MatrixMode::MODELVIEW);
 	LoadMatrix(&m[0]);
 	return true;
