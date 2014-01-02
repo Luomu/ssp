@@ -1,4 +1,4 @@
-// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "RendererGL2.h"
@@ -232,14 +232,12 @@ bool RendererGL2::SetTransform(const matrix4x4d &m)
 	matrix4x4f mf;
 	matrix4x4dtof(m, mf);
 	return SetTransform(mf);
-	return true;
 }
 
 bool RendererGL2::SetTransform(const matrix4x4f &m)
 {
 	PROFILE_SCOPED()
 	//same as above
-	m_modelViewStack.top() = m;
 	SetMatrixMode(MatrixMode::MODELVIEW);
 	LoadMatrix(&m[0]);
 	return true;
@@ -350,12 +348,14 @@ bool RendererGL2::SetWireFrameMode(bool enabled)
 	return true;
 }
 
-void RendererGL2::SetLights(const bool enabled) { 
+bool RendererGL2::SetLightsEnabled(const bool enabled) {
+	// XXX move lighting out to shaders
 	if( enabled ) {
 		glEnable(GL_LIGHTING);
 	} else {
 		glDisable(GL_LIGHTING);
 	}
+	return true;
 }
 
 bool RendererGL2::SetLights(int numlights, const Light *lights)

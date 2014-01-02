@@ -1,4 +1,4 @@
-// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "Pi.h"
@@ -130,6 +130,7 @@ bool Pi::mouseYInvert;
 std::map<SDL_JoystickID,Pi::JoystickState> Pi::joysticks;
 bool Pi::navTunnelDisplayed;
 bool Pi::speedLinesDisplayed = false;
+bool Pi::hudTrailsDisplayed = false;
 Gui::Fixed *Pi::menu;
 bool Pi::DrawGUI = true;
 Graphics::Renderer *Pi::renderer;
@@ -137,10 +138,9 @@ RefCountedPtr<UI::Context> Pi::ui;
 ModelCache *Pi::modelCache;
 Intro *Pi::intro;
 SDLGraphics *Pi::sdl;
-Graphics::RenderTarget *Pi::pRTarget;
-RefCountedPtr<Graphics::Texture> Pi::m_texture;
-std::unique_ptr<Graphics::Drawables::TexturedQuad> Pi::m_quads[eVP_MAX];
-std::unique_ptr<Gui::Image> Pi::pLoadingImage;
+Graphics::RenderTarget *Pi::renderTarget;
+RefCountedPtr<Graphics::Texture> Pi::renderTexture;
+std::unique_ptr<Graphics::Drawables::TexturedQuad> Pi::renderQuads[eVP_MAX];
 
 #if WITH_OBJECTVIEWER
 ObjectViewerView *Pi::objectViewerView;
@@ -164,8 +164,8 @@ void Pi::CreateRenderTarget(const Uint16 width, const Uint16 height) {
 		Graphics::TEXTURE_RGB_888,
 		vector2f(width, height),
 		Graphics::LINEAR_CLAMP, false, false, 0);
-	Pi::m_texture.Reset(Pi::renderer->CreateTexture(texDesc));
-	Pi::m_quads[eVPCentre].reset(new Graphics::Drawables::TexturedQuad(Pi::renderer, m_texture.Get(), vector2f(0.0f,0.0f), vector2f(800.0f, 600.0f)));
+	Pi::renderTexture.Reset(Pi::renderer->CreateTexture(texDesc));
+	Pi::renderQuads[eVPCentre].reset(new Graphics::Drawables::TexturedQuad(Pi::renderer, renderTexture.Get(), vector2f(0.0f,0.0f), vector2f(800.0f, 600.0f)));
 	if( OculusRiftInterface::HasHMD() ) {
 		Graphics::MaterialDescriptor desc;
 		desc.effect = Graphics::EFFECT_HMDWARP;
@@ -174,12 +174,12 @@ void Pi::CreateRenderTarget(const Uint16 width, const Uint16 height) {
 		// create first (left) viewport material and quad
 		Graphics::Material* hmdMat = Pi::renderer->CreateMaterial(desc);
 		hmdMat->specialParameter0 = new OculusRiftInterface::Viewport(0,0,640,800);
-		Pi::m_quads[eVPLeft].reset(new Graphics::Drawables::TexturedQuad(Pi::renderer, m_texture.Get(), hmdMat, vector2f(0.0f,0.0f), vector2f(400.0f, 600.0f)));
+		Pi::renderQuads[eVPLeft].reset(new Graphics::Drawables::TexturedQuad(Pi::renderer, renderTexture.Get(), hmdMat, vector2f(0.0f,0.0f), vector2f(400.0f, 600.0f)));
 
 		// create second (right) viewport material and quad
 		hmdMat = Pi::renderer->CreateMaterial(desc);
 		hmdMat->specialParameter0 = new OculusRiftInterface::Viewport(640,0,640,800);
-		Pi::m_quads[eVPRight].reset(new Graphics::Drawables::TexturedQuad(Pi::renderer, m_texture.Get(), hmdMat, vector2f(400.0f,0.0f), vector2f(400.0f, 600.0f)));
+		Pi::renderQuads[eVPRight].reset(new Graphics::Drawables::TexturedQuad(Pi::renderer, renderTexture.Get(), hmdMat, vector2f(400.0f,0.0f), vector2f(400.0f, 600.0f)));
 	} 
 
 	// Oculus Rift is 1280×800 (640×800 per eye)
@@ -189,9 +189,9 @@ void Pi::CreateRenderTarget(const Uint16 width, const Uint16 height) {
 		Graphics::TEXTURE_NONE,		// don't create a texture
 		Graphics::TEXTURE_DEPTH,
 		false);
-	Pi::pRTarget = Pi::renderer->CreateRenderTarget(rtDesc);
+	Pi::renderTarget = Pi::renderer->CreateRenderTarget(rtDesc);
 
-	pRTarget->SetColorTexture(Pi::m_texture.Get());
+	Pi::renderTarget->SetColorTexture(Pi::renderTexture.Get());
 
 	Pi::renderer->SetRenderTarget(NULL);
 }
@@ -205,7 +205,7 @@ void Pi::DrawRenderTarget(const bool bAllowHMD /*= false*/) {
 	//Gui::Screen::EnterOrtho();
 	{
 		Pi::renderer->SetDepthTest(false);
-		Pi::renderer->SetLights(false);
+		Pi::renderer->SetLightsEnabled(false);
 		Pi::renderer->SetBlendMode(Graphics::BLEND_ALPHA);
 		Pi::renderer->SetMatrixMode(Graphics::MatrixMode::PROJECTION);
 		Pi::renderer->SetOrthographicProjection(0, 800, 600, 0, -1, 1);
@@ -214,10 +214,10 @@ void Pi::DrawRenderTarget(const bool bAllowHMD /*= false*/) {
 	}
 	
 	if( OculusRiftInterface::HasHMD() && bAllowHMD ) {
-		Pi::m_quads[eVPLeft]->Draw( Pi::renderer );
-		Pi::m_quads[eVPRight]->Draw( Pi::renderer );
+		Pi::renderQuads[eVPLeft]->Draw( Pi::renderer );
+		Pi::renderQuads[eVPRight]->Draw( Pi::renderer );
 	} else {
-		Pi::m_quads[eVPCentre]->Draw( Pi::renderer );
+		Pi::renderQuads[eVPCentre]->Draw( Pi::renderer );
 	}
 
 	//Gui::Screen::LeaveOrtho();
@@ -226,7 +226,7 @@ void Pi::DrawRenderTarget(const bool bAllowHMD /*= false*/) {
 		Pi::renderer->PopMatrix();
 		Pi::renderer->SetMatrixMode(Graphics::MatrixMode::MODELVIEW);
 		Pi::renderer->PopMatrix();
-		Pi::renderer->SetLights(true);
+		Pi::renderer->SetLightsEnabled(true);
 		Pi::renderer->SetDepthTest(true);
 	}
 
@@ -235,12 +235,12 @@ void Pi::DrawRenderTarget(const bool bAllowHMD /*= false*/) {
 
 //static
 void Pi::BeginRenderTarget() {
-	const bool bTargetSet = Pi::renderer->SetRenderTarget(Pi::pRTarget);
+	Pi::renderer->SetRenderTarget(Pi::renderTarget);
 }
 
 //static
 void Pi::EndRenderTarget() {
-	Pi::renderer->SetRenderTarget(NULL);
+	Pi::renderer->SetRenderTarget(nullptr);
 }
 
 static void draw_progress(UI::Gauge *gauge, UI::Label *label, float progress)
@@ -253,40 +253,6 @@ static void draw_progress(UI::Gauge *gauge, UI::Label *label, float progress)
 	Pi::ui->Draw();
 	Pi::renderer->SwapBuffers();
 }
-
-/*
-static void draw_progress(float progress)
-{
-	Pi::BeginRenderTarget();
-	{
-		Pi::renderer->BeginFrame();
-		// render something interesting here
-		if( NULL==Pi::pLoadingImage.Get() ) {
-			Pi::pLoadingImage.Reset(new Gui::Image("loading.png"));
-		}
-
-		{
-			Pi::renderer->SetTransform(matrix4x4f::Identity());
-			Gui::Screen::EnterOrtho();
-
-			if( Pi::pLoadingImage.Get() ) {
-				Pi::pLoadingImage->Draw();
-			}
-
-			float w, h;
-			std::string msg = stringf(Lang::SIMULATING_UNIVERSE_EVOLUTION_N_BYEARS, formatarg("age", progress * 13.7f));
-			Gui::Screen::MeasureString(msg, w, h);
-			Gui::Screen::RenderString(msg, 0.5f*(Gui::Screen::GetWidth()-w), 0.75f*(Gui::Screen::GetHeight()-h));
-
-			Gui::Screen::LeaveOrtho();
-		}
-		Pi::renderer->EndFrame();
-	}
-	Pi::EndRenderTarget();
-
-	Pi::DrawRenderTarget();
-}
-*/
 
 static void LuaInit()
 {
@@ -457,6 +423,7 @@ void Pi::Init()
 
 	navTunnelDisplayed = (config->Int("DisplayNavTunnel")) ? true : false;
 	speedLinesDisplayed = (config->Int("SpeedLines")) ? true : false;
+	hudTrailsDisplayed = (config->Int("HudTrails")) ? true : false;
 
 	EnumStrings::Init();
 
@@ -551,7 +518,6 @@ void Pi::Init()
 	draw_progress(gauge, label, 1.0f);
 
 	OS::NotifyLoadEnd();
-	Pi::pLoadingImage.reset();
 
 #if 0
 	// frame test code
@@ -845,7 +811,10 @@ void Pi::HandleEvents()
 									}
 								} else {
 									Ship *ship = new Ship(ShipType::POLICE);
-									ship->AIKill(Pi::player);
+									if( KeyState(SDLK_LCTRL) )
+										ship->AIFlyTo(Pi::player);	// a less lethal option
+									else
+										ship->AIKill(Pi::player);	// a really lethal option!
 									ship->m_equipment.Set(Equip::SLOT_LASER, 0, Equip::PULSECANNON_DUAL_1MW);
 									ship->m_equipment.Add(Equip::LASER_COOLING_BOOSTER);
 									ship->m_equipment.Add(Equip::ATMOSPHERIC_SHIELDING);

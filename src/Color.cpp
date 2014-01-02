@@ -1,9 +1,17 @@
-// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "Color.h"
 #include "LuaUtils.h"
 #include <SDL_stdinc.h>
+
+const Color4f Color4f::BLACK  = Color4f(0.0f,0.0f,0.0f,1.0f);
+const Color4f Color4f::WHITE  = Color4f(1.0f,1.0f,1.0f,1.0f);
+const Color4f Color4f::RED    = Color4f(1.0f,0.0f,0.0f,1.0f);
+const Color4f Color4f::GREEN  = Color4f(0.0f,1.0f,0.0f,1.0f);
+const Color4f Color4f::BLUE   = Color4f(0.0f,0.0f,1.0f,1.0f);
+const Color4f Color4f::YELLOW = Color4f(1.0f,1.0f,0.0f,1.0f);
+const Color4f Color4f::GRAY   = Color4f(0.5f,0.5f,0.5f,1.f);
 
 const Color4ub Color::BLACK   = Color(0, 0, 0, 255);
 const Color4ub Color::WHITE   = Color(255, 255, 255, 255);

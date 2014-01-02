@@ -1,4 +1,4 @@
-// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _RENDERER_GL2_H
@@ -22,9 +22,9 @@ struct Settings;
 namespace GL2 {
 	class GeoSphereSkyMaterial;
 	class GeoSphereSurfaceMaterial;
-	class LitMultiMaterial;
 	class Material;
 	class MultiMaterial;
+	class LitMultiMaterial;
 	class Program;
 	class RenderTarget;
 	class RingMaterial;
@@ -64,7 +64,7 @@ public:
 	virtual bool SetDepthWrite(bool enabled);
 	virtual bool SetWireFrameMode(bool enabled);
 
-	virtual void SetLights(const bool enabled);
+	virtual bool SetLightsEnabled(const bool enabled);
 	virtual bool SetLights(int numlights, const Light *l);
 	virtual bool SetAmbientColor(const Color &c);
 

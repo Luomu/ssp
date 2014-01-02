@@ -1,4 +1,4 @@
-// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _MODELBODY_H
@@ -21,7 +21,7 @@ public:
 	void SetPosition(const vector3d &p);
 	void SetOrient(const matrix3x3d &r);
 	void TransformToModelCoords(const Frame *camFrame);
-	void SetFrame(Frame *f);
+	virtual void SetFrame(Frame *f);
 	// Colliding: geoms are checked against collision space
 	void SetColliding(bool colliding);
 	bool IsColliding() const { return m_colliding; }

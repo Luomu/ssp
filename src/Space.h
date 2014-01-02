@@ -1,4 +1,4 @@
-// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _SPACE_H
@@ -71,6 +71,7 @@ public:
 	void GetBodiesMaybeNear(const vector3d &pos, double dist, BodyNearList &bodies) const {
 		m_bodyNearFinder.GetBodiesMaybeNear(pos, dist, bodies);
 	}
+
 
 private:
 	void GenBody(SystemBody *b, Frame *f);

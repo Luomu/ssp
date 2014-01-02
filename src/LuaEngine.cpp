@@ -1,4 +1,4 @@
-// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "LuaEngine.h"
@@ -337,6 +337,23 @@ static int l_engine_set_display_speed_lines(lua_State *l)
 	Pi::config->SetInt("SpeedLines", (enabled ? 1 : 0));
 	Pi::config->Save();
 	Pi::SetSpeedLinesDisplayed(enabled);
+	return 0;
+}
+
+static int l_engine_get_display_hud_trails(lua_State *l)
+{
+	lua_pushboolean(l, Pi::config->Int("HudTrails") != 0);
+	return 1;
+}
+
+static int l_engine_set_display_hud_trails(lua_State *l)
+{
+	if (lua_isnone(l, 1))
+		return luaL_error(l, "SetDisplayHudTrails takes one boolean argument");
+	const bool enabled = lua_toboolean(l, 1);
+	Pi::config->SetInt("HudTrails", (enabled ? 1 : 0));
+	Pi::config->Save();
+	Pi::SetHudTrailsDisplayed(enabled);
 	return 0;
 }
 
@@ -704,6 +721,9 @@ void LuaEngine::Register()
 
 		{ "GetDisplaySpeedLines", l_engine_get_display_speed_lines },
 		{ "SetDisplaySpeedLines", l_engine_set_display_speed_lines },
+
+		{ "GetDisplayHudTrails", l_engine_get_display_hud_trails },
+		{ "SetDisplayHudTrails", l_engine_set_display_hud_trails },
 
 		{ "GetMasterMuted", l_engine_get_master_muted },
 		{ "SetMasterMuted", l_engine_set_master_muted },

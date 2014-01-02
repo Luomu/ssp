@@ -34,7 +34,15 @@ void SpeedLines::Update(float time)
 	vector3f vel = vector3f(m_ship->GetVelocity());
 	const float absVel = vel.Length();
 
-	//alter line color to give overall idea of speed
+	// don't show if
+	//   vel < 100m/s
+	//   in rotating frame (near station or planet surface)
+	if (absVel < 100.f || m_ship->GetFrame()->IsRotFrame()) {
+		m_visible = false;
+		return;
+	}
+	m_visible = true;
+
 	//slow lines down at higher speeds
 	float mult;
 	if (absVel > 100000.f) {
@@ -53,13 +61,6 @@ void SpeedLines::Update(float time)
 
 	//rate of change (incl. time acceleration)
 	float d = absVel * time * mult;
-
-	//don't draw when almost stopped
-	if (d < 0.0001f) {
-		m_visible = false;
-		return;
-	}
-	m_visible = true;
 
 	m_lineLength = Clamp(absVel * 0.1f, 2.f, 100.f);
 	m_dir = vel.Normalized();
@@ -104,7 +105,8 @@ void SpeedLines::Render(Graphics::Renderer *r)
 		m_vertices[vtx+1] = *it + dir;
 
 		//distance fade
-		const Color col = Color(m_color.r, m_color.g, m_color.b, 1.f - it->Length() / BOUNDS);
+		const Color col = Color(m_color.r, m_color.g, m_color.b,
+				Clamp((1.f - it->Length() / BOUNDS),0.f,1.f) * 255);
 		m_vtxColors[vtx]   = col;
 		m_vtxColors[vtx+1] = col;
 

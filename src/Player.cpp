@@ -1,4 +1,4 @@
-// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "Player.h"
@@ -33,6 +33,16 @@ void Player::Load(Serializer::Reader &rd, Space *space)
 {
 	Pi::player = this;
 	Ship::Load(rd, space);
+}
+
+//XXX perhaps remove this, the sound is very annoying
+bool Player::OnDamage(Object *attacker, float kgDamage)
+{
+	bool r = Ship::OnDamage(attacker, kgDamage);
+	if (!IsDead() && (GetPercentHull() < 25.0f)) {
+		Sound::BodyMakeNoise(this, "warning", .5f);
+	}
+	return r;
 }
 
 //XXX handle killcounts in lua

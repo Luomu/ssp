@@ -1,4 +1,4 @@
-// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _PLAYER_H
@@ -18,6 +18,7 @@ public:
 	Player(ShipType::Id shipId);
 	Player() { }; //default constructor used before Load
 	virtual void SetDockedWith(SpaceStation *, int port);
+	virtual bool OnDamage(Object *attacker, float kgDamage);
 	virtual bool SetWheelState(bool down); // returns success of state change, NOT state itself
 	virtual Missile * SpawnMissile(ShipType::Id missile_type, int power=-1);
 	virtual void SetAlertState(Ship::AlertState as);

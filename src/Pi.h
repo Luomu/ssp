@@ -1,4 +1,4 @@
-// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _PI_H
@@ -81,6 +81,8 @@ public:
 	static void SetNavTunnelDisplayed(bool state) { navTunnelDisplayed = state; }
 	static bool AreSpeedLinesDisplayed() { return speedLinesDisplayed; }
 	static void SetSpeedLinesDisplayed(bool state) { speedLinesDisplayed = state; }
+	static bool AreHudTrailsDisplayed() { return hudTrailsDisplayed; }
+	static void SetHudTrailsDisplayed(bool state) { hudTrailsDisplayed = state; }
 	static int MouseButtonState(int button) { return mouseButton[button]; }
 	/// Get the default speed modifier to apply to movement (scrolling, zooming...), depending on the "shift" keys.
 	/// This is a default value only, centralized here to promote uniform user expericience.
@@ -166,7 +168,6 @@ public:
 	static JobQueue *Jobs() { return jobQueue.get();}
 
 	static bool DrawGUI;
-	static std::unique_ptr<Gui::Image> pLoadingImage;
 
 private:
 	static void HandleEvents();
@@ -209,18 +210,19 @@ private:
 
 	static bool navTunnelDisplayed;
 	static bool speedLinesDisplayed;
+	static bool hudTrailsDisplayed;
 
 	static Gui::Fixed *menu;
 
-	static Graphics::RenderTarget *pRTarget;
-	static RefCountedPtr<Graphics::Texture> m_texture;
+	static Graphics::RenderTarget *renderTarget;
+	static RefCountedPtr<Graphics::Texture> renderTexture;
 	enum EViewports {
 		eVPCentre=0,
 		eVPLeft,
 		eVPRight,
 		eVP_MAX
 	};
-	static std::unique_ptr<Graphics::Drawables::TexturedQuad> m_quads[eVP_MAX];
+	static std::unique_ptr<Graphics::Drawables::TexturedQuad> renderQuads[eVP_MAX];
 };
 
 #endif /* _PI_H */
