@@ -72,6 +72,7 @@ public:
 		m_bodyNearFinder.GetBodiesMaybeNear(pos, dist, bodies);
 	}
 
+
 private:
 	void GenBody(SystemBody *b, Frame *f);
 	// make sure SystemBody* is in Pi::currentSystem

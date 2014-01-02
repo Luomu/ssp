@@ -22,9 +22,9 @@ struct Settings;
 namespace GL2 {
 	class GeoSphereSkyMaterial;
 	class GeoSphereSurfaceMaterial;
-	class LitMultiMaterial;
 	class Material;
 	class MultiMaterial;
+	class LitMultiMaterial;
 	class Program;
 	class RenderTarget;
 	class RingMaterial;

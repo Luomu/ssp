@@ -8,6 +8,7 @@ HudTrail::HudTrail(Body *b, const Color& c)
 , m_color(c)
 , m_updateTime(0.f)
 {
+	m_currentFrame = b->GetFrame();
 }
 
 void HudTrail::Update(float time)
@@ -16,7 +17,9 @@ void HudTrail::Update(float time)
 	m_updateTime += time;
 	if (m_updateTime > UPDATE_INTERVAL) {
 		m_updateTime = 0.f;
-		m_trailPoints.push_back(m_body->GetInterpPosition());
+		const Frame *bodyFrame = m_body->GetFrame();
+		if( bodyFrame==m_currentFrame )
+			m_trailPoints.push_back(m_body->GetInterpPosition());
 	}
 
 	while (m_trailPoints.size() > MAX_POINTS)
@@ -47,7 +50,7 @@ void HudTrail::Render(Graphics::Renderer *r)
 			tvts.push_back(-vector3f(curpos - m_trailPoints[i]));
 			alpha -= decrement;
 			colors.push_back(tcolor);
-			colors.back().a = alpha * 255;
+			colors.back().a = Uint8(alpha * 255);
 		}
 
 		r->SetTransform(m_transform);
@@ -56,4 +59,10 @@ void HudTrail::Render(Graphics::Renderer *r)
 		r->SetDepthTest(true);
 		r->DrawLines(tvts.size(), &tvts[0], &colors[0], Graphics::LINE_STRIP);
 	}
+}
+
+void HudTrail::Reset(Frame *newFrame)
+{
+	m_currentFrame = newFrame;
+	m_trailPoints.clear();
 }

@@ -54,14 +54,12 @@ void GeoSphere::Uninit()
 
 static void print_info(const SystemBody *sbody, const Terrain *terrain)
 {
-/*
 	printf(
 		"%s:\n"
 		"    height fractal: %s\n"
 		"    colour fractal: %s\n"
 		"    seed: %u\n",
 		sbody->name.c_str(), terrain->GetHeightFractalName(), terrain->GetColorFractalName(), sbody->seed);
-*/
 }
 
 // static

@@ -214,8 +214,7 @@ void WorldView::InitObject()
 	RefCountedPtr<Text::TextureFont> hudFont = Gui::Screen::GetFontCache().GetTextureFont("OverlayFont");
 	m_reticle.reset(new HudReticle(hudFont, Gui::Screen::GetRenderer()));
 
-	if (Pi::config->Int("SpeedLines") == 1)
-		m_speedLines.reset(new SpeedLines(Pi::player));
+	m_speedLines.reset(new SpeedLines(Pi::player));
 
 	//get near & far clipping distances
 	//XXX m_renderer not set yet
@@ -408,12 +407,15 @@ void WorldView::Draw3D()
 
 	// Draw 3D HUD
 	// Speed lines
-	if (m_speedLines.get()) m_speedLines->Render(m_renderer);
+	if (Pi::AreSpeedLinesDisplayed())
+		m_speedLines->Render(m_renderer);
 
 	// Contact trails
-	for (auto it = Pi::player->GetSensors()->GetContacts().begin(); it != Pi::player->GetSensors()->GetContacts().end(); ++it)
-		it->trail->Render(m_renderer);
-
+	if( Pi::AreHudTrailsDisplayed() ) {
+		for (auto it = Pi::player->GetSensors()->GetContacts().begin(); it != Pi::player->GetSensors()->GetContacts().end(); ++it)
+			it->trail->Render(m_renderer);
+	}
+	
 	// Target info (not really 3d)
 	m_reticle->Draw();
 }
@@ -918,12 +920,26 @@ void WorldView::Update()
 		matrix4x4d trans;
 		Frame::GetFrameRenderTransform(Pi::player->GetFrame(), cam_frame, trans);
 
+		if ( m_speedLines.get() && Pi::AreSpeedLinesDisplayed() ) {
+			m_speedLines->Update(Pi::game->GetTimeStep());
+
+			trans[12] = trans[13] = trans[14] = 0.0;
+			trans[15] = 1.0;
+			m_speedLines->SetTransform(trans);
+		}
+	}
+
+	if( Pi::AreHudTrailsDisplayed() )
+	{
+		const Frame *cam_frame = m_camera->GetCamFrame();
+		matrix4x4d trans;
+		Frame::GetFrameRenderTransform(Pi::player->GetFrame(), cam_frame, trans);
+
 		for (auto it = Pi::player->GetSensors()->GetContacts().begin(); it != Pi::player->GetSensors()->GetContacts().end(); ++it)
 			it->trail->SetTransform(trans);
-
-		trans[12] = trans[13] = trans[14] = 0.0;
-		trans[15] = 1.0;
-		m_speedLines->SetTransform(trans);
+	} else {
+		for (auto it = Pi::player->GetSensors()->GetContacts().begin(); it != Pi::player->GetSensors()->GetContacts().end(); ++it)
+			it->trail->Reset(Pi::player->GetFrame());
 	}
 
 	// target object under the crosshairs. must be done after

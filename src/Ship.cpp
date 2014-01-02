@@ -782,6 +782,12 @@ void Ship::SetLandedOn(Planet *p, float latitude, float longitude)
 	LuaEvent::Queue("onShipLanded", this, p);
 }
 
+void Ship::SetFrame(Frame *f)
+{
+	DynamicBody::SetFrame(f);
+	m_sensors->ResetTrails();
+}
+
 void Ship::TimeStepUpdate(const float timeStep)
 {
 	// If docked, station is responsible for updating position/orient of ship
