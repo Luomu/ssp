@@ -166,7 +166,6 @@ public:
 	static JobQueue *Jobs() { return jobQueue.get();}
 
 	static bool DrawGUI;
-	static std::unique_ptr<Gui::Image> pLoadingImage;
 
 private:
 	static void HandleEvents();

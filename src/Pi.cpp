@@ -233,40 +233,6 @@ static void draw_progress(UI::Gauge *gauge, UI::Label *label, float progress)
 	Pi::renderer->SwapBuffers();
 }
 
-/*
-static void draw_progress(float progress)
-{
-	Pi::BeginRenderTarget();
-	{
-		Pi::renderer->BeginFrame();
-		// render something interesting here
-		if( NULL==Pi::pLoadingImage.Get() ) {
-			Pi::pLoadingImage.Reset(new Gui::Image("loading.png"));
-		}
-
-		{
-			Pi::renderer->SetTransform(matrix4x4f::Identity());
-			Gui::Screen::EnterOrtho();
-
-			if( Pi::pLoadingImage.Get() ) {
-				Pi::pLoadingImage->Draw();
-			}
-
-			float w, h;
-			std::string msg = stringf(Lang::SIMULATING_UNIVERSE_EVOLUTION_N_BYEARS, formatarg("age", progress * 13.7f));
-			Gui::Screen::MeasureString(msg, w, h);
-			Gui::Screen::RenderString(msg, 0.5f*(Gui::Screen::GetWidth()-w), 0.75f*(Gui::Screen::GetHeight()-h));
-
-			Gui::Screen::LeaveOrtho();
-		}
-		Pi::renderer->EndFrame();
-	}
-	Pi::EndRenderTarget();
-
-	Pi::DrawRenderTarget();
-}
-*/
-
 static void LuaInit()
 {
 	LuaObject<PropertiedObject>::RegisterClass();
@@ -528,7 +494,6 @@ void Pi::Init()
 	draw_progress(gauge, label, 1.0f);
 
 	OS::NotifyLoadEnd();
-	Pi::pLoadingImage.reset();
 
 #if 0
 	// frame test code
