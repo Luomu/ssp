@@ -440,8 +440,6 @@ void WorldView::Draw3D(const ViewEye eye /*= ViewEye_Centre*/)
 		break;
 	}
 
-	if (!Pi::DrawGUI) return;
-
 	// Draw 3D HUD
 	// Speed lines
 	if (Pi::AreSpeedLinesDisplayed())
@@ -986,7 +984,7 @@ void WorldView::Update(const ViewEye eye /*= ViewEye_Centre*/)
 
 	if( Pi::AreHudTrailsDisplayed() )
 	{
-		const Frame *cam_frame = m_camera->GetCamFrame();
+		const Frame *cam_frame = GetCurrentCamFrame(eye);
 		matrix4x4d trans;
 		Frame::GetFrameRenderTransform(Pi::player->GetFrame(), cam_frame, trans);
 

@@ -156,7 +156,8 @@ void Camera::Draw(Renderer *renderer, const Body *excludeBody, const ViewEye eye
 		m_renderer->SetPerspectiveProjection(m_fovAng, m_width/m_height, m_zNear, m_zFar);
 	}
 	m_renderer->SetTransform(matrix4x4f::Identity());
-	//m_renderer->ClearScreen();
+	if( ViewEye_Right!=eye )
+		m_renderer->ClearScreen();
 
 	matrix4x4d trans2bg;
 	Frame::GetFrameRenderTransform(Pi::game->GetSpace()->GetRootFrame(), m_camFrame, trans2bg);

@@ -282,7 +282,6 @@ bool RendererGL2::SetProjection(const matrix4x4f &m)
 {
 	PROFILE_SCOPED()
 	//same as above
-	m_projectionStack.top() = m;
 	SetMatrixMode(MatrixMode::PROJECTION);
 	LoadMatrix(&m[0]);
 	return true;
@@ -865,7 +864,7 @@ void RendererGL2::PushState()
 	SetMatrixMode(MatrixMode::MODELVIEW);
 	PushMatrix();
 	glPushAttrib(GL_ALL_ATTRIB_BITS & (~GL_POINT_BIT));
-	}
+}
 
 void RendererGL2::PopState()
 {
@@ -1010,8 +1009,8 @@ void RendererGL2::PushMatrix()
 		case MatrixMode::PROJECTION:
 			m_projectionStack.push(m_projectionStack.top());
 			break;
-		}
 	}
+}
 
 void RendererGL2::PopMatrix()
 {
@@ -1040,7 +1039,7 @@ void RendererGL2::LoadIdentity()
 		case MatrixMode::PROJECTION:
 			m_projectionStack.top() = matrix4x4f::Identity();
 			break;
-}
+	}
 }
 
 void RendererGL2::LoadMatrix(const matrix4x4f &m)
@@ -1054,7 +1053,7 @@ void RendererGL2::LoadMatrix(const matrix4x4f &m)
 		case MatrixMode::PROJECTION:
 			m_projectionStack.top() = m;
 			break;
-}
+	}
 }
 
 void RendererGL2::Translate( const float x, const float y, const float z )

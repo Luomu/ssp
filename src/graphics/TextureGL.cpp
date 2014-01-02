@@ -42,7 +42,7 @@ inline GLint GLImageFormat(TextureFormat format) {
 		case TEXTURE_LUMINANCE_ALPHA_88: return GL_LUMINANCE_ALPHA;
 		case TEXTURE_INTENSITY_8:  return GL_LUMINANCE;
 		case TEXTURE_DXT5: return GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
-		case TEXTURE_DXT1: return GL_COMPRESSED_RGB_S3TC_DXT1_EXT;
+		case TEXTURE_DXT1:  return GL_COMPRESSED_RGB_S3TC_DXT1_EXT;
 		default: assert(0); return 0;
 	}
 }

@@ -17,7 +17,6 @@ using namespace OVR::Util::Render;
 // Purpose is to isolate the LibOVR from Pioneer and allow for changes to the API & SDK without affecting Pioneer.
 class OculusRiftImplemetation : public MessageHandler {
 public:
-	#pragma optimize("",off)
 	OculusRiftImplemetation() : pManager(nullptr), pSensor(nullptr), pHMD(nullptr)
 	{
 		Width  = 1280;
@@ -144,12 +143,12 @@ public:
 
 		SConfig.Set2DAreaFov(DegreeToRad(85.0f));
 	}
-	#pragma optimize("",off)
+	
 	~OculusRiftImplemetation() 
 	{
 		Uninit();
 	}
-	#pragma optimize("",off)
+	
 	void Uninit()
 	{
 		// No OVR functions involving memory are allowed after this.
@@ -174,7 +173,7 @@ public:
 			System::Destroy();
 		}
 	}
-	#pragma optimize("",off)
+	
 	void OnUpdate()
 	{
 		// Handle Sensor motion.
@@ -276,24 +275,24 @@ private:
 
 // static members for the interface class.
 std::unique_ptr<OculusRiftImplemetation> OculusRiftInterface::mPimpl;
-#pragma optimize("",off)
+
 void OculusRiftInterface::Init()
 {
 	mPimpl.reset(new OculusRiftImplemetation);
 }
-#pragma optimize("",off)
+
 void OculusRiftInterface::Uninit()
 {
 	assert(mPimpl.get());
 	mPimpl->Uninit();
 }
-#pragma optimize("",off)
+
 void OculusRiftInterface::Update()
 {
 	assert(mPimpl.get());
 	mPimpl->OnUpdate();
 }
-#pragma optimize("",off)
+
 //static
 bool OculusRiftInterface::HasHMD()
 {
