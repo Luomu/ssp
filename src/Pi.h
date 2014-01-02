@@ -1,4 +1,4 @@
-// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _PI_H
@@ -212,9 +212,9 @@ private:
 
 	static Gui::Fixed *menu;
 
-	static Graphics::RenderTarget *pRTarget;
-	static RefCountedPtr<Graphics::Texture> m_texture;
-	static std::unique_ptr<Graphics::Drawables::TexturedQuad> m_quad;
+	static Graphics::RenderTarget *renderTarget;
+	static RefCountedPtr<Graphics::Texture> renderTexture;
+	static std::unique_ptr<Graphics::Drawables::TexturedQuad> renderQuad;
 };
 
 #endif /* _PI_H */

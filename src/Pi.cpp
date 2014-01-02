@@ -1,4 +1,4 @@
-// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "Pi.h"
@@ -136,10 +136,9 @@ RefCountedPtr<UI::Context> Pi::ui;
 ModelCache *Pi::modelCache;
 Intro *Pi::intro;
 SDLGraphics *Pi::sdl;
-Graphics::RenderTarget *Pi::pRTarget;
-RefCountedPtr<Graphics::Texture> Pi::m_texture;
-std::unique_ptr<Graphics::Drawables::TexturedQuad> Pi::m_quad;
-std::unique_ptr<Gui::Image> Pi::pLoadingImage;
+Graphics::RenderTarget *Pi::renderTarget;
+RefCountedPtr<Graphics::Texture> Pi::renderTexture;
+std::unique_ptr<Graphics::Drawables::TexturedQuad> Pi::renderQuad;
 
 #if WITH_OBJECTVIEWER
 ObjectViewerView *Pi::objectViewerView;
@@ -163,50 +162,51 @@ void Pi::CreateRenderTarget(const Uint16 width, const Uint16 height) {
 		Graphics::TEXTURE_RGB_888,
 		vector2f(width, height),
 		Graphics::LINEAR_CLAMP, false, false, 0);
-	Pi::m_texture.Reset(Pi::renderer->CreateTexture(texDesc));
-	Pi::m_quad.reset(new Graphics::Drawables::TexturedQuad(Pi::renderer, m_texture.Get(), vector2f(0.0f,0.0f), vector2f(800.0f, 600.0f)));
+	Pi::renderTexture.Reset(Pi::renderer->CreateTexture(texDesc));
+	Pi::renderQuad.reset(new Graphics::Drawables::TexturedQuad(Pi::renderer, Pi::renderTexture.Get(), vector2f(0.0f,0.0f), vector2f(float(Graphics::GetScreenWidth()), float(Graphics::GetScreenHeight()))));
 
-	// Oculus Rift is 1280×800 (640×800 per eye)
+	// Complete the RT description so we can request a buffer.
+	// NB: we don't want it to create use a texture because we share it with the textured quad created above.
 	Graphics::RenderTargetDesc rtDesc(
 		width,
 		height,
 		Graphics::TEXTURE_NONE,		// don't create a texture
 		Graphics::TEXTURE_DEPTH,
 		false);
-	Pi::pRTarget = Pi::renderer->CreateRenderTarget(rtDesc);
+	Pi::renderTarget = Pi::renderer->CreateRenderTarget(rtDesc);
 
-	pRTarget->SetColorTexture(Pi::m_texture.Get());
+	Pi::renderTarget->SetColorTexture(Pi::renderTexture.Get());
 }
 
 //static
 void Pi::DrawRenderTarget() {
 	Pi::renderer->BeginFrame();
+	Pi::renderer->SetViewport(0, 0, Graphics::GetScreenWidth(), Graphics::GetScreenHeight());	
 	Pi::renderer->SetTransform(matrix4x4f::Identity());
 
 	//Gui::Screen::EnterOrtho();
 	{
-		glDisable(GL_DEPTH_TEST);
-		glDisable(GL_LIGHTING);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		glMatrixMode(GL_PROJECTION);
-		glPushMatrix();
-		glLoadIdentity();
-		glOrtho(0, 800, 600, 0, -1, 1);
-		glMatrixMode(GL_MODELVIEW);
-		glPushMatrix();
-		glLoadIdentity();
+		Pi::renderer->SetDepthTest(false);
+		Pi::renderer->SetLightsEnabled(false);
+		Pi::renderer->SetBlendMode(Graphics::BLEND_ALPHA);
+		Pi::renderer->SetMatrixMode(Graphics::MatrixMode::PROJECTION);
+		Pi::renderer->PushMatrix();
+		Pi::renderer->SetOrthographicProjection(0, Graphics::GetScreenWidth(), Graphics::GetScreenHeight(), 0, -1, 1);
+		Pi::renderer->SetMatrixMode(Graphics::MatrixMode::MODELVIEW);
+		Pi::renderer->PushMatrix();
+		Pi::renderer->LoadIdentity();
 	}
-
-	Pi::m_quad->Draw( Pi::renderer );
+	
+	Pi::renderQuad->Draw( Pi::renderer );
 
 	//Gui::Screen::LeaveOrtho();
 	{
-		glMatrixMode(GL_PROJECTION);
-		glPopMatrix();
-		glMatrixMode(GL_MODELVIEW);
-		glPopMatrix();
-		glEnable(GL_LIGHTING);
-		glEnable(GL_DEPTH_TEST);
+		Pi::renderer->SetMatrixMode(Graphics::MatrixMode::PROJECTION);
+		Pi::renderer->PopMatrix();
+		Pi::renderer->SetMatrixMode(Graphics::MatrixMode::MODELVIEW);
+		Pi::renderer->PopMatrix();
+		Pi::renderer->SetLightsEnabled(true);
+		Pi::renderer->SetDepthTest(true);
 	}
 
 	Pi::renderer->EndFrame();
@@ -214,12 +214,12 @@ void Pi::DrawRenderTarget() {
 
 //static
 void Pi::BeginRenderTarget() {
-	const bool bTargetSet = Pi::renderer->SetRenderTarget(Pi::pRTarget);
+	Pi::renderer->SetRenderTarget(Pi::renderTarget);
 }
 
 //static
 void Pi::EndRenderTarget() {
-	Pi::renderer->SetRenderTarget(NULL);
+	Pi::renderer->SetRenderTarget(nullptr);
 }
 
 static void draw_progress(UI::Gauge *gauge, UI::Label *label, float progress)
