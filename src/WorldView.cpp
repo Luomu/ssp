@@ -278,6 +278,7 @@ void WorldView::SetCamType(enum CamType c)
 	switch(m_camType) {
 		case CAM_INTERNAL:
 			m_activeCameraController = m_internalCameraController.get();
+			Pi::player->OnCockpitActivated();
 			break;
 		case CAM_EXTERNAL:
 			m_activeCameraController = m_externalCameraController.get();
@@ -401,9 +402,15 @@ void WorldView::Draw3D()
 	assert(Pi::game);
 	assert(Pi::player);
 	assert(!Pi::player->IsDead());
-	m_camera->Draw(m_renderer, GetCamType() == CAM_INTERNAL ? Pi::player : 0);
 
-	if (!Pi::DrawGUI) return;
+	Body* excludeBody = nullptr;
+	ShipCockpit* cockpit = nullptr;
+	if(GetCamType() == CAM_INTERNAL) {
+		excludeBody = Pi::player;
+		if (m_internalCameraController->GetMode() == InternalCameraController::MODE_FRONT)
+			cockpit = Pi::player->GetCockpit();
+	}
+	m_camera->Draw(m_renderer, excludeBody, cockpit);
 
 	// Draw 3D HUD
 	// Speed lines
@@ -1422,6 +1429,7 @@ void WorldView::UpdateProjectedObjects()
 				default: break;
 			}
 		}
+
 		if (laser >= 0) {
 			laser = Pi::player->m_equipment.Get(Equip::SLOT_LASER, laser);
 			laser = Equip::types[laser].tableIndex;

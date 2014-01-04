@@ -12,6 +12,7 @@
 #include "Body.h"
 
 class Frame;
+class ShipCockpit;
 namespace Graphics { class Renderer; }
 
 class Camera {
@@ -21,7 +22,7 @@ public:
 	virtual ~Camera();
 
 	void Update();
-	void Draw(Graphics::Renderer *r, const Body *excludeBody = 0);
+	void Draw(Graphics::Renderer *r, const Body *excludeBody = nullptr, ShipCockpit* cockpit = nullptr);
 
 	void SetFov(float y);
 	float GetFov() const;

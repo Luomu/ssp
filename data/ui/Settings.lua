@@ -99,6 +99,10 @@ ui.templates.Settings = function (args)
 			Engine.GetDisplaySpeedLines, Engine.SetDisplaySpeedLines,
 			l.DISPLAY_SPEED_LINES)
 
+		local cockpitCheckBox = optionCheckBox(
+			Engine.GetCockpitEnabled, Engine.SetCockpitEnabled,
+			l.ENABLE_COCKPIT)
+
 		local hudTrailsCheckBox = optionCheckBox(
 			Engine.GetDisplayHudTrails, Engine.SetDisplayHudTrails,
 			l.DISPLAY_HUD_TRAILS)
@@ -125,6 +129,7 @@ ui.templates.Settings = function (args)
 				cityDetailDropDown,
 				navTunnelsCheckBox,
 				speedLinesCheckBox,
+				cockpitCheckBox,
 				hudTrailsCheckBox,
 			})))
 	end
