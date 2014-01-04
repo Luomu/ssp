@@ -55,6 +55,7 @@ private:
 	matrix3x3d m_orient;
 };
 
+
 class InternalCameraController : public CameraController {
 public:
 	enum Mode {
@@ -96,6 +97,7 @@ private:
 	vector3d m_topPos;    matrix3x3d m_topOrient;
 	vector3d m_bottomPos; matrix3x3d m_bottomOrient;
 };
+
 
 class MoveableCameraController : public CameraController {
 public:
@@ -154,6 +156,7 @@ private:
 	double m_rotY; //horizontal rot
 	matrix3x3d m_extOrient;
 };
+
 
 // Much like external camera, but does not turn when the ship turns
 class SiderealCameraController : public MoveableCameraController {

@@ -37,9 +37,9 @@ GameConfig::GameConfig()
 	map["DefaultLowThrustPower"] = "0.25";
 	map["VSync"] = "0";
 	map["UseTextureCompression"] = "0";
-	map["CockpitCamera"] = "1";
 	map["WorkerThreads"] = "0";
 	map["SpeedLines"] = "0";
+	map["EnableCockpit"] = "0";
 	map["HudTrails"] = "0";
 
 #ifdef _WIN32

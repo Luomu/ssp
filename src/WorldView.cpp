@@ -299,6 +299,7 @@ void WorldView::SetCamType(enum CameraController::Type c)
 	switch(m_camType) {
 		case CameraController::INTERNAL:
 			m_activeCameraController = m_internalCameraController.get();
+			Pi::player->OnCockpitActivated();
 			break;
 		case CameraController::EXTERNAL:
 			m_activeCameraController = m_externalCameraController.get();
@@ -422,21 +423,31 @@ void WorldView::Draw3D(const ViewEye eye /*= ViewEye_Centre*/)
 	assert(Pi::game);
 	assert(Pi::player);
 	assert(!Pi::player->IsDead());
+	
+
+	Body* excludeBody = nullptr;
+	ShipCockpit* cockpit = nullptr;
+	if(GetCamType() == CameraController::INTERNAL) {
+		excludeBody = Pi::player;
+		if (m_internalCameraController->GetMode() == InternalCameraController::MODE_FRONT)
+			cockpit = Pi::player->GetCockpit();
+	}
+	
 	const int screenW = Graphics::GetScreenWidth();
 	const int halfScreenW = screenW>>1;
 	const Body *pExcluded = GetCamType() == CameraController::INTERNAL ? Pi::player : nullptr;
 	switch(eye) {
 	case ViewEye_Centre:	
 		m_renderer->SetViewport(0, 0, screenW, Graphics::GetScreenHeight());
-		m_cameras[0]->Draw(m_renderer, pExcluded, eye);
+		m_cameras[0]->Draw(m_renderer, pExcluded, cockpit, eye);
 		break;
 	case ViewEye_Left:		
 		m_renderer->SetViewport(0, 0, halfScreenW, Graphics::GetScreenHeight());
-		m_cameras[0]->Draw(m_renderer, pExcluded, eye);
+		m_cameras[0]->Draw(m_renderer, pExcluded, cockpit, eye);
 		break;
 	case ViewEye_Right:		
 		m_renderer->SetViewport(halfScreenW,0, halfScreenW, Graphics::GetScreenHeight());
-		m_cameras[1]->Draw(m_renderer, pExcluded, eye);
+		m_cameras[1]->Draw(m_renderer, pExcluded, cockpit, eye);
 		break;
 	}
 
@@ -720,9 +731,9 @@ void WorldView::RefreshButtonStateAndVisibility()
 					else
 						Pi::cpan->SetOverlayText(ShipCpanel::OVERLAY_BOTTOM_RIGHT, stringf(Lang::ALT_IN_METRES, formatarg("altitude", altitude),
 							formatarg("vspeed", vspeed)));
-			} else {
+				} else {
 					Pi::cpan->SetOverlayText(ShipCpanel::OVERLAY_BOTTOM_RIGHT, "");
-			}
+				}
 			} else {
 				Pi::cpan->SetOverlayText(ShipCpanel::OVERLAY_BOTTOM_RIGHT, "");
 			}
@@ -732,7 +743,7 @@ void WorldView::RefreshButtonStateAndVisibility()
 				static_cast<Planet*>(astro)->GetAtmosphericState(center_dist, &pressure, &density);
 
 				if (pressure > 0.001)
-				Pi::cpan->SetOverlayText(ShipCpanel::OVERLAY_BOTTOM_LEFT, stringf(Lang::PRESSURE_N_ATMOSPHERES, formatarg("pressure", pressure)));
+					Pi::cpan->SetOverlayText(ShipCpanel::OVERLAY_BOTTOM_LEFT, stringf(Lang::PRESSURE_N_ATMOSPHERES, formatarg("pressure", pressure)));
 				else
 					Pi::cpan->SetOverlayText(ShipCpanel::OVERLAY_BOTTOM_LEFT, "");
 				if (Pi::player->GetHullTemperature() > 0.01) {
@@ -1493,6 +1504,7 @@ void WorldView::UpdateProjectedObjects(const ViewEye eye /*= ViewEye_Centre*/)
 				default: break;
 			}
 		}
+
 		if (laser >= 0) {
 			laser = Pi::player->m_equipment.Get(Equip::SLOT_LASER, laser);
 			laser = Equip::types[laser].tableIndex;

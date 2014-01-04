@@ -67,7 +67,8 @@ void CameraController::Update()
 }
 
 InternalCameraController::InternalCameraController(std::vector<Camera*> &cameras, const Ship *ship) :
-	CameraController(cameras, ship)
+	CameraController(cameras, ship),
+	m_mode(MODE_FRONT)
 {
 	SetMode(MODE_FRONT);
 	m_magnify = false;

@@ -13,6 +13,7 @@
 #include "OculusRift.h"
 
 class Frame;
+class ShipCockpit;
 namespace Graphics { class Renderer; }
 
 class Camera {
@@ -22,7 +23,7 @@ public:
 	virtual ~Camera();
 
 	void Update();
-	void Draw(Graphics::Renderer *r, const Body *excludeBody, const ViewEye eye);
+	void Draw(Graphics::Renderer *r, const Body *excludeBody = nullptr, ShipCockpit* cockpit = nullptr, const ViewEye eye = ViewEye_Centre);
 
 	void SetFov(float y);
 	float GetFov() const;
