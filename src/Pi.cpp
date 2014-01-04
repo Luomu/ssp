@@ -388,17 +388,30 @@ void Pi::Init()
 		OS::Error("SDL initialization failed: %s\n", SDL_GetError());
 	}
 
+	OculusRiftInterface::Init();
+
 	// Do rest of SDL video initialization and create Renderer
 	Graphics::Settings videoSettings = {};
 	videoSettings.width = config->Int("ScrWidth");
 	videoSettings.height = config->Int("ScrHeight");
 	videoSettings.fullscreen = (config->Int("StartFullscreen") != 0);
+	videoSettings.useOVR = (config->Int("UseOVR") != 0) && OculusRiftInterface::HasHMD();
 	videoSettings.requestedSamples = config->Int("AntiAliasingMode");
 	videoSettings.vsync = (config->Int("VSync") != 0);
 	videoSettings.useTextureCompression = (config->Int("UseTextureCompression") != 0);
 	videoSettings.enableDebugMessages = (config->Int("EnableGLDebug") != 0);
 	videoSettings.iconFile = OS::GetIconFilename();
 	videoSettings.title = "Pioneer";
+
+	
+	if( videoSettings.useOVR )
+	{
+		// override some setting if we're forcing it onto the Oculus
+		const OculusRiftInterface::ScreenInfo si = OculusRiftInterface::GetScreenInfo();
+		videoSettings.width = si.HResolution;
+		videoSettings.height = si.VResolution;
+		videoSettings.fullscreen = true;
+	}
 
 	Pi::renderer = Graphics::Init(videoSettings);
 	{
@@ -412,8 +425,6 @@ void Pi::Init()
 		fwrite(s.c_str(), 1, s.size(), f);
 		fclose(f);
 	}
-
-	OculusRiftInterface::Init();
 
 	Pi::CreateRenderTarget(videoSettings.width, videoSettings.height);
 	Pi::rng.IncRefCount(); // so nothing tries to free it

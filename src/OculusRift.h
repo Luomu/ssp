@@ -45,6 +45,13 @@ public:
 	static void GetDistortionValues(float &XCenterOffset, float &Scale, float &K0, float &K1, float &K2, float &K3);
 	static matrix4x4f GetPerspectiveMatrix(const ViewEye eye);
 	static float GetYFOVDegrees();
+
+	struct ScreenInfo
+	{
+		int				DesktopX, DesktopY;
+		unsigned int	HResolution, VResolution;
+	};
+	static ScreenInfo GetScreenInfo();
 private:
 	static std::unique_ptr<OculusRiftImplemetation> mPimpl;
 };

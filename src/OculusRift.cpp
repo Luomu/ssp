@@ -240,6 +240,8 @@ public:
 
 	float GetYFOVDegrees() { return SConfig.GetYFOVDegrees(); }
 
+	const OVR::HMDInfo& GetHMDInfo() const { return HMDInfo; }
+
 private:
 	matrix4x4f PerspectiveRH(const float yfov, const float aspect, const float znear, const float zfar)
 	{
@@ -327,4 +329,16 @@ matrix4x4f OculusRiftInterface::GetPerspectiveMatrix(const ViewEye eye)
 float OculusRiftInterface::GetYFOVDegrees() 
 { 
 	return mPimpl->GetYFOVDegrees(); 
+}
+
+//static 
+OculusRiftInterface::ScreenInfo OculusRiftInterface::GetScreenInfo()
+{
+	OculusRiftInterface::ScreenInfo si;
+	const OVR::HMDInfo& info = mPimpl->GetHMDInfo();
+	si.DesktopX = info.DesktopX;
+	si.DesktopY = info.DesktopY;
+	si.HResolution = info.HResolution;
+	si.VResolution = info.VResolution;
+	return si;
 }
